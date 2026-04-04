@@ -1,4 +1,5 @@
 import React from 'react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 
 type Section = 'dashboard' | 'budget' | 'investments' | 'account' | 'nin-validation';
 
@@ -25,6 +26,8 @@ export default function Navigation({
   budgetMode,
   onChangeBudgetMode,
 }: NavigationProps) {
+  const { data: session, status } = useSession();
+
   const getBudgetModeLabel = () => {
     return budgetMode === 'strict'
       ? 'STRICT MODE - Funds Locked'
@@ -36,15 +39,46 @@ export default function Navigation({
       <div className="container mx-auto px-3 py-3 md:px-4 md:py-4">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
-            <h1 className="text-xl font-bold text-white drop-shadow-md md:text-2xl">RILSTACK</h1>
+            <h1 className="text-lg font-bold text-white drop-shadow-md md:text-2xl">RILSTACK</h1>
 
-            <button
-              onClick={onProfileClick}
-              className="whitespace-nowrap rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400 md:hidden"
-              title="Click to view profile"
-            >
-              Profile
-            </button>
+            <div className="flex items-center gap-2 md:hidden">
+              {status !== 'loading' && !session && (
+                <>
+                  <button
+                    onClick={() => signIn('google')}
+                    className="whitespace-nowrap rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-[11px] font-semibold text-cyan-100 transition-all hover:bg-cyan-400/20"
+                    title="Login with Google"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => signIn('google')}
+                    className="whitespace-nowrap rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-2 text-[11px] font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400"
+                    title="Sign up with Google"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
+              {session && (
+                <>
+                  <button
+                    onClick={onProfileClick}
+                    className="whitespace-nowrap rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-2 text-[11px] font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400"
+                    title="Click to view profile"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="whitespace-nowrap rounded-lg border border-slate-500 bg-slate-800 px-3 py-2 text-[11px] font-semibold text-slate-100 transition-all hover:bg-slate-700"
+                    title="Logout"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {budgetMode && (
@@ -92,13 +126,45 @@ export default function Navigation({
                 </button>
               ))}
             </div>
-            <button
-              onClick={onProfileClick}
-              className="ml-2 hidden whitespace-nowrap rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-4 py-2 font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400 md:block"
-              title="Click to view profile"
-            >
-              Profile
-            </button>
+
+            <div className="ml-2 hidden items-center gap-2 md:flex">
+              {status !== 'loading' && !session && (
+                <>
+                  <button
+                    onClick={() => signIn('google')}
+                    className="whitespace-nowrap rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition-all hover:bg-cyan-400/20"
+                    title="Login with Google"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => signIn('google')}
+                    className="whitespace-nowrap rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400"
+                    title="Sign up with Google"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
+              {session && (
+                <>
+                  <button
+                    onClick={onProfileClick}
+                    className="whitespace-nowrap rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-4 py-2 font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400"
+                    title="Click to view profile"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="whitespace-nowrap rounded-lg border border-slate-500 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-100 transition-all hover:bg-slate-700"
+                    title="Logout"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

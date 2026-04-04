@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import { Space_Grotesk } from 'next/font/google';
+import AuthProvider from '@/components/AuthProvider';
 import '../styles/globals.css';
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'RILSTACK - Professional Financial Management',
-  description: 'RILSTACK: Sophisticated Nigerian financial management platform with real Paystack integration, NIN validation, and professional portfolio tracking.',
+  description:
+    'RILSTACK: Sophisticated Nigerian financial management platform with real Paystack integration, NIN validation, and professional portfolio tracking.',
   keywords: 'finance, budgeting, savings, investments, Nigeria, Paystack, NIN',
   authors: [{ name: 'RILSTACK' }],
   openGraph: {
@@ -26,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={spaceGrotesk.className}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

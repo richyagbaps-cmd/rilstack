@@ -22,7 +22,7 @@ interface Transaction {
 }
 
 export default function AccountBalance() {
-  const [accounts, setAccounts] = useState<Account[]>([
+  const [accounts] = useState<Account[]>([
     { id: '1', type: 'checking', name: 'Primary Checking', balance: 450000, availableBalance: 360000, currency: 'NGN' },
     { id: '2', type: 'savings', name: 'Savings Account', balance: 1050000, availableBalance: 1050000, currency: 'NGN' },
     { id: '3', type: 'investment', name: 'Investment Portfolio', balance: 1576650, availableBalance: 150000, currency: 'NGN' },
@@ -41,7 +41,6 @@ export default function AccountBalance() {
   const [processError, setProcessError] = useState<string | null>(null);
   const [processSuccess, setProcessSuccess] = useState<string | null>(null);
 
-  // Form hooks
   const { register, handleSubmit, reset } = useForm<{ amount: string; method: string; description: string }>();
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
@@ -54,7 +53,6 @@ export default function AccountBalance() {
     setProcessSuccess(null);
 
     try {
-      // Call payment API
       const response = await fetch('/api/payment/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,7 +70,6 @@ export default function AccountBalance() {
 
       const paymentResult = await response.json();
 
-      // Create transaction record
       const newTransaction: Transaction = {
         id: paymentResult.transactionId || Date.now().toString(),
         type: 'deposit',
@@ -83,10 +80,9 @@ export default function AccountBalance() {
       };
 
       setTransactions([newTransaction, ...transactions]);
-      setProcessSuccess(`✅ ${paymentResult.message || 'Deposit initiated successfully'}`);
+      setProcessSuccess(`Deposit initiated: ${paymentResult.message || 'success'}`);
       reset();
-      
-      // Close modal after 2 seconds
+
       setTimeout(() => {
         setShowDepositModal(false);
         setProcessSuccess(null);
@@ -114,29 +110,16 @@ export default function AccountBalance() {
     }
   };
 
-  const getMethodBadge = (method: string) => {
-    switch (method) {
-      case 'card':
-        return 'bg-blue-100 text-blue-800';
-      case 'transfer':
-        return 'bg-purple-100 text-purple-800';
-      case 'ussd':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const getMethodIcon = (method: string) => {
     switch (method) {
       case 'card':
-        return '💳';
+        return 'Card';
       case 'transfer':
-        return '🏦';
+        return 'Bank';
       case 'ussd':
-        return '📱';
+        return 'USSD';
       default:
-        return '💰';
+        return 'Cash';
     }
   };
 
@@ -146,67 +129,64 @@ export default function AccountBalance() {
 
   return (
     <div className="space-y-6">
-      {/* Balance Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white p-6 rounded-lg shadow-lg">
-          <p className="text-sm opacity-90 mb-2">TOTAL BALANCE</p>
-          <p className="text-4xl font-bold mb-2">₦{totalBalance.toLocaleString()}</p>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+        <div className="rounded-lg bg-gradient-to-br from-blue-900 to-blue-800 p-5 text-white shadow-lg md:p-6">
+          <p className="mb-2 text-xs opacity-90 md:text-sm">TOTAL BALANCE</p>
+          <p className="mb-2 text-3xl font-bold md:text-4xl">N{totalBalance.toLocaleString()}</p>
           <p className="text-xs opacity-75">All accounts combined</p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
-          <p className="text-sm opacity-90 mb-2">AVAILABLE FOR WITHDRAWAL</p>
-          <p className="text-4xl font-bold mb-2">₦{totalAvailable.toLocaleString()}</p>
+        <div className="rounded-lg bg-gradient-to-br from-green-500 to-green-600 p-5 text-white shadow-lg md:p-6">
+          <p className="mb-2 text-xs opacity-90 md:text-sm">AVAILABLE FOR WITHDRAWAL</p>
+          <p className="mb-2 text-3xl font-bold md:text-4xl">N{totalAvailable.toLocaleString()}</p>
           <p className="text-xs opacity-75">Ready to withdraw immediately</p>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg shadow-lg">
-          <p className="text-sm opacity-90 mb-2">LOCKED/INVESTED</p>
-          <p className="text-4xl font-bold mb-2">₦{lockedBalance.toLocaleString()}</p>
+        <div className="rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 p-5 text-white shadow-lg md:p-6">
+          <p className="mb-2 text-xs opacity-90 md:text-sm">LOCKED OR INVESTED</p>
+          <p className="mb-2 text-3xl font-bold md:text-4xl">N{lockedBalance.toLocaleString()}</p>
           <p className="text-xs opacity-75">In active investments</p>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
         <button
           onClick={() => setShowDepositModal(true)}
-          className="bg-blue-800 text-white py-4 rounded-lg font-semibold hover:bg-blue-900 transition-all flex items-center justify-center gap-2"
+          className="flex items-center justify-center gap-2 rounded-lg bg-blue-800 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-900 md:py-4 md:text-base"
         >
-          💳 Deposit Funds
+          Deposit Funds
         </button>
         <button
           onClick={() => setShowWithdrawalModal(true)}
-          className="bg-green-600 text-white py-4 rounded-lg font-semibold hover:bg-green-700 transition-all flex items-center justify-center gap-2"
+          className="flex items-center justify-center gap-2 rounded-lg bg-green-600 py-3 text-sm font-semibold text-white transition-all hover:bg-green-700 md:py-4 md:text-base"
         >
-          🏦 Withdraw Funds
+          Withdraw Funds
         </button>
-        <button className="bg-purple-600 text-white py-4 rounded-lg font-semibold hover:bg-purple-700 transition-all flex items-center justify-center gap-2">
-          ➡️ Transfer Money
+        <button className="flex items-center justify-center gap-2 rounded-lg bg-purple-600 py-3 text-sm font-semibold text-white transition-all hover:bg-purple-700 md:py-4 md:text-base">
+          Transfer Money
         </button>
       </div>
 
-      {/* Account Details */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold mb-4">Account Details</h3>
+      <div className="rounded-lg bg-white p-5 shadow-md md:p-6">
+        <h3 className="mb-4 text-lg font-bold md:text-xl">Account Details</h3>
         <div className="space-y-3">
           {accounts.map((account) => (
-            <div key={account.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-              <div className="flex justify-between items-start mb-2">
+            <div key={account.id} className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
+              <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-lg">{account.name}</p>
-                  <p className="text-xs text-gray-600 capitalize">{account.type} Account</p>
+                  <p className="text-base font-semibold md:text-lg">{account.name}</p>
+                  <p className="text-xs capitalize text-gray-600">{account.type} Account</p>
                 </div>
-                <p className="text-lg font-bold text-blue-800">₦{account.balance.toLocaleString()}</p>
+                <p className="text-base font-bold text-blue-800 md:text-lg">N{account.balance.toLocaleString()}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-3 text-xs md:gap-4 md:text-sm">
                 <div>
                   <p className="text-gray-600">Available</p>
-                  <p className="font-semibold text-green-600">₦{account.availableBalance.toLocaleString()}</p>
+                  <p className="font-semibold text-green-600">N{account.availableBalance.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-gray-600">Locked</p>
-                  <p className="font-semibold text-orange-600">₦{(account.balance - account.availableBalance).toLocaleString()}</p>
+                  <p className="font-semibold text-orange-600">N{(account.balance - account.availableBalance).toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -214,27 +194,28 @@ export default function AccountBalance() {
         </div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold mb-4">Recent Transactions</h3>
+      <div className="rounded-lg bg-white p-5 shadow-md md:p-6">
+        <h3 className="mb-4 text-lg font-bold md:text-xl">Recent Transactions</h3>
         <div className="space-y-2">
           {transactions.slice(0, 5).map((transaction) => (
-            <div key={transaction.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-              <div className="flex justify-between items-center">
+            <div key={transaction.id} className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{getMethodIcon(transaction.method)}</span>
+                  <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700 md:text-xs">
+                    {getMethodIcon(transaction.method)}
+                  </span>
                   <div>
-                    <p className="font-semibold capitalize">
+                    <p className="text-sm font-semibold capitalize md:text-base">
                       {transaction.type} via {transaction.method === 'card' ? 'Card' : transaction.method === 'transfer' ? 'Bank Transfer' : 'USSD'}
                     </p>
                     <p className="text-xs text-gray-600">{transaction.date}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`text-lg font-bold ${transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                    {transaction.type === 'deposit' ? '+' : '-'}₦{transaction.amount.toLocaleString()}
+                  <p className={`text-base font-bold md:text-lg ${transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
+                    {transaction.type === 'deposit' ? '+' : '-'}N{transaction.amount.toLocaleString()}
                   </p>
-                  <span className={`text-xs px-2 py-1 rounded ${getStatusBadge(transaction.status)}`}>
+                  <span className={`rounded px-2 py-1 text-xs ${getStatusBadge(transaction.status)}`}>
                     {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                   </span>
                 </div>
@@ -244,60 +225,65 @@ export default function AccountBalance() {
         </div>
       </div>
 
-      {/* Deposit Modal */}
       {showDepositModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full">
-            <div className="bg-blue-800 text-white p-6 flex justify-between items-center">
-              <h3 className="text-xl font-bold">Deposit Funds</h3>
-              <button onClick={() => setShowDepositModal(false)} className="text-2xl font-bold hover:bg-blue-900 px-2 rounded">
-                ×
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white shadow-2xl">
+            <div className="flex items-center justify-between bg-blue-800 p-5 text-white md:p-6">
+              <h3 className="text-lg font-bold md:text-xl">Deposit Funds</h3>
+              <button onClick={() => setShowDepositModal(false)} className="rounded px-2 text-xl font-bold hover:bg-blue-900">
+                x
               </button>
             </div>
-            <form onSubmit={handleSubmit(onDepositSubmit)} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit(onDepositSubmit)} className="space-y-4 p-5 md:p-6">
               <div>
-                <label className="block text-sm font-semibold mb-2">Amount (₦ Min: ₦5,000)</label>
+                <label className="mb-2 block text-sm font-semibold">Amount (N Min: N5,000)</label>
                 <input
                   type="number"
                   step="1"
-                  placeholder="Enter amount (minimum ₦5,000)"
-                  {...register('amount', { 
+                  placeholder="Enter amount"
+                  {...register('amount', {
                     required: 'Amount is required',
                     valueAsNumber: true,
-                    min: { value: 5000, message: 'Minimum deposit is ₦5,000' },
+                    min: { value: 5000, message: 'Minimum deposit is N5,000' },
                   })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Deposit Method</label>
+                <label className="mb-2 block text-sm font-semibold">Deposit Method</label>
                 <select
                   {...register('method', { required: true })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
                   <option value="">Select method</option>
-                  <option value="card">💳 Credit/Debit Card</option>
-                  <option value="transfer">🏦 Bank Transfer</option>
-                  <option value="ussd">📱 USSD</option>
+                  <option value="card">Credit or Debit Card</option>
+                  <option value="transfer">Bank Transfer</option>
+                  <option value="ussd">USSD</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Description (Optional)</label>
+                <label className="mb-2 block text-sm font-semibold">Description (Optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g., Salary Deposit"
+                  placeholder="e.g. Salary Deposit"
                   {...register('description')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">
-                  Deposit
+              {processError && <p className="text-sm text-red-600">{processError}</p>}
+              {processSuccess && <p className="text-sm text-green-600">{processSuccess}</p>}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={isProcessing}
+                  className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {isProcessing ? 'Processing...' : 'Deposit'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowDepositModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-400"
+                  className="flex-1 rounded-lg bg-gray-300 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-400"
                 >
                   Cancel
                 </button>
@@ -307,57 +293,56 @@ export default function AccountBalance() {
         </div>
       )}
 
-      {/* Withdrawal Modal */}
       {showWithdrawalModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full">
-            <div className="bg-green-600 text-white p-6 flex justify-between items-center">
-              <h3 className="text-xl font-bold">Withdraw Funds</h3>
-              <button onClick={() => setShowWithdrawalModal(false)} className="text-2xl font-bold hover:bg-green-700 px-2 rounded">
-                ×
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white shadow-2xl">
+            <div className="flex items-center justify-between bg-green-600 p-5 text-white md:p-6">
+              <h3 className="text-lg font-bold md:text-xl">Withdraw Funds</h3>
+              <button onClick={() => setShowWithdrawalModal(false)} className="rounded px-2 text-xl font-bold hover:bg-green-700">
+                x
               </button>
             </div>
-            <form onSubmit={handleSubmit(onWithdrawalSubmit)} className="p-6 space-y-4">
-              <div className="bg-green-50 p-3 rounded border border-green-200 mb-4">
+            <form onSubmit={handleSubmit(onWithdrawalSubmit)} className="space-y-4 p-5 md:p-6">
+              <div className="rounded border border-green-200 bg-green-50 p-3">
                 <p className="text-sm text-green-800">
-                  <strong>Available to withdraw:</strong> ₦{totalAvailable.toLocaleString()}
+                  <strong>Available to withdraw:</strong> N{totalAvailable.toLocaleString()}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Amount (₦)</label>
+                <label className="mb-2 block text-sm font-semibold">Amount (N)</label>
                 <input
                   type="number"
                   step="1"
                   placeholder="Enter amount"
-                  {...register('amount', { 
+                  {...register('amount', {
                     required: 'Amount is required',
                     valueAsNumber: true,
-                    min: { value: 5000, message: 'Minimum withdrawal is ₦5,000' },
+                    min: { value: 5000, message: 'Minimum withdrawal is N5,000' },
                   })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
-                <p className="text-xs text-gray-500 mt-1">Must not exceed ₦{totalAvailable.toLocaleString()}</p>
+                <p className="mt-1 text-xs text-gray-500">Must not exceed N{totalAvailable.toLocaleString()}</p>
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Withdrawal Method</label>
+                <label className="mb-2 block text-sm font-semibold">Withdrawal Method</label>
                 <select
                   {...register('method', { required: true })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
                   <option value="">Select method</option>
-                  <option value="card">💳 To Card</option>
-                  <option value="transfer">🏦 Bank Transfer</option>
-                  <option value="ussd">📱 USSD</option>
+                  <option value="card">To Card</option>
+                  <option value="transfer">Bank Transfer</option>
+                  <option value="ussd">USSD</option>
                 </select>
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="submit" className="flex-1 bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700">
+              <div className="flex gap-3 pt-2">
+                <button type="submit" className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-semibold text-white hover:bg-green-700">
                   Withdraw
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowWithdrawalModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-400"
+                  className="flex-1 rounded-lg bg-gray-300 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-400"
                 >
                   Cancel
                 </button>
