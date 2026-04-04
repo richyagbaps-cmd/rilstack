@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --app-bg: #050816;
+  --app-fg: #e8eef8;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -13,16 +18,54 @@ html {
 }
 
 body {
-  background-color: #f9fafb;
-  color: #111827;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(74, 222, 255, 0.08), transparent 18%),
+    radial-gradient(circle at top right, rgba(176, 140, 255, 0.08), transparent 20%),
+    linear-gradient(180deg, #050816 0%, #08111d 46%, #050816 100%);
+  color: var(--app-fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.glass-panel {
+  background: linear-gradient(180deg, rgba(10, 18, 31, 0.82), rgba(7, 12, 21, 0.72));
+  box-shadow: 0 24px 80px rgba(4, 10, 18, 0.45);
+  backdrop-filter: blur(20px);
+}
+
+.dashboard-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9), transparent 95%);
+}
+
+.reel-bars {
+  position: relative;
+}
+
+.reel-bar {
+  background: linear-gradient(180deg, #63f0d6 0%, #4ea1ff 55%, #b08cff 100%);
+  animation: budgetPulse 1.8s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+@keyframes budgetPulse {
+  0%,
+  100% {
+    height: 20%;
+    opacity: 0.55;
+  }
+
+  50% {
+    height: 100%;
+    opacity: 1;
+  }
 }

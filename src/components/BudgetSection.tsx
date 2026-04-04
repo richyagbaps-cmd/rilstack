@@ -1,618 +1,585 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useMemo, useState } from 'react';
 
-interface Budget {
-  id: string;
-  category: string;
-  type: 'strict' | 'lax';
-  limit: number;
-  spent: number;
-  percentage?: number;
-  currency: string;
-}
+type BudgetMode = 'strict' | 'relaxed';
+type BudgetStyle = '50-30-20' | 'zero-based' | 'custom';
+type Profession = 'student' | 'worker' | 'entrepreneur' | 'freelancer';
+type CategoryGroup = 'Essential Expenses' | 'Flexible Expenses' | 'Savings & Goals';
 
-interface LockedSaving {
+interface BudgetCategory {
   id: string;
+  name: string;
+  group: CategoryGroup;
   amount: number;
-  lockPeriod: 'hourly' | 'daily' | 'monthly' | 'yearly';
-  createdDate: string;
   unlockDate: string;
-  status: 'locked' | 'unlocked' | 'withdrawn';
+  note: string;
+  editable: boolean;
+}
+
+interface BudgetPlan {
+  profession: Profession;
+  budgetStyle: BudgetStyle;
+  income: number;
+  categories: BudgetCategory[];
+  createdAt: string;
+}
+
+interface BudgetSectionProps {
+  budgetMode: BudgetMode;
+}
+
+const PROFESSION_LABELS: Record<Profession, string> = {
+  student: 'Student',
+  worker: 'Worker',
+  entrepreneur: 'Entrepreneur',
+  freelancer: 'Freelancer',
+};
+
+const BUDGET_STYLE_INFO: Array<{
+  id: BudgetStyle;
+  title: string;
   description: string;
-  interestRate: number;
-  timeRemaining?: string;
-}
-
-const STRICT_CATEGORIES = [
-  { name: 'Housing', examples: 'Rent, Mortgage, Property Tax, Home Insurance' },
-  { name: 'Utilities', examples: 'Electricity, Water, Gas, Internet, Phone' },
-  { name: 'Transportation', examples: 'Car Payment, Gas, Insurance, Maintenance' },
-  { name: 'Insurance', examples: 'Health, Auto, Life, Home Insurance' },
-  { name: 'Debt Payments', examples: 'Loan Payments, Credit Card Minimum' },
+  explanation: string;
+}> = [
+  {
+    id: '50-30-20',
+    title: '50/30/20 Budget',
+    description: 'A balanced split for essentials, lifestyle spending, and savings.',
+    explanation: '50% goes to needs, 30% to wants, and 20% to savings or future goals.',
+  },
+  {
+    id: 'zero-based',
+    title: 'Zero-Based Budget',
+    description: 'Every naira gets assigned a job before the month starts.',
+    explanation: 'Your full income is distributed across expense and savings categories until nothing is left unplanned.',
+  },
+  {
+    id: 'custom',
+    title: 'Custom Budget',
+    description: 'Start from an AI draft, then shape the plan around your own priorities.',
+    explanation: 'Good if you want more freedom while still using profession-based category suggestions.',
+  },
 ];
 
-const LAX_CATEGORIES = [
-  { name: 'Groceries', examples: 'Food, Household Items' },
-  { name: 'Dining Out', examples: 'Restaurants, Coffee, Takeout' },
-  { name: 'Entertainment', examples: 'Movies, Concerts, Subscriptions, Gaming' },
-  { name: 'Shopping', examples: 'Clothes, Accessories, Gifts, Personal Items' },
-  { name: 'Hobbies', examples: 'Sports, Art Supplies, Books, Gaming Equipment' },
-  { name: 'Travel', examples: 'Vacation, Hotels, Flights, Tours' },
-];
+const PROFESSION_TEMPLATES: Record<
+  Profession,
+  Array<{ name: string; group: CategoryGroup; note: string }>
+> = {
+  student: [
+    { name: 'School Fees', group: 'Essential Expenses', note: 'Tuition, registration, and academic costs.' },
+    { name: 'Transport', group: 'Essential Expenses', note: 'Daily commuting and occasional travel.' },
+    { name: 'Feeding', group: 'Essential Expenses', note: 'Meals, groceries, and cooking supplies.' },
+    { name: 'Data & Airtime', group: 'Flexible Expenses', note: 'Connectivity for classes and communication.' },
+    { name: 'Personal Care', group: 'Flexible Expenses', note: 'Toiletries, laundry, and small personal needs.' },
+    { name: 'Books & Learning', group: 'Savings & Goals', note: 'Courses, books, projects, and study tools.' },
+    { name: 'Emergency Buffer', group: 'Savings & Goals', note: 'Small reserve for urgent student needs.' },
+  ],
+  worker: [
+    { name: 'Rent & Housing', group: 'Essential Expenses', note: 'Rent, service charge, and housing upkeep.' },
+    { name: 'Utilities', group: 'Essential Expenses', note: 'Power, water, internet, and subscriptions.' },
+    { name: 'Transport', group: 'Essential Expenses', note: 'Commuting, fuel, or ride-hailing costs.' },
+    { name: 'Food & Groceries', group: 'Essential Expenses', note: 'Monthly food and home supplies.' },
+    { name: 'Dining & Lifestyle', group: 'Flexible Expenses', note: 'Restaurants, outings, and entertainment.' },
+    { name: 'Family Support', group: 'Flexible Expenses', note: 'Support for family or dependants.' },
+    { name: 'Emergency Savings', group: 'Savings & Goals', note: 'Cash reserve for unexpected costs.' },
+    { name: 'Investments', group: 'Savings & Goals', note: 'Long-term growth and future planning.' },
+  ],
+  entrepreneur: [
+    { name: 'Home Expenses', group: 'Essential Expenses', note: 'Personal housing and household costs.' },
+    { name: 'Business Operations', group: 'Essential Expenses', note: 'Inventory, logistics, tools, and recurring business spend.' },
+    { name: 'Utilities & Bills', group: 'Essential Expenses', note: 'Power, internet, and communication tools.' },
+    { name: 'Transport', group: 'Essential Expenses', note: 'Meetings, deliveries, and movement.' },
+    { name: 'Marketing', group: 'Flexible Expenses', note: 'Ads, content, promotions, and brand growth.' },
+    { name: 'Lifestyle', group: 'Flexible Expenses', note: 'Personal enjoyment and flexible spending.' },
+    { name: 'Tax Reserve', group: 'Savings & Goals', note: 'Set aside for levies, tax, and compliance.' },
+    { name: 'Business Expansion', group: 'Savings & Goals', note: 'Reinvestment for growth opportunities.' },
+  ],
+  freelancer: [
+    { name: 'Housing', group: 'Essential Expenses', note: 'Rent and home essentials.' },
+    { name: 'Internet & Tools', group: 'Essential Expenses', note: 'Software, data, subscriptions, and connectivity.' },
+    { name: 'Transport', group: 'Essential Expenses', note: 'Client meetings and movement.' },
+    { name: 'Food & Utilities', group: 'Essential Expenses', note: 'Living costs and household spend.' },
+    { name: 'Client Acquisition', group: 'Flexible Expenses', note: 'Portfolio, ads, networking, and proposals.' },
+    { name: 'Lifestyle', group: 'Flexible Expenses', note: 'Entertainment and personal spending.' },
+    { name: 'Tax Savings', group: 'Savings & Goals', note: 'A reserve for tax and compliance.' },
+    { name: 'Device Upgrade Fund', group: 'Savings & Goals', note: 'Laptop, phone, and equipment replacement.' },
+  ],
+};
 
-interface BudgetModel {
-  needs: number;
-  wants: number;
-  savings: number;
-}
+const BUDGET_STYLE_SPLITS: Record<BudgetStyle, Record<CategoryGroup, number>> = {
+  '50-30-20': {
+    'Essential Expenses': 50,
+    'Flexible Expenses': 30,
+    'Savings & Goals': 20,
+  },
+  'zero-based': {
+    'Essential Expenses': 55,
+    'Flexible Expenses': 20,
+    'Savings & Goals': 25,
+  },
+  custom: {
+    'Essential Expenses': 45,
+    'Flexible Expenses': 30,
+    'Savings & Goals': 25,
+  },
+};
 
-export default function BudgetSection() {
-  const [budgetModel, setBudgetModel] = useState<'50-30-20' | 'zero-based'>('50-30-20');
-  const [monthlyIncome, setMonthlyIncome] = useState(150000);
-  const [activeTab, setActiveTab] = useState<'budget' | 'locked-savings'>('budget');
-  
-  const [budgets, setBudgets] = useState<Budget[]>([
-    { id: '1', category: 'Housing', type: 'strict', limit: 75000, spent: 72000, currency: 'NGN', percentage: 50 },
-    { id: '2', category: 'Utilities', type: 'strict', limit: 12000, spent: 10500, currency: 'NGN' },
-    { id: '3', category: 'Transportation', type: 'strict', limit: 18000, spent: 16500, currency: 'NGN' },
-    { id: '4', category: 'Dining Out', type: 'lax', limit: 18000, spent: 13500, currency: 'NGN', percentage: 12 },
-    { id: '5', category: 'Entertainment', type: 'lax', limit: 27000, spent: 22500, currency: 'NGN', percentage: 18 },
-    { id: '6', category: 'Savings', type: 'strict', limit: 30000, spent: 15000, currency: 'NGN', percentage: 20 },
-  ]);
+const GROUP_COLORS: Record<CategoryGroup, string> = {
+  'Essential Expenses': 'border-rose-200 bg-rose-50',
+  'Flexible Expenses': 'border-amber-200 bg-amber-50',
+  'Savings & Goals': 'border-emerald-200 bg-emerald-50',
+};
 
-  const [lockedSavings, setLockedSavings] = useState<LockedSaving[]>([
-    {
-      id: '1',
-      amount: 50000,
-      lockPeriod: 'monthly',
-      createdDate: '2024-03-01',
-      unlockDate: '2024-04-01',
-      status: 'locked',
-      description: 'Monthly Savings Goal',
-      interestRate: 4.5,
+const formatCurrency = (amount: number) => `N${Math.round(amount).toLocaleString()}`;
+
+const makeDate = (daysAhead: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysAhead);
+  return date.toISOString().split('T')[0];
+};
+
+const getDefaultUnlockDate = (group: CategoryGroup, budgetMode: BudgetMode) => {
+  if (budgetMode === 'strict') {
+    if (group === 'Essential Expenses') return makeDate(30);
+    if (group === 'Flexible Expenses') return makeDate(14);
+    return makeDate(45);
+  }
+
+  if (group === 'Essential Expenses') return makeDate(14);
+  if (group === 'Flexible Expenses') return makeDate(10);
+  return makeDate(30);
+};
+
+const allocateAcrossCategories = (
+  items: Array<{ name: string; group: CategoryGroup; note: string }>,
+  income: number,
+  budgetStyle: BudgetStyle,
+  budgetMode: BudgetMode,
+): BudgetCategory[] => {
+  const split = BUDGET_STYLE_SPLITS[budgetStyle];
+  const categoriesByGroup = items.reduce<Record<CategoryGroup, typeof items>>(
+    (acc, item) => {
+      acc[item.group].push(item);
+      return acc;
     },
     {
-      id: '2',
-      amount: 100000,
-      lockPeriod: 'yearly',
-      createdDate: '2024-03-03',
-      unlockDate: '2025-03-03',
-      status: 'locked',
-      description: 'Annual Emergency Fund',
-      interestRate: 7.2,
+      'Essential Expenses': [],
+      'Flexible Expenses': [],
+      'Savings & Goals': [],
     },
-    {
-      id: '3',
-      amount: 15000,
-      lockPeriod: 'daily',
-      createdDate: '2024-03-02',
-      unlockDate: '2024-03-03',
-      status: 'unlocked',
-      description: 'Daily Savings',
-      interestRate: 2.0,
-    },
-  ]);
+  );
 
-  const [timeRemaining, setTimeRemaining] = useState<{ [key: string]: string }>({});
-  const { register: budgetRegister, handleSubmit: budgetHandleSubmit, reset: budgetReset } = useForm<{ category: string; limit: string }>();
-  const { register: lockRegister, handleSubmit: lockHandleSubmit, reset: lockReset, formState: { errors: lockErrors } } = useForm<{
-    amount: string;
-    lockPeriod: string;
-    description: string;
-  }>();
+  return items.map((item, index) => {
+    const groupShare = split[item.group] / 100;
+    const groupItems = categoriesByGroup[item.group];
+    const baseAmount = (income * groupShare) / Math.max(groupItems.length, 1);
+    const multiplier =
+      item.group === 'Essential Expenses'
+        ? 1.08
+        : item.group === 'Flexible Expenses'
+          ? 0.94
+          : 0.98;
 
-  const budgetModelAllocation: BudgetModel = {
-    needs: 50,
-    wants: 30,
-    savings: 20,
-  };
+    return {
+      id: `${item.group}-${index}-${item.name.toLowerCase().replace(/\s+/g, '-')}`,
+      name: item.name,
+      group: item.group,
+      amount: Math.max(1000, Math.round(baseAmount * multiplier)),
+      unlockDate: getDefaultUnlockDate(item.group, budgetMode),
+      note: item.note,
+      editable: true,
+    };
+  });
+};
 
-  // Calculate time remaining for locked savings
+export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
+  const storageKey = `budget-plan-${budgetMode}`;
+  const [profession, setProfession] = useState<Profession | null>(null);
+  const [budgetStyle, setBudgetStyle] = useState<BudgetStyle | null>(null);
+  const [income, setIncome] = useState('');
+  const [budgetPlan, setBudgetPlan] = useState<BudgetPlan | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryGroup, setNewCategoryGroup] = useState<CategoryGroup>('Flexible Expenses');
+
   useEffect(() => {
-    const calculateTimeRemaining = () => {
-      const remaining: { [key: string]: string } = {};
+    const savedPlan = localStorage.getItem(storageKey);
+    if (!savedPlan) return;
 
-      lockedSavings.forEach((saving) => {
-        if (saving.status === 'locked') {
-          const unlockTime = new Date(saving.unlockDate).getTime();
-          const nowTime = new Date().getTime();
-          const diffTime = unlockTime - nowTime;
-
-          if (diffTime > 0) {
-            const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-
-            if (days > 0) {
-              remaining[saving.id] = `${days}d ${hours}h remaining`;
-            } else if (hours > 0) {
-              remaining[saving.id] = `${hours}h ${minutes}m remaining`;
-            } else {
-              remaining[saving.id] = `${minutes}m remaining`;
-            }
-          } else {
-            remaining[saving.id] = 'Ready to unlock';
-          }
-        }
-      });
-
-      setTimeRemaining(remaining);
-    };
-
-    calculateTimeRemaining();
-    const timer = setInterval(calculateTimeRemaining, 60000);
-
-    return () => clearInterval(timer);
-  }, [lockedSavings]);
-
-  const onBudgetSubmit = (data: { category: string; limit: string }) => {
-    const newBudget: Budget = {
-      id: Date.now().toString(),
-      category: data.category,
-      type: 'lax',
-      limit: parseFloat(data.limit),
-      spent: 0,
-      currency: 'NGN',
-    };
-    setBudgets([...budgets, newBudget]);
-    budgetReset();
-  };
-
-  const onLockedSavingsSubmit = (data: { amount: string; lockPeriod: string; description: string }) => {
-    const now = new Date();
-    let unlockDate = new Date(now);
-
-    switch (data.lockPeriod) {
-      case 'hourly':
-        unlockDate.setHours(unlockDate.getHours() + 1);
-        break;
-      case 'daily':
-        unlockDate.setDate(unlockDate.getDate() + 1);
-        break;
-      case 'monthly':
-        unlockDate.setMonth(unlockDate.getMonth() + 1);
-        break;
-      case 'yearly':
-        unlockDate.setFullYear(unlockDate.getFullYear() + 1);
-        break;
+    try {
+      const parsedPlan = JSON.parse(savedPlan) as BudgetPlan;
+      setBudgetPlan(parsedPlan);
+      setProfession(parsedPlan.profession);
+      setBudgetStyle(parsedPlan.budgetStyle);
+      setIncome(String(parsedPlan.income));
+    } catch {
+      localStorage.removeItem(storageKey);
     }
+  }, [storageKey]);
 
-    const newSaving: LockedSaving = {
-      id: Date.now().toString(),
-      amount: parseFloat(data.amount),
-      lockPeriod: data.lockPeriod as 'hourly' | 'daily' | 'monthly' | 'yearly',
-      createdDate: now.toISOString().split('T')[0],
-      unlockDate: unlockDate.toISOString().split('T')[0],
-      status: 'locked',
-      description: data.description,
-      interestRate: data.lockPeriod === 'yearly' ? 7.2 : data.lockPeriod === 'monthly' ? 4.5 : data.lockPeriod === 'daily' ? 2.0 : 0.5,
+  useEffect(() => {
+    if (!budgetPlan) return;
+    localStorage.setItem(storageKey, JSON.stringify(budgetPlan));
+  }, [budgetPlan, storageKey]);
+
+  const modeDetails = useMemo(() => {
+    return budgetMode === 'strict'
+      ? {
+          title: 'Strict Budget Planner',
+          subtitle: 'Create a time-locked spending plan with scheduled release dates for each category.',
+          rule: 'Funds stay locked until the chosen open date. This mode is built for discipline and controlled spending.',
+          penalty: 'No early-withdrawal fee is shown here because strict mode is meant to keep funds locked until the approved date.',
+          accent: 'from-cyan-700 to-blue-900',
+        }
+      : {
+          title: 'Relaxed Budget Planner',
+          subtitle: 'Create a flexible plan with open dates, while still discouraging early withdrawals.',
+          rule: 'Each category has an expected spend-open date, but early withdrawals are allowed.',
+          penalty: 'Any withdrawal before the category open date attracts a 2% fee on the amount withdrawn.',
+          accent: 'from-emerald-700 to-teal-900',
+        };
+  }, [budgetMode]);
+
+  const groupedCategories = useMemo(() => {
+    const categories = budgetPlan?.categories ?? [];
+    return {
+      'Essential Expenses': categories.filter((item) => item.group === 'Essential Expenses'),
+      'Flexible Expenses': categories.filter((item) => item.group === 'Flexible Expenses'),
+      'Savings & Goals': categories.filter((item) => item.group === 'Savings & Goals'),
+    };
+  }, [budgetPlan]);
+
+  const totalAllocated = (budgetPlan?.categories ?? []).reduce((sum, item) => sum + item.amount, 0);
+  const remainingBalance = (budgetPlan?.income ?? 0) - totalAllocated;
+
+  const generatePlan = () => {
+    if (!profession || !budgetStyle || !income) return;
+
+    const numericIncome = Number(income);
+    if (!Number.isFinite(numericIncome) || numericIncome <= 0) return;
+
+    const categories = allocateAcrossCategories(
+      PROFESSION_TEMPLATES[profession],
+      numericIncome,
+      budgetStyle,
+      budgetMode,
+    );
+
+    setBudgetPlan({
+      profession,
+      budgetStyle,
+      income: numericIncome,
+      categories,
+      createdAt: new Date().toISOString(),
+    });
+  };
+
+  const updateCategory = (categoryId: string, field: keyof BudgetCategory, value: string | number) => {
+    setBudgetPlan((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        categories: current.categories.map((category) =>
+          category.id === categoryId ? { ...category, [field]: value } : category,
+        ),
+      };
+    });
+  };
+
+  const addCategory = () => {
+    const trimmedName = newCategoryName.trim();
+    if (!trimmedName || !budgetPlan) return;
+
+    const newCategory: BudgetCategory = {
+      id: `${newCategoryGroup}-${Date.now()}`,
+      name: trimmedName,
+      group: newCategoryGroup,
+      amount: 0,
+      unlockDate: getDefaultUnlockDate(newCategoryGroup, budgetMode),
+      note: 'Added manually by user.',
+      editable: true,
     };
 
-    setLockedSavings([newSaving, ...lockedSavings]);
-    lockReset();
+    setBudgetPlan({
+      ...budgetPlan,
+      categories: [...budgetPlan.categories, newCategory],
+    });
+    setNewCategoryName('');
   };
 
-  const getProgressColor = (spent: number, limit: number) => {
-    const percentage = (spent / limit) * 100;
-    if (percentage > 90) return 'bg-red-500';
-    if (percentage > 75) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
-
-  const getPeriodColor = (period: string) => {
-    const colors: { [key: string]: string } = {
-      hourly: 'from-blue-400 to-blue-500',
-      daily: 'from-green-400 to-green-500',
-      monthly: 'from-purple-400 to-purple-500',
-      yearly: 'from-orange-400 to-orange-500',
-    };
-    return colors[period] || 'from-gray-400 to-gray-500';
-  };
-
-  const strictBudgets = budgets.filter(b => b.type === 'strict');
-  const laxBudgets = budgets.filter(b => b.type === 'lax');
-  const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
-  const strictSpent = strictBudgets.reduce((sum, b) => sum + b.spent, 0);
-  const laxSpent = laxBudgets.reduce((sum, b) => sum + b.spent, 0);
-
-  const totalLocked = lockedSavings
-    .filter((s) => s.status === 'locked')
-    .reduce((sum, s) => sum + s.amount, 0);
-
-  const totalUnlocked = lockedSavings
-    .filter((s) => s.status === 'unlocked')
-    .reduce((sum, s) => sum + s.amount, 0);
-
-  const getTotalInterest = () => {
-    return lockedSavings.reduce((sum, s) => sum + (s.amount * s.interestRate) / 100, 0).toFixed(2);
+  const resetPlan = () => {
+    localStorage.removeItem(storageKey);
+    setBudgetPlan(null);
+    setProfession(null);
+    setBudgetStyle(null);
+    setIncome('');
   };
 
   return (
-    <div className="space-y-6">
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-gray-300">
-        <button
-          onClick={() => setActiveTab('budget')}
-          className={`px-6 py-3 font-semibold border-b-2 transition-all ${
-            activeTab === 'budget'
-              ? 'border-blue-800 text-blue-800'
-              : 'border-transparent text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          💰 Budget Management
-        </button>
-        <button
-          onClick={() => setActiveTab('locked-savings')}
-          className={`px-6 py-3 font-semibold border-b-2 transition-all ${
-            activeTab === 'locked-savings'
-              ? 'border-blue-800 text-blue-800'
-              : 'border-transparent text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          🔒 Locked Savings
-        </button>
-      </div>
-
-      {/* Budget Tab */}
-      {activeTab === 'budget' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Budget Display */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              {/* Budget Model Selection */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4">Select Budget Model</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setBudgetModel('50-30-20')}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      budgetModel === '50-30-20'
-                        ? 'border-blue-800 bg-blue-50'
-                        : 'border-gray-300 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="font-semibold text-sm mb-2">50/30/20 Budget</div>
-                    <div className="text-xs text-gray-600">
-                      <div>50% Needs</div>
-                      <div>30% Wants</div>
-                      <div>20% Savings</div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => setBudgetModel('zero-based')}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      budgetModel === 'zero-based'
-                        ? 'border-blue-800 bg-blue-50'
-                        : 'border-gray-300 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="font-semibold text-sm mb-2">Zero-Based Budget</div>
-                    <div className="text-xs text-gray-600">
-                      <div>Every dollar assigned</div>
-                      <div>Custom allocation</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Income Input */}
-              <div className="mb-6 pb-6 border-b">
-                <label className="block text-sm font-semibold mb-2">Monthly Income</label>
-                <input
-                  type="number"
-                  value={monthlyIncome}
-                  onChange={(e) => setMonthlyIncome(parseFloat(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              {/* 50-30-20 Model Overview */}
-              {budgetModel === '50-30-20' && (
-                <div className="mb-6 pb-6 border-b">
-                  <h3 className="text-lg font-semibold mb-4">50/30/20 Breakdown</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-gray-600 text-sm mb-1">NEEDS (50%)</p>
-                      <p className="text-2xl font-bold text-blue-600">₦{(monthlyIncome * 0.5).toLocaleString()}</p>
-                      <p className="text-xs text-gray-500 mt-2">Housing, Utilities, Food, Insurance</p>
-                    </div>
-                    <div className="bg-purple-50 p-4 rounded-lg">
-                      <p className="text-gray-600 text-sm mb-1">WANTS (30%)</p>
-                      <p className="text-2xl font-bold text-purple-600">₦{(monthlyIncome * 0.3).toLocaleString()}</p>
-                      <p className="text-xs text-gray-500 mt-2">Entertainment, Dining, Shopping</p>
-                    </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <p className="text-gray-600 text-sm mb-1">SAVINGS (20%)</p>
-                      <p className="text-2xl font-bold text-green-600">₦{(monthlyIncome * 0.2).toLocaleString()}</p>
-                      <p className="text-xs text-gray-500 mt-2">Emergency Fund, Investments</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Strict Categories (Needs) */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">!</span>
-                  Strict Categories (Essential)
-                </h3>
-                <div className="space-y-4">
-                  {strictBudgets.map((budget) => {
-                    const percentage = (budget.spent / budget.limit) * 100;
-                    return (
-                      <div key={budget.id} className="p-4 border border-gray-200 rounded-lg">
-                        <div className="flex justify-between mb-2">
-                          <h3 className="font-semibold text-lg">{budget.category}</h3>
-                          <span className="text-gray-600">₦{budget.spent.toLocaleString()} / ₦{budget.limit.toLocaleString()}</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${getProgressColor(budget.spent, budget.limit)}`}
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">{percentage.toFixed(1)}% of budget spent</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Lax Categories (Wants) */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <span className="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">*</span>
-                  Lax Categories (Flexible)
-                </h3>
-                <div className="space-y-4">
-                  {laxBudgets.map((budget) => {
-                    const percentage = (budget.spent / budget.limit) * 100;
-                    return (
-                      <div key={budget.id} className="p-4 border border-gray-200 rounded-lg">
-                        <div className="flex justify-between mb-2">
-                          <h3 className="font-semibold text-lg">{budget.category}</h3>
-                          <span className="text-gray-600">₦{budget.spent.toLocaleString()} / ₦{budget.limit.toLocaleString()}</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${getProgressColor(budget.spent, budget.limit)}`}
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">{percentage.toFixed(1)}% of budget spent</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+    <div className="space-y-8">
+      <section className={`rounded-3xl bg-gradient-to-br ${modeDetails.accent} p-8 text-white shadow-2xl`}>
+        <p className="text-sm uppercase tracking-[0.28em] text-white/70">{budgetMode} mode</p>
+        <h2 className="mt-3 text-3xl font-bold">{modeDetails.title}</h2>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-white/85">{modeDetails.subtitle}</p>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-white/60">Spending Rule</p>
+            <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.rule}</p>
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Budget Summary */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Budget Summary</h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-gray-600 text-sm">Total Spent</p>
-                  <p className="text-2xl font-bold text-blue-800">₦{totalSpent.toLocaleString()}</p>
-                </div>
-                <div className="border-t pt-3">
-                  <p className="text-gray-600 text-sm">Strict Expenses</p>
-                  <p className="text-xl font-semibold text-red-600">₦{strictSpent.toLocaleString()}</p>
-                </div>
-                <div className="border-t pt-3">
-                  <p className="text-gray-600 text-sm">Flexible Expenses</p>
-                  <p className="text-xl font-semibold text-yellow-600">₦{laxSpent.toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Add Budget Form */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Add Budget</h2>
-              <form onSubmit={budgetHandleSubmit(onBudgetSubmit)} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Category</label>
-                  <select
-                    {...budgetRegister('category', { required: true })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="">Select Category</option>
-                    <optgroup label="Strict Categories">
-                      {STRICT_CATEGORIES.map(cat => (
-                        <option key={cat.name} value={cat.name}>{cat.name}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Lax Categories">
-                      {LAX_CATEGORIES.map(cat => (
-                        <option key={cat.name} value={cat.name}>{cat.name}</option>
-                      ))}
-                    </optgroup>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Budget Limit (₦)</label>
-                  <input
-                    type="number"
-                    step="1"
-                    placeholder="e.g., 50000"
-                    {...budgetRegister('limit', { 
-                      required: 'Budget limit is required',
-                      valueAsNumber: true,
-                      min: { value: 5000, message: 'Minimum budget is ₦5,000' },
-                    })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <button type="submit" className="w-full bg-blue-800 text-white py-2 rounded-lg font-semibold hover:bg-blue-900">
-                  Add Budget
-                </button>
-              </form>
-            </div>
+          <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-white/60">Withdrawal Notice</p>
+            <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.penalty}</p>
           </div>
         </div>
+      </section>
+
+      {!budgetPlan && (
+        <section className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+          <div className="rounded-3xl bg-white p-8 shadow-xl">
+            <h3 className="text-2xl font-bold text-slate-900">1. Tell us what kind of earner you are</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Your profession shapes the expense categories the planner creates for you.
+            </p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {(Object.keys(PROFESSION_LABELS) as Profession[]).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setProfession(option)}
+                  className={`rounded-2xl border p-5 text-left transition-all ${
+                    profession === option
+                      ? 'border-cyan-500 bg-cyan-50 shadow-md'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <p className="text-base font-semibold text-slate-900">{PROFESSION_LABELS[option]}</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    {option === 'student' && 'Academic and low-to-mid income categories with education priorities.'}
+                    {option === 'worker' && 'Salary-driven monthly planning for fixed bills and long-term savings.'}
+                    {option === 'entrepreneur' && 'Personal plus business-related budgeting with cash-flow discipline.'}
+                    {option === 'freelancer' && 'Irregular-income planning with tools, client costs, and tax reserves.'}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white p-8 shadow-xl">
+            <h3 className="text-2xl font-bold text-slate-900">2. Pick your budget type</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              After choosing your budget type, the planner will generate an editable allocation from your income.
+            </p>
+            <div className="mt-6 space-y-4">
+              {BUDGET_STYLE_INFO.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setBudgetStyle(option.id)}
+                  className={`w-full rounded-2xl border p-5 text-left transition-all ${
+                    budgetStyle === option.id
+                      ? 'border-cyan-500 bg-cyan-50 shadow-md'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <p className="text-base font-semibold text-slate-900">{option.title}</p>
+                  <p className="mt-1 text-sm text-slate-600">{option.description}</p>
+                  <p className="mt-3 text-xs leading-5 text-slate-500">{option.explanation}</p>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-semibold text-slate-900">3. Enter your monthly income</label>
+              <input
+                type="number"
+                min="1"
+                value={income}
+                onChange={(event) => setIncome(event.target.value)}
+                placeholder="e.g. 350000"
+                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-cyan-500"
+              />
+            </div>
+
+            <button
+              onClick={generatePlan}
+              disabled={!profession || !budgetStyle || !income}
+              className="mt-6 w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Generate AI Budget Plan
+            </button>
+          </div>
+        </section>
       )}
 
-      {/* Locked Savings Tab */}
-      {activeTab === 'locked-savings' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Locked Savings Display */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-4 shadow-lg">
-                <p className="text-sm mb-1">Total Locked</p>
-                <p className="text-2xl font-bold">₦{totalLocked.toLocaleString()}</p>
+      {budgetPlan && (
+        <>
+          <section className="grid gap-4 md:grid-cols-4">
+            <div className="rounded-2xl bg-white p-5 shadow-md">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Profession</p>
+              <p className="mt-2 text-xl font-bold text-slate-900">{PROFESSION_LABELS[budgetPlan.profession]}</p>
+            </div>
+            <div className="rounded-2xl bg-white p-5 shadow-md">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Budget Type</p>
+              <p className="mt-2 text-xl font-bold text-slate-900">{budgetPlan.budgetStyle}</p>
+            </div>
+            <div className="rounded-2xl bg-white p-5 shadow-md">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Income</p>
+              <p className="mt-2 text-xl font-bold text-slate-900">{formatCurrency(budgetPlan.income)}</p>
+            </div>
+            <div className="rounded-2xl bg-white p-5 shadow-md">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Remaining</p>
+              <p className={`mt-2 text-xl font-bold ${remainingBalance < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                {formatCurrency(remainingBalance)}
+              </p>
+            </div>
+          </section>
+
+          <section className="rounded-3xl bg-white p-8 shadow-xl">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900">Editable AI allocation</h3>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                  Your categories are grouped together for easier planning. You can edit every amount, adjust open dates,
+                  and add more categories that fit your lifestyle.
+                </p>
               </div>
-              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-4 shadow-lg">
-                <p className="text-sm mb-1">Ready to Unlock</p>
-                <p className="text-2xl font-bold">₦{totalUnlocked.toLocaleString()}</p>
-              </div>
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg p-4 shadow-lg">
-                <p className="text-sm mb-1">Interest at Unlock</p>
-                <p className="text-2xl font-bold">₦{(parseFloat(getTotalInterest())).toLocaleString()}</p>
-              </div>
+              <button
+                onClick={resetPlan}
+                className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
+              >
+                Start Over
+              </button>
             </div>
 
-            {/* Active Locked Savings */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold mb-4">🔒 Currently Locked</h3>
-              <div className="space-y-4">
-                {lockedSavings.filter(s => s.status === 'locked').map((saving) => (
-                  <div key={saving.id} className={`bg-gradient-to-r ${getPeriodColor(saving.lockPeriod)} text-white rounded-lg p-4`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-bold text-lg">{saving.description}</h4>
-                        <p className="text-sm opacity-90">₦{saving.amount.toLocaleString()} locked</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm opacity-90">Unlocks in:</p>
-                        <p className="font-bold">{timeRemaining[saving.id] || 'calculating...'}</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-sm mt-3 pt-3 border-t border-white border-opacity-30">
-                      <span>Period: {saving.lockPeriod}</span>
-                      <span>Interest Rate: {saving.interestRate}%</span>
-                      <span className="font-semibold">Est. Interest: ₦{(saving.amount * saving.interestRate / 100).toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))}
-                {lockedSavings.filter(s => s.status === 'locked').length === 0 && (
-                  <p className="text-center text-gray-500 py-4">No active locked savings</p>
-                )}
-              </div>
-            </div>
-
-            {/* Ready to Unlock */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold mb-4">✅ Ready to Unlock</h3>
-              <div className="space-y-3">
-                {lockedSavings.filter(s => s.status === 'unlocked').map((saving) => (
-                  <div key={saving.id} className="flex justify-between items-center p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="mt-8 grid gap-8">
+              {(Object.keys(groupedCategories) as CategoryGroup[]).map((group) => (
+                <div key={group} className={`rounded-3xl border p-5 ${GROUP_COLORS[group]}`}>
+                  <div className="mb-4 flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold">{saving.description}</h4>
-                      <p className="text-sm text-gray-600">Principal: ₦{saving.amount.toLocaleString()} + Interest: ₦{(saving.amount * saving.interestRate / 100).toLocaleString()}</p>
+                      <h4 className="text-lg font-bold text-slate-900">{group}</h4>
+                      <p className="text-sm text-slate-600">
+                        {group === 'Essential Expenses' && 'Core bills and responsibilities that keep life running.'}
+                        {group === 'Flexible Expenses' && 'Lifestyle and adjustable expenses you can tune month to month.'}
+                        {group === 'Savings & Goals' && 'Future-focused money for security, growth, and planned targets.'}
+                      </p>
                     </div>
-                    <button
-                      onClick={() => {
-                        setLockedSavings(lockedSavings.map(s => 
-                          s.id === saving.id ? { ...s, status: 'withdrawn' as const } : s
-                        ));
-                      }}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-semibold text-sm"
-                    >
-                      Withdraw
-                    </button>
+                    <div className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                      {formatCurrency(groupedCategories[group].reduce((sum, item) => sum + item.amount, 0))}
+                    </div>
                   </div>
-                ))}
-                {lockedSavings.filter(s => s.status === 'unlocked').length === 0 && (
-                  <p className="text-center text-gray-500 py-4">No unlocked savings available</p>
-                )}
-              </div>
+
+                  <div className="space-y-4">
+                    {groupedCategories[group].map((category) => (
+                      <div key={category.id} className="rounded-2xl bg-white p-4 shadow-sm">
+                        <div className="grid gap-4 lg:grid-cols-[1.1fr,0.9fr,0.8fr]">
+                          <div>
+                            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                              Category
+                            </label>
+                            <input
+                              value={category.name}
+                              onChange={(event) => updateCategory(category.id, 'name', event.target.value)}
+                              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                            />
+                            <p className="mt-2 text-xs leading-5 text-slate-500">{category.note}</p>
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                              Allocation
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={category.amount}
+                              onChange={(event) =>
+                                updateCategory(category.id, 'amount', Number(event.target.value) || 0)
+                              }
+                              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                            />
+                            <p className="mt-2 text-xs text-slate-500">
+                              {budgetMode === 'strict'
+                                ? 'Locked until the open date you set.'
+                                : 'Open date is advisory, but early withdrawals attract a 2% fee.'}
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                              Spend Open Date
+                            </label>
+                            <input
+                              type="date"
+                              value={category.unlockDate}
+                              onChange={(event) => updateCategory(category.id, 'unlockDate', event.target.value)}
+                              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                            />
+                            {budgetMode === 'relaxed' && (
+                              <p className="mt-2 text-xs text-red-500">2% fee applies to withdrawals before this date.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          </section>
 
-          {/* Sidebar - Create New Locked Savings */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Create Locked Savings</h2>
-              <form onSubmit={lockHandleSubmit(onLockedSavingsSubmit)} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Amount (₦)</label>
-                  <input
-                    type="number"
-                    placeholder="Minimum ₦5,000"
-                    {...lockRegister('amount', {
-                      required: 'Amount is required',
-                      valueAsNumber: true,
-                      min: { value: 5000, message: 'Minimum is ₦5,000' },
-                    })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-800"
-                  />
-                  {lockErrors.amount && <p className="text-red-600 text-xs mt-1">{lockErrors.amount.message}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Lock Period</label>
-                  <select
-                    {...lockRegister('lockPeriod', { required: 'Lock period is required' })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-800"
-                  >
-                    <option value="">Select Period</option>
-                    <option value="hourly">⏰ Hourly (0.5% APY)</option>
-                    <option value="daily">📅 Daily (2.0% APY)</option>
-                    <option value="monthly">📆 Monthly (4.5% APY)</option>
-                    <option value="yearly">📊 Yearly (7.2% APY)</option>
-                  </select>
-                  {lockErrors.lockPeriod && <p className="text-red-600 text-xs mt-1">{lockErrors.lockPeriod.message}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Description</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Emergency Fund"
-                    {...lockRegister('description', { required: 'Description is required' })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-800"
-                  />
-                  {lockErrors.description && <p className="text-red-600 text-xs mt-1">{lockErrors.description.message}</p>}
-                </div>
-
-                <button type="submit" className="w-full bg-blue-800 text-white py-2 rounded-lg font-semibold hover:bg-blue-900">
-                  Lock Savings
+          <section className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+            <div className="rounded-3xl bg-white p-8 shadow-xl">
+              <h3 className="text-2xl font-bold text-slate-900">Add more categories</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Add custom categories if your spending style needs something extra beyond the AI-generated list.
+              </p>
+              <div className="mt-6 grid gap-4 md:grid-cols-[1fr,0.8fr,auto]">
+                <input
+                  value={newCategoryName}
+                  onChange={(event) => setNewCategoryName(event.target.value)}
+                  placeholder="e.g. Childcare, Gym, Content Production"
+                  className="rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                />
+                <select
+                  value={newCategoryGroup}
+                  onChange={(event) => setNewCategoryGroup(event.target.value as CategoryGroup)}
+                  className="rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                >
+                  <option value="Essential Expenses">Essential Expenses</option>
+                  <option value="Flexible Expenses">Flexible Expenses</option>
+                  <option value="Savings & Goals">Savings & Goals</option>
+                </select>
+                <button
+                  onClick={addCategory}
+                  className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800"
+                >
+                  Add
                 </button>
-              </form>
-            </div>
-
-            {/* Interest Rates Info */}
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <h3 className="font-semibold text-blue-900 mb-3">💡 Interest Rates</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-blue-800">
-                  <span>⏰ Hourly:</span>
-                  <span className="font-bold">0.5%</span>
-                </div>
-                <div className="flex justify-between text-blue-800">
-                  <span>📅 Daily:</span>
-                  <span className="font-bold">2.0%</span>
-                </div>
-                <div className="flex justify-between text-blue-800">
-                  <span>📆 Monthly:</span>
-                  <span className="font-bold">4.5%</span>
-                </div>
-                <div className="flex justify-between text-blue-800">
-                  <span>📊 Yearly:</span>
-                  <span className="font-bold">7.2%</span>
-                </div>
               </div>
             </div>
-          </div>
-        </div>
+
+            <div className="rounded-3xl bg-white p-8 shadow-xl">
+              <h3 className="text-2xl font-bold text-slate-900">Planner notes</h3>
+              <div className="mt-6 space-y-4 text-sm leading-6 text-slate-600">
+                <p>
+                  The planner uses your profession and selected budget style to draft category allocations automatically.
+                  You can adjust the numbers freely to match real life.
+                </p>
+                <p>
+                  In <span className="font-semibold text-slate-900">strict mode</span>, the open date acts like a release
+                  date for spending from that category.
+                </p>
+                <p>
+                  In <span className="font-semibold text-slate-900">relaxed mode</span>, spending can happen earlier, but
+                  any early withdrawal from a category should be treated as carrying a 2% fee.
+                </p>
+                <p>
+                  If the total allocated amount is above your income, reduce some category amounts until the remaining
+                  balance becomes zero or positive.
+                </p>
+              </div>
+            </div>
+          </section>
+        </>
       )}
     </div>
   );

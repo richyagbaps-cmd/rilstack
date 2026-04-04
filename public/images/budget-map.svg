@@ -1,0 +1,29 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="40" fill="#111114"/>
+  <rect x="92" y="96" width="1016" height="608" rx="32" fill="#161D26" stroke="#2A3442"/>
+  <rect x="144" y="172" width="284" height="452" rx="24" fill="#0D1620" stroke="#3A4658"/>
+  <rect x="458" y="172" width="284" height="452" rx="24" fill="#0D1620" stroke="#3A4658"/>
+  <rect x="772" y="172" width="284" height="452" rx="24" fill="#0D1620" stroke="#3A4658"/>
+  <text x="180" y="224" fill="#98FFF0" font-family="Arial, sans-serif" font-size="24" font-weight="700">NEEDS</text>
+  <text x="496" y="224" fill="#93C7FF" font-family="Arial, sans-serif" font-size="24" font-weight="700">WANTS</text>
+  <text x="810" y="224" fill="#C9B2FF" font-family="Arial, sans-serif" font-size="24" font-weight="700">GOALS</text>
+  <rect x="176" y="268" width="220" height="68" rx="18" fill="#132636"/>
+  <rect x="176" y="358" width="220" height="68" rx="18" fill="#132636"/>
+  <rect x="176" y="448" width="220" height="68" rx="18" fill="#132636"/>
+  <rect x="490" y="268" width="220" height="68" rx="18" fill="#182334"/>
+  <rect x="490" y="358" width="220" height="68" rx="18" fill="#182334"/>
+  <rect x="490" y="448" width="220" height="68" rx="18" fill="#182334"/>
+  <rect x="804" y="268" width="220" height="68" rx="18" fill="#201933"/>
+  <rect x="804" y="358" width="220" height="68" rx="18" fill="#201933"/>
+  <rect x="804" y="448" width="220" height="68" rx="18" fill="#201933"/>
+  <text x="196" y="310" fill="#D8F6FF" font-family="Arial, sans-serif" font-size="20">Rent & Utilities</text>
+  <text x="196" y="400" fill="#D8F6FF" font-family="Arial, sans-serif" font-size="20">Transport</text>
+  <text x="196" y="490" fill="#D8F6FF" font-family="Arial, sans-serif" font-size="20">Food</text>
+  <text x="510" y="310" fill="#E3EEFF" font-family="Arial, sans-serif" font-size="20">Dining</text>
+  <text x="510" y="400" fill="#E3EEFF" font-family="Arial, sans-serif" font-size="20">Leisure</text>
+  <text x="510" y="490" fill="#E3EEFF" font-family="Arial, sans-serif" font-size="20">Shopping</text>
+  <text x="824" y="310" fill="#F0E6FF" font-family="Arial, sans-serif" font-size="20">Emergency Fund</text>
+  <text x="824" y="400" fill="#F0E6FF" font-family="Arial, sans-serif" font-size="20">Investments</text>
+  <text x="824" y="490" fill="#F0E6FF" font-family="Arial, sans-serif" font-size="20">Travel Goal</text>
+  <text x="144" y="136" fill="#C6D3E3" font-family="Arial, sans-serif" font-size="32" font-weight="700">Budget Map</text>
+</svg>

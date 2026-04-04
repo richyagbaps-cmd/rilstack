@@ -15,15 +15,15 @@ export default function BudgetModeSelector({ onModeSelect }: BudgetModeSelectorP
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 md:p-8">
       {/* Header */}
-      <div className="max-w-6xl mx-auto mb-16">
-        <h1 className="text-5xl font-bold text-white mb-4">Choose Your Budgeting Style</h1>
-        <p className="text-slate-400 text-lg">Select how you want to manage your finances. You can change this anytime.</p>
+      <div className="mx-auto mb-10 max-w-6xl md:mb-16">
+        <h1 className="mb-4 text-3xl font-bold text-white md:text-5xl">Choose Your Budgeting Style</h1>
+        <p className="text-base text-slate-400 md:text-lg">Select how you want to manage your finances. You can change this anytime.</p>
       </div>
 
       {/* Mode Cards */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      <div className="mx-auto mb-10 grid max-w-6xl grid-cols-1 gap-6 md:mb-12 md:grid-cols-2 md:gap-8">
         {/* STRICT Mode Card */}
         <div
           onClick={() => handleSelect('strict')}
@@ -34,17 +34,17 @@ export default function BudgetModeSelector({ onModeSelect }: BudgetModeSelectorP
           }`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-900 opacity-90"></div>
-          <div className="relative p-12 text-white">
+          <div className="relative p-6 text-white md:p-12">
             {/* Icon */}
             <div className="mb-6">
-              <div className="w-16 h-16 bg-blue-400/30 rounded-xl flex items-center justify-center mb-6">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-400/30 md:mb-6 md:h-16 md:w-16">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
             </div>
 
-            <h2 className="text-3xl font-bold mb-4">STRICT MODE</h2>
+            <h2 className="mb-4 text-2xl font-bold md:text-3xl">STRICT MODE</h2>
             
             <div className="space-y-6">
               <div>
@@ -119,17 +119,17 @@ export default function BudgetModeSelector({ onModeSelect }: BudgetModeSelectorP
           }`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-900 opacity-90"></div>
-          <div className="relative p-12 text-white">
+          <div className="relative p-6 text-white md:p-12">
             {/* Icon */}
             <div className="mb-6">
-              <div className="w-16 h-16 bg-emerald-400/30 rounded-xl flex items-center justify-center mb-6">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-400/30 md:mb-6 md:h-16 md:w-16">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
 
-            <h2 className="text-3xl font-bold mb-4">RELAXED MODE</h2>
+            <h2 className="mb-4 text-2xl font-bold md:text-3xl">RELAXED MODE</h2>
             
             <div className="space-y-6">
               <div>
@@ -196,42 +196,42 @@ export default function BudgetModeSelector({ onModeSelect }: BudgetModeSelectorP
       </div>
 
       {/* Comparison Table */}
-      <div className="max-w-6xl mx-auto mb-12">
-        <h2 className="text-3xl font-bold text-white mb-8">Quick Comparison</h2>
+      <div className="mx-auto mb-10 max-w-6xl md:mb-12">
+        <h2 className="mb-6 text-2xl font-bold text-white md:mb-8 md:text-3xl">Quick Comparison</h2>
         <div className="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-sm">
           <table className="w-full">
             <thead>
               <tr className="bg-slate-700/50 border-b border-slate-600">
-                <th className="px-6 py-4 text-left text-slate-200 font-semibold">Feature</th>
-                <th className="px-6 py-4 text-center text-blue-300 font-semibold">STRICT MODE</th>
-                <th className="px-6 py-4 text-center text-emerald-300 font-semibold">RELAXED MODE</th>
+                <th className="px-4 py-4 text-left text-sm font-semibold text-slate-200 md:px-6">Feature</th>
+                <th className="px-4 py-4 text-center text-sm font-semibold text-blue-300 md:px-6">STRICT MODE</th>
+                <th className="px-4 py-4 text-center text-sm font-semibold text-emerald-300 md:px-6">RELAXED MODE</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
               <tr className="hover:bg-slate-700/30 transition-colors">
-                <td className="px-6 py-4 text-slate-300">Withdrawal Freedom</td>
-                <td className="px-6 py-4 text-center text-blue-400">Limited (by unlock date)</td>
-                <td className="px-6 py-4 text-center text-emerald-400">Unlimited</td>
+                <td className="px-4 py-4 text-sm text-slate-300 md:px-6">Withdrawal Freedom</td>
+                <td className="px-4 py-4 text-center text-sm text-blue-400 md:px-6">Limited (by unlock date)</td>
+                <td className="px-4 py-4 text-center text-sm text-emerald-400 md:px-6">Unlimited</td>
               </tr>
               <tr className="hover:bg-slate-700/30 transition-colors">
-                <td className="px-6 py-4 text-slate-300">Withdrawal Penalty</td>
-                <td className="px-6 py-4 text-center text-blue-400">0%</td>
-                <td className="px-6 py-4 text-center text-red-400">2% on amount</td>
+                <td className="px-4 py-4 text-sm text-slate-300 md:px-6">Withdrawal Penalty</td>
+                <td className="px-4 py-4 text-center text-sm text-blue-400 md:px-6">0%</td>
+                <td className="px-4 py-4 text-center text-sm text-red-400 md:px-6">2% on amount</td>
               </tr>
               <tr className="hover:bg-slate-700/30 transition-colors">
-                <td className="px-6 py-4 text-slate-300">Best For</td>
-                <td className="px-6 py-4 text-center text-blue-400">Fixed recurring expenses</td>
-                <td className="px-6 py-4 text-center text-emerald-400">Variable expenses</td>
+                <td className="px-4 py-4 text-sm text-slate-300 md:px-6">Best For</td>
+                <td className="px-4 py-4 text-center text-sm text-blue-400 md:px-6">Fixed recurring expenses</td>
+                <td className="px-4 py-4 text-center text-sm text-emerald-400 md:px-6">Variable expenses</td>
               </tr>
               <tr className="hover:bg-slate-700/30 transition-colors">
-                <td className="px-6 py-4 text-slate-300">Discipline Level</td>
-                <td className="px-6 py-4 text-center text-blue-400">Highest</td>
-                <td className="px-6 py-4 text-center text-emerald-400">Flexible</td>
+                <td className="px-4 py-4 text-sm text-slate-300 md:px-6">Discipline Level</td>
+                <td className="px-4 py-4 text-center text-sm text-blue-400 md:px-6">Highest</td>
+                <td className="px-4 py-4 text-center text-sm text-emerald-400 md:px-6">Flexible</td>
               </tr>
               <tr className="hover:bg-slate-700/30 transition-colors">
-                <td className="px-6 py-4 text-slate-300">Learning Curve</td>
-                <td className="px-6 py-4 text-center text-blue-400">Moderate</td>
-                <td className="px-6 py-4 text-center text-emerald-400">Simple</td>
+                <td className="px-4 py-4 text-sm text-slate-300 md:px-6">Learning Curve</td>
+                <td className="px-4 py-4 text-center text-sm text-blue-400 md:px-6">Moderate</td>
+                <td className="px-4 py-4 text-center text-sm text-emerald-400 md:px-6">Simple</td>
               </tr>
             </tbody>
           </table>
@@ -239,8 +239,8 @@ export default function BudgetModeSelector({ onModeSelect }: BudgetModeSelectorP
       </div>
 
       {/* Info Box */}
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 backdrop-blur-sm">
+      <div className="mx-auto max-w-6xl">
+        <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur-sm md:p-8">
           <h3 className="text-xl font-bold text-white mb-4">Pro Tips</h3>
           <ul className="space-y-3 text-slate-300">
             <li className="flex gap-3">

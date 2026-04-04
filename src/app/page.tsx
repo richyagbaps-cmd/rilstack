@@ -77,9 +77,9 @@ export default function Home() {
         budgetMode={budgetMode}
         onChangeBudgetMode={handleChangeBudgetMode}
       />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 py-6 md:px-4 md:py-8">
         {currentSection === 'dashboard' && <Dashboard />}
-        {currentSection === 'budget' && <BudgetSection />}
+        {currentSection === 'budget' && budgetMode && <BudgetSection budgetMode={budgetMode} />}
         {currentSection === 'investments' && <InvestmentPortfolio />}
         {currentSection === 'account' && <AccountBalance />}
         {currentSection === 'nin-validation' && <NinValidation />}
@@ -87,13 +87,13 @@ export default function Home() {
 
       {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
 
-      <div className="fixed bottom-0 left-0 z-40 flex items-end gap-4 p-4">
+      <div className="fixed bottom-0 left-0 z-40 flex items-end gap-3 p-3 md:gap-4 md:p-4">
         {showChatbot ? (
           <AIChatbot onClose={() => setShowChatbot(false)} />
         ) : (
           <button
             onClick={() => setShowChatbot(true)}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-cyan-600 to-cyan-500 text-sm font-semibold text-white shadow-lg transition-all hover:scale-110 hover:shadow-xl"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-cyan-600 to-cyan-500 text-xs font-semibold text-white shadow-lg transition-all hover:scale-110 hover:shadow-xl md:h-16 md:w-16 md:text-sm"
             title="Open AI Assistant"
           >
             Chat

@@ -147,7 +147,7 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
   ];
 
   return (
-    <div className="flex max-h-96 w-96 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl">
+    <div className="flex max-h-[70vh] w-[calc(100vw-1.5rem)] max-w-96 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl sm:max-h-96">
       <div className="flex items-center justify-between bg-gradient-to-r from-blue-900 to-blue-800 p-4 text-white shadow-lg">
         <div>
           <h2 className="text-lg font-bold">AI Assistant</h2>

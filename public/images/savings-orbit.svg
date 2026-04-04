@@ -1,0 +1,35 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="40" fill="#07111F"/>
+  <circle cx="948" cy="160" r="210" fill="url(#paint0_radial)" fill-opacity="0.9"/>
+  <circle cx="240" cy="632" r="220" fill="url(#paint1_radial)" fill-opacity="0.65"/>
+  <circle cx="600" cy="400" r="236" stroke="url(#paint2_linear)" stroke-width="2" stroke-dasharray="16 16"/>
+  <circle cx="600" cy="400" r="168" stroke="#1EE7D2" stroke-opacity="0.28" stroke-width="2"/>
+  <circle cx="600" cy="400" r="96" fill="#0A1B31" stroke="#76F5E7" stroke-width="2"/>
+  <path d="M540 401C540 370.072 565.072 345 596 345H604C634.928 345 660 370.072 660 401C660 431.928 634.928 457 604 457H596C565.072 457 540 431.928 540 401Z" fill="#103155"/>
+  <path d="M600 332V470" stroke="#A4FFF3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M540 365H678" stroke="#A4FFF3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M486 310C521.287 275.382 562.867 258.073 610.74 258.073C658.613 258.073 701.573 276.698 739.62 313.948" stroke="#1EE7D2" stroke-width="10" stroke-linecap="round"/>
+  <path d="M486 492C521.287 526.618 562.867 543.927 610.74 543.927C658.613 543.927 701.573 525.302 739.62 488.052" stroke="#58A6FF" stroke-width="10" stroke-linecap="round"/>
+  <rect x="122" y="150" width="232" height="126" rx="24" fill="#0B1B2E" stroke="#1C4D7B"/>
+  <text x="154" y="198" fill="#91FFE6" font-family="Arial, sans-serif" font-size="20" font-weight="700">SAFELOCK ACTIVE</text>
+  <text x="154" y="235" fill="#B8CAE0" font-family="Arial, sans-serif" font-size="18">Savings shielded</text>
+  <text x="154" y="259" fill="#B8CAE0" font-family="Arial, sans-serif" font-size="18">until the target date.</text>
+  <rect x="850" y="486" width="220" height="136" rx="24" fill="#081A2A" stroke="#1975C6"/>
+  <text x="884" y="536" fill="#80D5FF" font-family="Arial, sans-serif" font-size="20" font-weight="700">AUTOGROWTH</text>
+  <text x="884" y="572" fill="#D9F3FF" font-family="Arial, sans-serif" font-size="36" font-weight="700">+12.5%</text>
+  <text x="884" y="601" fill="#A9C3DB" font-family="Arial, sans-serif" font-size="16">Projected annual lift</text>
+  <defs>
+    <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(948 160) rotate(90) scale(210)">
+      <stop stop-color="#0F7BE8"/>
+      <stop offset="1" stop-color="#0F7BE8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="paint1_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(240 632) rotate(90) scale(220)">
+      <stop stop-color="#14C9AA"/>
+      <stop offset="1" stop-color="#14C9AA" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="paint2_linear" x1="364" y1="214" x2="848" y2="592" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#45D8FF"/>
+      <stop offset="1" stop-color="#9B7CFF"/>
+    </linearGradient>
+  </defs>
+</svg>
