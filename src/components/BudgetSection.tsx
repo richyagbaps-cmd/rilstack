@@ -6,15 +6,25 @@ type BudgetMode = 'strict' | 'relaxed';
 type BudgetStyle = '50-30-20' | 'zero-based' | 'custom';
 type Profession = 'student' | 'worker' | 'entrepreneur' | 'freelancer';
 type CategoryGroup = 'Essential Expenses' | 'Flexible Expenses' | 'Savings & Goals';
+type SpendingCadence = 'daily' | 'weekly' | 'monthly';
 
 interface BudgetCategory {
   id: string;
   name: string;
   group: CategoryGroup;
   amount: number;
+  cadence: SpendingCadence;
+  dailyEstimate: number;
   unlockDate: string;
   note: string;
   editable: boolean;
+}
+
+interface LockedSummary {
+  lockedAt: string;
+  totalLocked: number;
+  eligibleInterest: number;
+  annualInterestRate: number;
 }
 
 interface BudgetPlan {
@@ -23,6 +33,7 @@ interface BudgetPlan {
   income: number;
   categories: BudgetCategory[];
   createdAt: string;
+  lockedSummary?: LockedSummary;
 }
 
 interface BudgetSectionProps {
@@ -64,46 +75,46 @@ const BUDGET_STYLE_INFO: Array<{
 
 const PROFESSION_TEMPLATES: Record<
   Profession,
-  Array<{ name: string; group: CategoryGroup; note: string }>
+  Array<{ name: string; group: CategoryGroup; note: string; cadence: SpendingCadence }>
 > = {
   student: [
-    { name: 'School Fees', group: 'Essential Expenses', note: 'Tuition, registration, and academic costs.' },
-    { name: 'Transport', group: 'Essential Expenses', note: 'Daily commuting and occasional travel.' },
-    { name: 'Feeding', group: 'Essential Expenses', note: 'Meals, groceries, and cooking supplies.' },
-    { name: 'Data & Airtime', group: 'Flexible Expenses', note: 'Connectivity for classes and communication.' },
-    { name: 'Personal Care', group: 'Flexible Expenses', note: 'Toiletries, laundry, and small personal needs.' },
-    { name: 'Books & Learning', group: 'Savings & Goals', note: 'Courses, books, projects, and study tools.' },
-    { name: 'Emergency Buffer', group: 'Savings & Goals', note: 'Small reserve for urgent student needs.' },
+    { name: 'Feeding', group: 'Essential Expenses', note: 'Meals, groceries, and cooking supplies.', cadence: 'daily' },
+    { name: 'Transport', group: 'Essential Expenses', note: 'Daily commuting and occasional travel.', cadence: 'daily' },
+    { name: 'School Fees', group: 'Essential Expenses', note: 'Tuition, registration, and academic costs.', cadence: 'monthly' },
+    { name: 'Data & Airtime', group: 'Flexible Expenses', note: 'Connectivity for classes and communication.', cadence: 'weekly' },
+    { name: 'Personal Care', group: 'Flexible Expenses', note: 'Toiletries, laundry, and small personal needs.', cadence: 'weekly' },
+    { name: 'Books & Learning', group: 'Savings & Goals', note: 'Courses, books, projects, and study tools.', cadence: 'monthly' },
+    { name: 'Emergency Buffer', group: 'Savings & Goals', note: 'Small reserve for urgent student needs.', cadence: 'monthly' },
   ],
   worker: [
-    { name: 'Rent & Housing', group: 'Essential Expenses', note: 'Rent, service charge, and housing upkeep.' },
-    { name: 'Utilities', group: 'Essential Expenses', note: 'Power, water, internet, and subscriptions.' },
-    { name: 'Transport', group: 'Essential Expenses', note: 'Commuting, fuel, or ride-hailing costs.' },
-    { name: 'Food & Groceries', group: 'Essential Expenses', note: 'Monthly food and home supplies.' },
-    { name: 'Dining & Lifestyle', group: 'Flexible Expenses', note: 'Restaurants, outings, and entertainment.' },
-    { name: 'Family Support', group: 'Flexible Expenses', note: 'Support for family or dependants.' },
-    { name: 'Emergency Savings', group: 'Savings & Goals', note: 'Cash reserve for unexpected costs.' },
-    { name: 'Investments', group: 'Savings & Goals', note: 'Long-term growth and future planning.' },
+    { name: 'Food & Groceries', group: 'Essential Expenses', note: 'Monthly food and home supplies.', cadence: 'daily' },
+    { name: 'Transport', group: 'Essential Expenses', note: 'Commuting, fuel, or ride-hailing costs.', cadence: 'daily' },
+    { name: 'Rent & Housing', group: 'Essential Expenses', note: 'Rent, service charge, and housing upkeep.', cadence: 'monthly' },
+    { name: 'Utilities', group: 'Essential Expenses', note: 'Power, water, internet, and subscriptions.', cadence: 'monthly' },
+    { name: 'Dining & Lifestyle', group: 'Flexible Expenses', note: 'Restaurants, outings, and entertainment.', cadence: 'weekly' },
+    { name: 'Family Support', group: 'Flexible Expenses', note: 'Support for family or dependants.', cadence: 'weekly' },
+    { name: 'Emergency Savings', group: 'Savings & Goals', note: 'Cash reserve for unexpected costs.', cadence: 'monthly' },
+    { name: 'Investments', group: 'Savings & Goals', note: 'Long-term growth and future planning.', cadence: 'monthly' },
   ],
   entrepreneur: [
-    { name: 'Home Expenses', group: 'Essential Expenses', note: 'Personal housing and household costs.' },
-    { name: 'Business Operations', group: 'Essential Expenses', note: 'Inventory, logistics, tools, and recurring business spend.' },
-    { name: 'Utilities & Bills', group: 'Essential Expenses', note: 'Power, internet, and communication tools.' },
-    { name: 'Transport', group: 'Essential Expenses', note: 'Meetings, deliveries, and movement.' },
-    { name: 'Marketing', group: 'Flexible Expenses', note: 'Ads, content, promotions, and brand growth.' },
-    { name: 'Lifestyle', group: 'Flexible Expenses', note: 'Personal enjoyment and flexible spending.' },
-    { name: 'Tax Reserve', group: 'Savings & Goals', note: 'Set aside for levies, tax, and compliance.' },
-    { name: 'Business Expansion', group: 'Savings & Goals', note: 'Reinvestment for growth opportunities.' },
+    { name: 'Home Expenses', group: 'Essential Expenses', note: 'Personal housing and household costs.', cadence: 'daily' },
+    { name: 'Business Operations', group: 'Essential Expenses', note: 'Inventory, logistics, tools, and recurring business spend.', cadence: 'daily' },
+    { name: 'Utilities & Bills', group: 'Essential Expenses', note: 'Power, internet, and communication tools.', cadence: 'monthly' },
+    { name: 'Transport', group: 'Essential Expenses', note: 'Meetings, deliveries, and movement.', cadence: 'daily' },
+    { name: 'Marketing', group: 'Flexible Expenses', note: 'Ads, content, promotions, and brand growth.', cadence: 'weekly' },
+    { name: 'Lifestyle', group: 'Flexible Expenses', note: 'Personal enjoyment and flexible spending.', cadence: 'weekly' },
+    { name: 'Tax Reserve', group: 'Savings & Goals', note: 'Set aside for levies, tax, and compliance.', cadence: 'monthly' },
+    { name: 'Business Expansion', group: 'Savings & Goals', note: 'Reinvestment for growth opportunities.', cadence: 'monthly' },
   ],
   freelancer: [
-    { name: 'Housing', group: 'Essential Expenses', note: 'Rent and home essentials.' },
-    { name: 'Internet & Tools', group: 'Essential Expenses', note: 'Software, data, subscriptions, and connectivity.' },
-    { name: 'Transport', group: 'Essential Expenses', note: 'Client meetings and movement.' },
-    { name: 'Food & Utilities', group: 'Essential Expenses', note: 'Living costs and household spend.' },
-    { name: 'Client Acquisition', group: 'Flexible Expenses', note: 'Portfolio, ads, networking, and proposals.' },
-    { name: 'Lifestyle', group: 'Flexible Expenses', note: 'Entertainment and personal spending.' },
-    { name: 'Tax Savings', group: 'Savings & Goals', note: 'A reserve for tax and compliance.' },
-    { name: 'Device Upgrade Fund', group: 'Savings & Goals', note: 'Laptop, phone, and equipment replacement.' },
+    { name: 'Food & Utilities', group: 'Essential Expenses', note: 'Living costs and household spend.', cadence: 'daily' },
+    { name: 'Housing', group: 'Essential Expenses', note: 'Rent and home essentials.', cadence: 'monthly' },
+    { name: 'Internet & Tools', group: 'Essential Expenses', note: 'Software, data, subscriptions, and connectivity.', cadence: 'monthly' },
+    { name: 'Transport', group: 'Essential Expenses', note: 'Client meetings and movement.', cadence: 'daily' },
+    { name: 'Client Acquisition', group: 'Flexible Expenses', note: 'Portfolio, ads, networking, and proposals.', cadence: 'weekly' },
+    { name: 'Lifestyle', group: 'Flexible Expenses', note: 'Entertainment and personal spending.', cadence: 'weekly' },
+    { name: 'Tax Savings', group: 'Savings & Goals', note: 'A reserve for tax and compliance.', cadence: 'monthly' },
+    { name: 'Device Upgrade Fund', group: 'Savings & Goals', note: 'Laptop, phone, and equipment replacement.', cadence: 'monthly' },
   ],
 };
 
@@ -131,6 +142,21 @@ const GROUP_COLORS: Record<CategoryGroup, string> = {
   'Savings & Goals': 'border-emerald-200 bg-emerald-50',
 };
 
+const CADENCE_LABELS: Record<SpendingCadence, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+};
+
+const DAYS_PER_CADENCE: Record<SpendingCadence, number> = {
+  daily: 1,
+  weekly: 7,
+  monthly: 30,
+};
+
+const OPAY_ANNUAL_RATE_BELOW_100K = 14.95;
+const OPAY_ANNUAL_RATE_ABOVE_100K = 4.95;
+
 const formatCurrency = (amount: number) => `N${Math.round(amount).toLocaleString()}`;
 
 const makeDate = (daysAhead: number) => {
@@ -141,18 +167,43 @@ const makeDate = (daysAhead: number) => {
 
 const getDefaultUnlockDate = (group: CategoryGroup, budgetMode: BudgetMode) => {
   if (budgetMode === 'strict') {
-    if (group === 'Essential Expenses') return makeDate(30);
+    if (group === 'Essential Expenses') return makeDate(10);
     if (group === 'Flexible Expenses') return makeDate(14);
-    return makeDate(45);
+    return makeDate(30);
   }
 
-  if (group === 'Essential Expenses') return makeDate(14);
+  if (group === 'Essential Expenses') return makeDate(7);
   if (group === 'Flexible Expenses') return makeDate(10);
-  return makeDate(30);
+  return makeDate(21);
+};
+
+const deriveDailyEstimate = (amount: number, cadence: SpendingCadence) =>
+  Math.max(0, Math.round(amount / DAYS_PER_CADENCE[cadence]));
+
+const daysBetweenTodayAnd = (dateValue: string) => {
+  const today = new Date();
+  const target = new Date(dateValue);
+  const diff = target.getTime() - today.getTime();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+};
+
+const calculateInterestPreview = (categories: BudgetCategory[]) => {
+  const eligibleCategories = categories.filter((category) => daysBetweenTodayAnd(category.unlockDate) > 7);
+  const eligibleAmount = eligibleCategories.reduce((sum, category) => sum + category.amount, 0);
+  const annualRate =
+    eligibleAmount <= 100000 ? OPAY_ANNUAL_RATE_BELOW_100K : OPAY_ANNUAL_RATE_ABOVE_100K;
+  const weightedDays = eligibleCategories.reduce(
+    (sum, category) => sum + daysBetweenTodayAnd(category.unlockDate),
+    0,
+  );
+  const averageDays = eligibleAmount > 0 ? weightedDays / Math.max(eligibleCategories.length, 1) : 0;
+  const estimatedInterest = eligibleAmount * (annualRate / 100) * (averageDays / 365);
+
+  return { eligibleAmount, annualRate, estimatedInterest };
 };
 
 const allocateAcrossCategories = (
-  items: Array<{ name: string; group: CategoryGroup; note: string }>,
+  items: Array<{ name: string; group: CategoryGroup; note: string; cadence: SpendingCadence }>,
   income: number,
   budgetStyle: BudgetStyle,
   budgetMode: BudgetMode,
@@ -180,12 +231,15 @@ const allocateAcrossCategories = (
         : item.group === 'Flexible Expenses'
           ? 0.94
           : 0.98;
+    const amount = Math.max(1000, Math.round(baseAmount * multiplier));
 
     return {
       id: `${item.group}-${index}-${item.name.toLowerCase().replace(/\s+/g, '-')}`,
       name: item.name,
       group: item.group,
-      amount: Math.max(1000, Math.round(baseAmount * multiplier)),
+      amount,
+      cadence: item.cadence,
+      dailyEstimate: deriveDailyEstimate(amount, item.cadence),
       unlockDate: getDefaultUnlockDate(item.group, budgetMode),
       note: item.note,
       editable: true,
@@ -201,6 +255,7 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
   const [budgetPlan, setBudgetPlan] = useState<BudgetPlan | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryGroup, setNewCategoryGroup] = useState<CategoryGroup>('Flexible Expenses');
+  const [newCategoryCadence, setNewCategoryCadence] = useState<SpendingCadence>('weekly');
 
   useEffect(() => {
     const savedPlan = localStorage.getItem(storageKey);
@@ -226,15 +281,15 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
     return budgetMode === 'strict'
       ? {
           title: 'Strict Budget Planner',
-          subtitle: 'Create a time-locked spending plan with scheduled release dates for each category.',
-          rule: 'Funds stay locked until the chosen open date. This mode is built for discipline and controlled spending.',
-          penalty: 'No early-withdrawal fee is shown here because strict mode is meant to keep funds locked until the approved date.',
+          subtitle: 'Build a complete daily spending plan and lock each category until its approved spending date.',
+          rule: 'Funds stay locked until the chosen open date. After you finalize the plan, you can continue and lock the funds.',
+          penalty: 'Funds locked for more than 7 days earn estimated interest using an OPay-inspired rate reduced by 0.05 percentage points.',
           accent: 'from-cyan-700 to-blue-900',
         }
       : {
           title: 'Relaxed Budget Planner',
-          subtitle: 'Create a flexible plan with open dates, while still discouraging early withdrawals.',
-          rule: 'Each category has an expected spend-open date, but early withdrawals are allowed.',
+          subtitle: 'Create a flexible daily spending plan with dates that guide when money should be opened.',
+          rule: 'Each category still gets a spend-open date, but early withdrawals remain possible before that date.',
           penalty: 'Any withdrawal before the category open date attracts a 2% fee on the amount withdrawn.',
           accent: 'from-emerald-700 to-teal-900',
         };
@@ -251,6 +306,7 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
 
   const totalAllocated = (budgetPlan?.categories ?? []).reduce((sum, item) => sum + item.amount, 0);
   const remainingBalance = (budgetPlan?.income ?? 0) - totalAllocated;
+  const planInterest = calculateInterestPreview(budgetPlan?.categories ?? []);
 
   const generatePlan = () => {
     if (!profession || !budgetStyle || !income) return;
@@ -274,15 +330,36 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
     });
   };
 
-  const updateCategory = (categoryId: string, field: keyof BudgetCategory, value: string | number) => {
+  const updateCategory = (
+    categoryId: string,
+    field: keyof BudgetCategory,
+    value: string | number,
+  ) => {
     setBudgetPlan((current) => {
       if (!current) return current;
 
+      const categories = current.categories.map((category) => {
+        if (category.id !== categoryId) return category;
+
+        const updated = { ...category, [field]: value };
+        if (field === 'amount' || field === 'cadence') {
+          updated.dailyEstimate = deriveDailyEstimate(
+            field === 'amount' ? Number(value) || 0 : updated.amount,
+            field === 'cadence' ? (value as SpendingCadence) : updated.cadence,
+          );
+        }
+
+        if (field === 'dailyEstimate') {
+          updated.dailyEstimate = Number(value) || 0;
+        }
+
+        return updated;
+      });
+
       return {
         ...current,
-        categories: current.categories.map((category) =>
-          category.id === categoryId ? { ...category, [field]: value } : category,
-        ),
+        categories,
+        lockedSummary: undefined,
       };
     });
   };
@@ -296,6 +373,8 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
       name: trimmedName,
       group: newCategoryGroup,
       amount: 0,
+      cadence: newCategoryCadence,
+      dailyEstimate: 0,
       unlockDate: getDefaultUnlockDate(newCategoryGroup, budgetMode),
       note: 'Added manually by user.',
       editable: true,
@@ -304,8 +383,23 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
     setBudgetPlan({
       ...budgetPlan,
       categories: [...budgetPlan.categories, newCategory],
+      lockedSummary: undefined,
     });
     setNewCategoryName('');
+  };
+
+  const lockFunds = () => {
+    if (!budgetPlan || remainingBalance < 0) return;
+
+    setBudgetPlan({
+      ...budgetPlan,
+      lockedSummary: {
+        lockedAt: new Date().toISOString(),
+        totalLocked: totalAllocated,
+        eligibleInterest: planInterest.estimatedInterest,
+        annualInterestRate: planInterest.annualRate,
+      },
+    });
   };
 
   const resetPlan = () => {
@@ -328,18 +422,18 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
             <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.rule}</p>
           </div>
           <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.24em] text-white/60">Withdrawal Notice</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-white/60">Locking Notice</p>
             <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.penalty}</p>
           </div>
         </div>
       </section>
 
-      {!budgetPlan && (
+      {!budgetPlan ? (
         <section className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
           <div className="rounded-3xl bg-white p-8 shadow-xl">
             <h3 className="text-2xl font-bold text-slate-900">1. Tell us what kind of earner you are</h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Your profession shapes the expense categories the planner creates for you.
+              Your profession shapes the expense categories and daily spending flow the planner creates for you.
             </p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {(Object.keys(PROFESSION_LABELS) as Profession[]).map((option) => (
@@ -367,7 +461,7 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
           <div className="rounded-3xl bg-white p-8 shadow-xl">
             <h3 className="text-2xl font-bold text-slate-900">2. Pick your budget type</h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              After choosing your budget type, the planner will generate an editable allocation from your income.
+              The planner will generate a full editable plan with category allocations, daily expense guidance, and dates.
             </p>
             <div className="mt-6 space-y-4">
               {BUDGET_STYLE_INFO.map((option) => (
@@ -404,13 +498,11 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
               disabled={!profession || !budgetStyle || !income}
               className="mt-6 w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Generate AI Budget Plan
+              Generate Full Budget Plan
             </button>
           </div>
         </section>
-      )}
-
-      {budgetPlan && (
+      ) : (
         <>
           <section className="grid gap-4 md:grid-cols-4">
             <div className="rounded-2xl bg-white p-5 shadow-md">
@@ -433,150 +525,247 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
             </div>
           </section>
 
-          <section className="rounded-3xl bg-white p-8 shadow-xl">
-            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-slate-900">Editable AI allocation</h3>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                  Your categories are grouped together for easier planning. You can edit every amount, adjust open dates,
-                  and add more categories that fit your lifestyle.
-                </p>
-              </div>
-              <button
-                onClick={resetPlan}
-                className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
-              >
-                Start Over
-              </button>
-            </div>
-
-            <div className="mt-8 grid gap-8">
-              {(Object.keys(groupedCategories) as CategoryGroup[]).map((group) => (
-                <div key={group} className={`rounded-3xl border p-5 ${GROUP_COLORS[group]}`}>
-                  <div className="mb-4 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-lg font-bold text-slate-900">{group}</h4>
-                      <p className="text-sm text-slate-600">
-                        {group === 'Essential Expenses' && 'Core bills and responsibilities that keep life running.'}
-                        {group === 'Flexible Expenses' && 'Lifestyle and adjustable expenses you can tune month to month.'}
-                        {group === 'Savings & Goals' && 'Future-focused money for security, growth, and planned targets.'}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-                      {formatCurrency(groupedCategories[group].reduce((sum, item) => sum + item.amount, 0))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {groupedCategories[group].map((category) => (
-                      <div key={category.id} className="rounded-2xl bg-white p-4 shadow-sm">
-                        <div className="grid gap-4 lg:grid-cols-[1.1fr,0.9fr,0.8fr]">
-                          <div>
-                            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                              Category
-                            </label>
-                            <input
-                              value={category.name}
-                              onChange={(event) => updateCategory(category.id, 'name', event.target.value)}
-                              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
-                            />
-                            <p className="mt-2 text-xs leading-5 text-slate-500">{category.note}</p>
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                              Allocation
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              value={category.amount}
-                              onChange={(event) =>
-                                updateCategory(category.id, 'amount', Number(event.target.value) || 0)
-                              }
-                              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
-                            />
-                            <p className="mt-2 text-xs text-slate-500">
-                              {budgetMode === 'strict'
-                                ? 'Locked until the open date you set.'
-                                : 'Open date is advisory, but early withdrawals attract a 2% fee.'}
-                            </p>
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                              Spend Open Date
-                            </label>
-                            <input
-                              type="date"
-                              value={category.unlockDate}
-                              onChange={(event) => updateCategory(category.id, 'unlockDate', event.target.value)}
-                              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
-                            />
-                            {budgetMode === 'relaxed' && (
-                              <p className="mt-2 text-xs text-red-500">2% fee applies to withdrawals before this date.</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+          <section className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
             <div className="rounded-3xl bg-white p-8 shadow-xl">
-              <h3 className="text-2xl font-bold text-slate-900">Add more categories</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Add custom categories if your spending style needs something extra beyond the AI-generated list.
-              </p>
-              <div className="mt-6 grid gap-4 md:grid-cols-[1fr,0.8fr,auto]">
-                <input
-                  value={newCategoryName}
-                  onChange={(event) => setNewCategoryName(event.target.value)}
-                  placeholder="e.g. Childcare, Gym, Content Production"
-                  className="rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
-                />
-                <select
-                  value={newCategoryGroup}
-                  onChange={(event) => setNewCategoryGroup(event.target.value as CategoryGroup)}
-                  className="rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
-                >
-                  <option value="Essential Expenses">Essential Expenses</option>
-                  <option value="Flexible Expenses">Flexible Expenses</option>
-                  <option value="Savings & Goals">Savings & Goals</option>
-                </select>
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900">Complete budget plan</h3>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                    Each category includes a total allocation, a daily expense guide, a spending rhythm, and the exact
+                    date the money should open for spending.
+                  </p>
+                </div>
                 <button
-                  onClick={addCategory}
-                  className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800"
+                  onClick={resetPlan}
+                  className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
                 >
-                  Add
+                  Start Over
                 </button>
               </div>
+
+              <div className="mt-8 grid gap-8">
+                {(Object.keys(groupedCategories) as CategoryGroup[]).map((group) => (
+                  <div key={group} className={`rounded-3xl border p-5 ${GROUP_COLORS[group]}`}>
+                    <div className="mb-4 flex items-center justify-between gap-4">
+                      <div>
+                        <h4 className="text-lg font-bold text-slate-900">{group}</h4>
+                        <p className="text-sm text-slate-600">
+                          {group === 'Essential Expenses' && 'Core daily and fixed bills that keep life running.'}
+                          {group === 'Flexible Expenses' && 'Lifestyle and adjustable expenses you can tune month to month.'}
+                          {group === 'Savings & Goals' && 'Future-focused money for security, growth, and planned targets.'}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                        {formatCurrency(groupedCategories[group].reduce((sum, item) => sum + item.amount, 0))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {groupedCategories[group].map((category) => (
+                        <div key={category.id} className="rounded-2xl bg-white p-4 shadow-sm">
+                          <div className="grid gap-4 xl:grid-cols-[1fr,0.8fr,0.8fr,0.9fr]">
+                            <div>
+                              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                Category
+                              </label>
+                              <input
+                                value={category.name}
+                                onChange={(event) => updateCategory(category.id, 'name', event.target.value)}
+                                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                              />
+                              <p className="mt-2 text-xs leading-5 text-slate-500">{category.note}</p>
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                Allocation
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={category.amount}
+                                onChange={(event) =>
+                                  updateCategory(category.id, 'amount', Number(event.target.value) || 0)
+                                }
+                                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                Daily Spend Plan
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={category.dailyEstimate}
+                                onChange={(event) =>
+                                  updateCategory(category.id, 'dailyEstimate', Number(event.target.value) || 0)
+                                }
+                                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                              />
+                              <p className="mt-2 text-xs text-slate-500">
+                                Suggested from the category amount, but fully editable.
+                              </p>
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                Spend Open Date
+                              </label>
+                              <input
+                                type="date"
+                                value={category.unlockDate}
+                                onChange={(event) => updateCategory(category.id, 'unlockDate', event.target.value)}
+                                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                              />
+                              <p className={`mt-2 text-xs ${budgetMode === 'strict' ? 'text-cyan-700' : 'text-red-500'}`}>
+                                {budgetMode === 'strict'
+                                  ? 'This category stays locked until this date.'
+                                  : 'Early withdrawals before this date attract a 2% fee.'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 grid gap-4 md:grid-cols-[0.8fr,1.2fr]">
+                            <div>
+                              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                Spending Frequency
+                              </label>
+                              <select
+                                value={category.cadence}
+                                onChange={(event) =>
+                                  updateCategory(category.id, 'cadence', event.target.value as SpendingCadence)
+                                }
+                                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                              >
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                              </select>
+                            </div>
+                            <div className="rounded-2xl bg-slate-50 p-4">
+                              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Spending summary</p>
+                              <p className="mt-2 text-sm text-slate-700">
+                                {CADENCE_LABELS[category.cadence]} category with a suggested spend pace of{' '}
+                                <span className="font-semibold text-slate-900">{formatCurrency(category.dailyEstimate)}</span>{' '}
+                                per day.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-8 shadow-xl">
-              <h3 className="text-2xl font-bold text-slate-900">Planner notes</h3>
-              <div className="mt-6 space-y-4 text-sm leading-6 text-slate-600">
-                <p>
-                  The planner uses your profession and selected budget style to draft category allocations automatically.
-                  You can adjust the numbers freely to match real life.
+            <div className="space-y-6">
+              <section className="rounded-3xl bg-white p-8 shadow-xl">
+                <h3 className="text-2xl font-bold text-slate-900">Add more categories</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Add custom categories if your spending style needs something extra beyond the generated list.
                 </p>
-                <p>
-                  In <span className="font-semibold text-slate-900">strict mode</span>, the open date acts like a release
-                  date for spending from that category.
-                </p>
-                <p>
-                  In <span className="font-semibold text-slate-900">relaxed mode</span>, spending can happen earlier, but
-                  any early withdrawal from a category should be treated as carrying a 2% fee.
-                </p>
-                <p>
-                  If the total allocated amount is above your income, reduce some category amounts until the remaining
-                  balance becomes zero or positive.
-                </p>
-              </div>
+                <div className="mt-6 grid gap-4">
+                  <input
+                    value={newCategoryName}
+                    onChange={(event) => setNewCategoryName(event.target.value)}
+                    placeholder="e.g. Childcare, Gym, Content Production"
+                    className="rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                  />
+                  <select
+                    value={newCategoryGroup}
+                    onChange={(event) => setNewCategoryGroup(event.target.value as CategoryGroup)}
+                    className="rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                  >
+                    <option value="Essential Expenses">Essential Expenses</option>
+                    <option value="Flexible Expenses">Flexible Expenses</option>
+                    <option value="Savings & Goals">Savings & Goals</option>
+                  </select>
+                  <select
+                    value={newCategoryCadence}
+                    onChange={(event) => setNewCategoryCadence(event.target.value as SpendingCadence)}
+                    className="rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                  <button
+                    onClick={addCategory}
+                    className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800"
+                  >
+                    Add Category
+                  </button>
+                </div>
+              </section>
+
+              <section className="rounded-3xl bg-white p-8 shadow-xl">
+                <h3 className="text-2xl font-bold text-slate-900">Lock preview</h3>
+                <div className="mt-6 space-y-4 text-sm leading-6 text-slate-600">
+                  <p>When you continue, the app treats this plan as your active spending lock schedule.</p>
+                  <p>Categories with open dates more than 7 days ahead are marked as interest-eligible.</p>
+                  <p>
+                    Interest estimate uses an inferred OPay-style annual rate of{' '}
+                    <span className="font-semibold text-slate-900">{planInterest.annualRate.toFixed(2)}%</span> after
+                    deducting 0.05 percentage points.
+                  </p>
+                  <p>
+                    Eligible locked amount:{' '}
+                    <span className="font-semibold text-slate-900">{formatCurrency(planInterest.eligibleAmount)}</span>
+                  </p>
+                  <p>
+                    Estimated interest preview:{' '}
+                    <span className="font-semibold text-emerald-700">{formatCurrency(planInterest.estimatedInterest)}</span>
+                  </p>
+                  <p>
+                    {budgetMode === 'strict'
+                      ? 'Strict mode keeps funds locked until their spending dates.'
+                      : 'Relaxed mode still allows early withdrawals, but the 2% fee warning remains.'}
+                  </p>
+                </div>
+
+                <button
+                  onClick={lockFunds}
+                  disabled={remainingBalance < 0}
+                  className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-700 px-5 py-4 text-sm font-semibold text-white transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Continue and Lock Funds
+                </button>
+                {remainingBalance < 0 && (
+                  <p className="mt-3 text-xs text-red-600">
+                    Reduce allocations until your remaining balance becomes zero or positive before locking funds.
+                  </p>
+                )}
+              </section>
+
+              {budgetPlan.lockedSummary && (
+                <section className="rounded-3xl border border-cyan-200 bg-cyan-50 p-8 shadow-xl">
+                  <p className="text-xs uppercase tracking-[0.24em] text-cyan-700">Funds locked</p>
+                  <h3 className="mt-2 text-2xl font-bold text-slate-900">Budget plan activated</h3>
+                  <div className="mt-5 grid gap-4 md:grid-cols-2">
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Total Locked</p>
+                      <p className="mt-2 text-xl font-bold text-slate-900">
+                        {formatCurrency(budgetPlan.lockedSummary.totalLocked)}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Interest Estimate</p>
+                      <p className="mt-2 text-xl font-bold text-emerald-700">
+                        {formatCurrency(budgetPlan.lockedSummary.eligibleInterest)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-slate-600">
+                    Lock timestamp: {new Date(budgetPlan.lockedSummary.lockedAt).toLocaleString()}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Applied annual rate: {budgetPlan.lockedSummary.annualInterestRate.toFixed(2)}%.
+                  </p>
+                </section>
+              )}
             </div>
           </section>
         </>
