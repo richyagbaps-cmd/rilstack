@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import React, { useEffect, useMemo, useState } from 'react';
 
 type BudgetMode = 'strict' | 'relaxed';
@@ -427,17 +428,30 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
   return (
     <div className="space-y-8">
       <section className={`rounded-3xl bg-gradient-to-br ${modeDetails.accent} p-8 text-white shadow-2xl`}>
-        <p className="text-sm uppercase tracking-[0.28em] text-white/70">{budgetMode} mode</p>
-        <h2 className="mt-3 text-3xl font-bold">{modeDetails.title}</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-white/85">{modeDetails.subtitle}</p>
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.24em] text-white/60">Spending Rule</p>
-            <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.rule}</p>
+        <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
+          <div>
+            <p className="text-sm uppercase tracking-[0.28em] text-white/70">{budgetMode} mode</p>
+            <h2 className="mt-3 text-3xl font-bold">{modeDetails.title}</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/85">{modeDetails.subtitle}</p>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
+                <p className="text-xs uppercase tracking-[0.24em] text-white/60">Spending Rule</p>
+                <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.rule}</p>
+              </div>
+              <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
+                <p className="text-xs uppercase tracking-[0.24em] text-white/60">Locking Notice</p>
+                <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.penalty}</p>
+              </div>
+            </div>
           </div>
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.24em] text-white/60">Locking Notice</p>
-            <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.penalty}</p>
+          <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20">
+            <Image
+              src="/images/budget-map.svg"
+              alt="Budget planning illustration"
+              width={1200}
+              height={800}
+              className="h-full w-full object-cover"
+            />
           </div>
         </div>
       </section>

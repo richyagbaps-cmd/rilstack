@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -24,6 +25,20 @@ interface Investment {
 }
 
 export default function InvestmentPortfolio() {
+  const nigeriaNews = [
+    {
+      title: 'Q2 2026 Treasury Bills calendar points to heavy supply',
+      source: 'Nairametrics',
+    },
+    {
+      title: 'March 2026 NTB auction stop rates eased on strong liquidity',
+      source: 'Nairametrics',
+    },
+    {
+      title: 'DMO bond auction results remain a key signal for local investors',
+      source: 'DMO Nigeria',
+    },
+  ];
   const [investments, setInvestments] = useState<Investment[]>([
     {
       id: '1',
@@ -160,7 +175,39 @@ export default function InvestmentPortfolio() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(176,140,255,0.2),_transparent_24%),linear-gradient(135deg,_rgba(8,17,29,0.96),_rgba(6,14,24,0.92))] p-5 text-white shadow-2xl md:p-8">
+        <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
+          <div className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.26em] text-violet-200">Investment View</p>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Track holdings, yields, and Nigerian fixed-income signals in one place.</h2>
+            <p className="max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
+              This screen combines your holdings, portfolio performance, interest-rate summaries, and local market headlines
+              so investments feel easier to interpret at a glance.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {nigeriaNews.map((item) => (
+                <div key={item.title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">{item.source}</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{item.title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20">
+            <Image
+              src="/images/investment-grid.svg"
+              alt="Investment illustration"
+              width={1200}
+              height={800}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Portfolio Summary & Chart */}
       <div className="lg:col-span-2 space-y-6">
         {/* Summary Cards */}
@@ -456,6 +503,7 @@ export default function InvestmentPortfolio() {
             </button>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );

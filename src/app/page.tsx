@@ -17,6 +17,29 @@ type Section = 'dashboard' | 'budget' | 'investments' | 'account' | 'nin-validat
 
 function PublicLanding() {
   const handleGoogleAuth = () => signIn('google', { callbackUrl: '/' });
+  const newsItems = [
+    {
+      title: 'CBN plans N3.95 trillion Treasury Bills auctions for Q2 2026',
+      date: 'April 3, 2026',
+      source: 'Nairametrics',
+      href: 'https://nairametrics.com/2026/04/03/cbn-plans-n3-95-trillion-treasury-bills-auction-in-q2-2026-n750bn-net-issuance/',
+      summary: 'The issuance calendar points to continued heavy supply in 364-day bills as fixed-income demand stays strong.',
+    },
+    {
+      title: 'CBN cut stop rates at the March 25, 2026 treasury bill auction',
+      date: 'March 26, 2026',
+      source: 'Nairametrics',
+      href: 'https://nairametrics.com/2026/03/26/cbn-cuts-rates-at-march-25-ntb-auction-amid-liquidity-glut/',
+      summary: 'Lower stop rates on the 182-day and 364-day tenors signalled easing yields amid stronger liquidity.',
+    },
+    {
+      title: 'DMO published the March 2026 FGN bond auction results',
+      date: 'March 30, 2026',
+      source: 'DMO Nigeria',
+      href: 'https://www.dmo.gov.ng/fgn-bonds/nigerian-treasury-bills?filter%5Bsearch%5D=&limit=100&limitstart=0',
+      summary: 'Nigeria’s debt office continues to release official auction summaries that investors can track for bond market direction.',
+    },
+  ];
   const featureCards = [
     {
       title: 'Budgeting',
@@ -66,12 +89,12 @@ function PublicLanding() {
             </div>
             <div className="space-y-4">
               <h2 className="max-w-3xl text-3xl font-bold tracking-tight md:text-5xl">
-                The first screen now explains the app before asking people to log in.
+                Budget smarter, lock savings with purpose, and track Nigerian investment signals from one app.
               </h2>
               <p className="max-w-2xl text-sm leading-6 text-slate-300 md:text-base md:leading-7">
-                RILSTACK helps people budget intentionally, protect savings with time-based controls, and follow
-                investment growth from one place. Visitors learn what the app does first, then continue with Google login
-                when they are ready.
+                RILSTACK is a personal finance workspace built for budgeting, savings discipline, and investment tracking.
+                Users can create structured budget plans, assign daily spending limits, set dates when money becomes available,
+                and manage deposits or withdrawals from a live balance that starts from zero.
               </p>
             </div>
 
@@ -79,17 +102,17 @@ function PublicLanding() {
               <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 md:text-xs">Budget Styles</p>
                 <p className="mt-2 text-lg font-bold text-white md:text-xl">3 Modes</p>
-                <p className="mt-1 text-xs text-slate-400 md:text-sm">50/30/20, zero-based, or custom planning.</p>
+                <p className="mt-1 text-xs text-slate-400 md:text-sm">Strict or relaxed mode, plus 50/30/20, zero-based, or custom planning.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 md:text-xs">Savings Guard</p>
                 <p className="mt-2 text-lg font-bold text-white md:text-xl">Safelock</p>
-                <p className="mt-1 text-xs text-slate-400 md:text-sm">Strict mode protects money until the target date.</p>
+                <p className="mt-1 text-xs text-slate-400 md:text-sm">Strict mode can lock category funds until a chosen spending date.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 md:text-xs">Growth View</p>
                 <p className="mt-2 text-lg font-bold text-white md:text-xl">Live Signals</p>
-                <p className="mt-1 text-xs text-slate-400 md:text-sm">Portfolio and savings visuals feel more interactive.</p>
+                <p className="mt-1 text-xs text-slate-400 md:text-sm">Monitor balances, fixed-income signals, and portfolio visuals in one dashboard.</p>
               </div>
             </div>
 
@@ -129,20 +152,51 @@ function PublicLanding() {
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
             <h3 className="text-lg font-bold text-white">Budgeting</h3>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Build monthly plans with guided category structure, editable AI allocations, and profession-based budgeting.
+              Build profession-based plans, set category allocations, and define daily spending targets to reduce confusion before the month starts.
             </p>
           </div>
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
             <h3 className="text-lg font-bold text-white">Saving</h3>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Use strict-mode safelock to hold back money until spending dates and create stronger saving discipline.
+              Use strict-mode safelock to hold back category funds until their release dates and earn projected interest on longer locks.
             </p>
           </div>
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
             <h3 className="text-lg font-bold text-white">Investing</h3>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Track growth visually across savings, treasury products, and portfolio categories from one dashboard.
+              Track treasury bills, bonds, and portfolio momentum while staying aware of current fixed-income moves in Nigeria.
             </p>
+          </div>
+        </section>
+
+        <section className="rounded-[32px] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-xl lg:p-8">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">Nigeria Investment News</p>
+              <h3 className="mt-2 text-2xl font-bold text-white md:text-3xl">Current market updates visitors can scan before signing in</h3>
+            </div>
+            <p className="max-w-xl text-sm leading-6 text-slate-300">
+              These updates highlight recent treasury bill and bond signals in Nigeria, so the home page feels more informed and grounded in the market.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {newsItems.map((item) => (
+              <a
+                key={item.title}
+                href={item.href}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-[26px] border border-white/10 bg-slate-950/50 p-5 transition-all hover:-translate-y-1 hover:border-cyan-300/30"
+              >
+                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">
+                  {item.source} · {item.date}
+                </p>
+                <h4 className="mt-3 text-lg font-semibold text-white">{item.title}</h4>
+                <p className="mt-3 text-sm leading-6 text-slate-300">{item.summary}</p>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">Open source</p>
+              </a>
+            ))}
           </div>
         </section>
       </div>
