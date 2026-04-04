@@ -7,6 +7,7 @@ type BudgetStyle = '50-30-20' | 'zero-based' | 'custom';
 type Profession = 'student' | 'worker' | 'entrepreneur' | 'freelancer';
 type CategoryGroup = 'Essential Expenses' | 'Flexible Expenses' | 'Savings & Goals';
 type SpendingCadence = 'daily' | 'weekly' | 'monthly';
+type SetupStep = 'profession' | 'budget-style' | 'income';
 
 interface BudgetCategory {
   id: string;
@@ -252,6 +253,7 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
   const [profession, setProfession] = useState<Profession | null>(null);
   const [budgetStyle, setBudgetStyle] = useState<BudgetStyle | null>(null);
   const [income, setIncome] = useState('');
+  const [setupStep, setSetupStep] = useState<SetupStep>('profession');
   const [budgetPlan, setBudgetPlan] = useState<BudgetPlan | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryGroup, setNewCategoryGroup] = useState<CategoryGroup>('Flexible Expenses');
@@ -267,6 +269,7 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
       setProfession(parsedPlan.profession);
       setBudgetStyle(parsedPlan.budgetStyle);
       setIncome(String(parsedPlan.income));
+      setSetupStep('income');
     } catch {
       localStorage.removeItem(storageKey);
     }
@@ -328,6 +331,16 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
       categories,
       createdAt: new Date().toISOString(),
     });
+  };
+
+  const handleProfessionSelect = (value: Profession) => {
+    setProfession(value);
+    setSetupStep('budget-style');
+  };
+
+  const handleBudgetStyleSelect = (value: BudgetStyle) => {
+    setBudgetStyle(value);
+    setSetupStep('income');
   };
 
   const updateCategory = (
@@ -408,6 +421,7 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
     setProfession(null);
     setBudgetStyle(null);
     setIncome('');
+    setSetupStep('profession');
   };
 
   return (
@@ -429,17 +443,49 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
       </section>
 
       {!budgetPlan ? (
-        <section className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-          <div className="rounded-3xl bg-white p-8 shadow-xl">
-            <h3 className="text-2xl font-bold text-slate-900">1. Tell us what kind of earner you are</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Your profession shapes the expense categories and daily spending flow the planner creates for you.
-            </p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <section className="mx-auto max-w-4xl rounded-3xl bg-white p-8 shadow-xl md:p-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Budget setup</p>
+              <h3 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+                {setupStep === 'profession' && '1. Tell us what kind of earner you are'}
+                {setupStep === 'budget-style' && '2. Pick your budget type'}
+                {setupStep === 'income' && '3. Tell us your income estimate'}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {setupStep === 'profession' &&
+                  'Your profession shapes the expense categories and daily spending flow the planner creates for you.'}
+                {setupStep === 'budget-style' &&
+                  'Choose the structure that should guide how the planner spreads your money across categories.'}
+                {setupStep === 'income' &&
+                  'Enter your monthly income estimate so the app can generate your complete budget plan.'}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
+              Step {setupStep === 'profession' ? '1' : setupStep === 'budget-style' ? '2' : '3'} of 3
+            </div>
+          </div>
+
+          <div className="mt-8 h-2 rounded-full bg-slate-100">
+            <div
+              className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all"
+              style={{
+                width:
+                  setupStep === 'profession'
+                    ? '33.33%'
+                    : setupStep === 'budget-style'
+                      ? '66.66%'
+                      : '100%',
+              }}
+            />
+          </div>
+
+          {setupStep === 'profession' && (
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {(Object.keys(PROFESSION_LABELS) as Profession[]).map((option) => (
                 <button
                   key={option}
-                  onClick={() => setProfession(option)}
+                  onClick={() => handleProfessionSelect(option)}
                   className={`rounded-2xl border p-5 text-left transition-all ${
                     profession === option
                       ? 'border-cyan-500 bg-cyan-50 shadow-md'
@@ -456,18 +502,14 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
                 </button>
               ))}
             </div>
-          </div>
+          )}
 
-          <div className="rounded-3xl bg-white p-8 shadow-xl">
-            <h3 className="text-2xl font-bold text-slate-900">2. Pick your budget type</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              The planner will generate a full editable plan with category allocations, daily expense guidance, and dates.
-            </p>
-            <div className="mt-6 space-y-4">
+          {setupStep === 'budget-style' && (
+            <div className="mt-8 space-y-4">
               {BUDGET_STYLE_INFO.map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => setBudgetStyle(option.id)}
+                  onClick={() => handleBudgetStyleSelect(option.id)}
                   className={`w-full rounded-2xl border p-5 text-left transition-all ${
                     budgetStyle === option.id
                       ? 'border-cyan-500 bg-cyan-50 shadow-md'
@@ -479,28 +521,55 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
                   <p className="mt-3 text-xs leading-5 text-slate-500">{option.explanation}</p>
                 </button>
               ))}
+              <button
+                onClick={() => setSetupStep('profession')}
+                className="rounded-2xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
+              >
+                Back
+              </button>
             </div>
+          )}
 
-            <div className="mt-6">
-              <label className="block text-sm font-semibold text-slate-900">3. Enter your monthly income</label>
-              <input
-                type="number"
-                min="1"
-                value={income}
-                onChange={(event) => setIncome(event.target.value)}
-                placeholder="e.g. 350000"
-                className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-cyan-500"
-              />
+          {setupStep === 'income' && (
+            <div className="mt-8 max-w-xl">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm text-slate-600">
+                  Profession: <span className="font-semibold text-slate-900">{profession ? PROFESSION_LABELS[profession] : '-'}</span>
+                </p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Budget type: <span className="font-semibold text-slate-900">{budgetStyle ?? '-'}</span>
+                </p>
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-sm font-semibold text-slate-900">Monthly income estimate</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={income}
+                  onChange={(event) => setIncome(event.target.value)}
+                  placeholder="e.g. 350000"
+                  className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-cyan-500"
+                />
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  onClick={() => setSetupStep('budget-style')}
+                  className="rounded-2xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={generatePlan}
+                  disabled={!profession || !budgetStyle || !income}
+                  className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Generate Full Budget Plan
+                </button>
+              </div>
             </div>
-
-            <button
-              onClick={generatePlan}
-              disabled={!profession || !budgetStyle || !income}
-              className="mt-6 w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Generate Full Budget Plan
-            </button>
-          </div>
+          )}
         </section>
       ) : (
         <>
