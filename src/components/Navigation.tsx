@@ -27,6 +27,7 @@ export default function Navigation({
   onChangeBudgetMode,
 }: NavigationProps) {
   const { data: session, status } = useSession();
+  const handleGoogleAuth = () => signIn('google', { callbackUrl: '/' });
 
   const getBudgetModeLabel = () => {
     return budgetMode === 'strict'
@@ -45,14 +46,14 @@ export default function Navigation({
               {status !== 'loading' && !session && (
                 <>
                   <button
-                    onClick={() => signIn('google')}
+                    onClick={handleGoogleAuth}
                     className="whitespace-nowrap rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-[11px] font-semibold text-cyan-100 transition-all hover:bg-cyan-400/20"
                     title="Login with Google"
                   >
                     Login
                   </button>
                   <button
-                    onClick={() => signIn('google')}
+                    onClick={handleGoogleAuth}
                     className="whitespace-nowrap rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-2 text-[11px] font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400"
                     title="Sign up with Google"
                   >
@@ -131,14 +132,14 @@ export default function Navigation({
               {status !== 'loading' && !session && (
                 <>
                   <button
-                    onClick={() => signIn('google')}
+                    onClick={handleGoogleAuth}
                     className="whitespace-nowrap rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition-all hover:bg-cyan-400/20"
                     title="Login with Google"
                   >
                     Login
                   </button>
                   <button
-                    onClick={() => signIn('google')}
+                    onClick={handleGoogleAuth}
                     className="whitespace-nowrap rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400"
                     title="Sign up with Google"
                   >

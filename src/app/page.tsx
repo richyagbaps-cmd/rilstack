@@ -16,6 +16,7 @@ import UserProfile from '@/components/UserProfile';
 type Section = 'dashboard' | 'budget' | 'investments' | 'account' | 'nin-validation';
 
 function PublicLanding() {
+  const handleGoogleAuth = () => signIn('google', { callbackUrl: '/' });
   const featureCards = [
     {
       title: 'Budgeting',
@@ -44,13 +45,13 @@ function PublicLanding() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => signIn('google')}
+              onClick={handleGoogleAuth}
               className="rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition-all hover:bg-cyan-400/20 md:px-4 md:text-sm"
             >
               Login
             </button>
             <button
-              onClick={() => signIn('google')}
+              onClick={handleGoogleAuth}
               className="rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-2 text-xs font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400 md:px-4 md:text-sm"
             >
               Sign Up
@@ -94,13 +95,13 @@ function PublicLanding() {
 
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => signIn('google')}
+                onClick={handleGoogleAuth}
                 className="rounded-2xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02]"
               >
                 Continue with Google
               </button>
               <button
-                onClick={() => signIn('google')}
+                onClick={handleGoogleAuth}
                 className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition-all hover:bg-white/10"
               >
                 Create Account
