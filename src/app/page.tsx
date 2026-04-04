@@ -22,12 +22,19 @@ export default function Home() {
 
   useEffect(() => {
     const savedMode = localStorage.getItem('budgetMode');
+    const chatbotTimer = window.setTimeout(() => {
+      setShowChatbot(false);
+    }, 1000);
 
     if (savedMode === 'strict' || savedMode === 'relaxed') {
       setBudgetMode(savedMode);
     }
 
     setIsLoaded(true);
+
+    return () => {
+      window.clearTimeout(chatbotTimer);
+    };
   }, []);
 
   const handleModeSelect = (mode: 'strict' | 'relaxed') => {
@@ -80,7 +87,7 @@ export default function Home() {
 
       {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
 
-      <div className="fixed bottom-0 right-0 z-40 flex items-end gap-4 p-4">
+      <div className="fixed bottom-0 left-0 z-40 flex items-end gap-4 p-4">
         {showChatbot ? (
           <AIChatbot onClose={() => setShowChatbot(false)} />
         ) : (
