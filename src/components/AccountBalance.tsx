@@ -247,7 +247,7 @@ export default function AccountBalance() {
     setProcessSuccess(null);
 
     try {
-      const callbackUrl = `${window.location.origin}/?section=account`;
+      const callbackUrl = 'https://rilstack.xyz/?section=account';
       const response = await fetch('/api/payment/deposit', {
         method: 'POST',
         headers: {
