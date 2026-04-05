@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -108,11 +108,6 @@ export default function Dashboard() {
   const [focusMode, setFocusMode] = useState<FocusMode>('savings');
   const focus = FOCUS_CONTENT[focusMode];
 
-  const portfolioTotal = useMemo(
-    () => portfolioBars.reduce((sum, item) => sum + item.amount, 0),
-    [],
-  );
-
   return (
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(74,222,255,0.16),_transparent_20%),radial-gradient(circle_at_top_right,_rgba(191,90,255,0.14),_transparent_24%),linear-gradient(180deg,_#050816_0%,_#09101d_48%,_#050816_100%)] px-3 pb-12 pt-4 text-white md:px-6 md:pt-6">
       <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-40" />
@@ -206,10 +201,10 @@ export default function Dashboard() {
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Income Stream</p>
-                <h3 className="mt-2 text-xl font-bold text-white md:text-2xl">Cashflow Atmosphere</h3>
+                <h3 className="mt-2 text-xl font-bold text-white md:text-2xl">Cash Flow Atmosphere</h3>
               </div>
               <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-sky-200">
-                6 Month Scan
+                6-Month Scan
               </div>
             </div>
             <ResponsiveContainer width="100%" height={260}>
@@ -248,7 +243,7 @@ export default function Dashboard() {
                 <h3 className="mt-2 text-xl font-bold text-white md:text-2xl">Allocation Pulse</h3>
               </div>
               <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-violet-200">
-                AI Balanced
+                AI-Balanced
               </span>
             </div>
             <div className="grid gap-6 md:grid-cols-[0.9fr,1.1fr]">
