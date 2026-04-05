@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Rilstack 2026 – Budget, Safelock, Invest | Nigeria</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f5f7fa; color: #1e2a3a; line-height: 1.5; }
+    .bg-grey-light { background: #f8f9fc; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    .btn-primary { background: #2c5f2d; color: white; border: none; padding: 12px 28px; border-radius: 40px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; }
+    .btn-primary:hover { background: #1e4620; transform: translateY(-2px); }
+    .btn-outline { background: transparent; border: 1px solid #b9c2cc; padding: 10px 24px; border-radius: 40px; font-weight: 500; color: #2c3e4e; cursor: pointer; }
+    .btn-outline:hover { border-color: #2c5f2d; background: #f0f5f0; }
+    .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; flex-wrap: wrap; gap: 20px; }
+    .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #2c5f2d, #4b6a3b); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
+    .nav-links { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+    .nav-links span, .nav-links a { cursor: pointer; color: #2c3e4e; font-weight: 500; }
+    .nav-links span:hover, .nav-links a:hover { color: #2c5f2d; }
+    .hero { padding: 60px 0 40px; }
+    .hero-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 40px; }
+    .hero-text { flex: 1; }
+    .hero-badge { background: #e9edf2; display: inline-block; padding: 6px 14px; border-radius: 30px; font-size: 0.85rem; font-weight: 500; margin-bottom: 24px; cursor: pointer; }
+    .hero-text h1 { font-size: 3rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px; }
+    .hero-text p { font-size: 1.2rem; color: #4a5b6e; margin-bottom: 32px; }
+    .hero-stats { display: flex; gap: 28px; margin-top: 24px; flex-wrap: wrap; }
+    .hero-stats div { cursor: pointer; background: #ffffff80; padding: 4px 12px; border-radius: 30px; }
+    .hero-visual { flex: 1; background: #eef2f7; border-radius: 32px; padding: 32px 20px; border: 1px solid #e2e8f0; cursor: pointer; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; margin: 48px 0; }
+    .feature-card { background: #ffffff; border-radius: 28px; padding: 32px 24px; border: 1px solid #eef2f6; cursor: pointer; transition: 0.2s; }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.05); }
+    .card-icon { font-size: 2.4rem; margin-bottom: 20px; }
+    .modes-container { display: flex; flex-wrap: wrap; gap: 30px; margin: 40px 0; }
+    .mode-card { flex: 1; background: #ffffff; border-radius: 28px; padding: 28px; border: 1px solid #e2e8f0; cursor: pointer; }
+    .mode-badge { font-weight: 700; padding: 4px 12px; border-radius: 30px; display: inline-block; margin-bottom: 16px; }
+    .strict { background: #fde6e0; color: #b34a2c; }
+    .relaxed { background: #e0f0e8; color: #2c6e4f; }
+    .resources-logos { display: flex; flex-wrap: wrap; gap: 40px; align-items: center; justify-content: space-between; background: #ffffff; padding: 30px 32px; border-radius: 48px; margin: 48px 0; border: 1px solid #eef2f6; }
+    .resource-item { font-weight: 600; font-size: 1.2rem; cursor: pointer; }
+    .safelock-banner { background: #eef2f7; border-radius: 40px; padding: 40px; margin: 50px 0; border-left: 6px solid #2c5f2d; cursor: pointer; }
+    .signup-verify { background: linear-gradient(135deg, #2c3e4e, #1e2f3f); border-radius: 36px; padding: 48px 40px; color: white; text-align: center; margin: 60px 0; }
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; margin: 48px 0; }
+    .team-card { background: white; border-radius: 28px; padding: 24px; text-align: center; border: 1px solid #eef2f6; cursor: pointer; transition: 0.2s; }
+    .team-card:hover { transform: translateY(-4px); background: #fefef7; }
+    .team-name { font-weight: 800; font-size: 1.2rem; margin-bottom: 8px; }
+    .team-title { color: #2c5f2d; font-weight: 600; font-size: 0.85rem; margin-bottom: 12px; }
+    footer { background: #1e2a36; color: #cddbe9; padding: 48px 0 32px; margin-top: 64px; border-radius: 32px 32px 0 0; }
+    .footer-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 32px; }
+    .footer-address { font-style: normal; line-height: 1.6; cursor: pointer; }
+    .copyright { text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid #2f4050; font-size: 0.85rem; }
+    .section-title { font-size: 2rem; font-weight: 700; margin-bottom: 12px; color: #1e2a3a; }
+    .section-sub { font-size: 1.1rem; color: #4a5b6e; margin-bottom: 32px; }
+    @media (max-width: 780px) { .hero-text h1 { font-size: 2.2rem; } .navbar { flex-direction: column; } }
+    [data-instruction] { cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="bg-grey-light">
+  <div class="container">
+    <div class="navbar">
+      <div class="logo" data-instruction="Rilstack 2026 logo: Click to refresh homepage. Budget, Safelock, Invest – all free for Nigerians.">RILSTACK 2026</div>
+      <div class="nav-links">
+        <span data-instruction="Budget feature: Track expenses, set limits, auto-sweep surplus to Safelock.">Budget</span>
+        <span data-instruction="Safelock: Goal-based savings vaults linked to your budget. Earn interest, lock funds.">Safelock</span>
+        <span data-instruction="Invest: Start from ₦500, fractional shares, low-risk ETFs. Build wealth.">Invest</span>
+        <span data-instruction="Resources: Articles from Naira Metrics, The Money Africa & more.">Resources</span>
+        <span data-instruction="Modes: Switch between Strict (hard caps) and Relaxed (gentle nudges).">Modes</span>
+        <button class="btn-outline" data-instruction="Log in with BVN/NIN or email. Access your dashboard.">Log in</button>
+        <button class="btn-primary" data-instruction="Start 5-min signup with BVN & NIN. Free forever.">Get Started →</button>
+      </div>
+    </div>
+    <div class="hero">
+      <div class="hero-grid">
+        <div class="hero-text">
+          <div class="hero-badge" data-instruction="Proudly Nigerian. Compliant with CBN guidelines, BVN/NIN security.">🇳🇬 Made for Nigerians, by Nigerians</div>
+          <h1>Budget, Save with Safelock, and Invest — all in one free app.</h1>
+          <p>Take control of your finances with Rilstack. Strict or relaxed mode, automated savings, and smart investing. Secured & free forever.</p>
+          <button class="btn-primary" data-instruction="Step 1: Enter BVN & NIN. Step 2: Verify identity (5 mins). Step 3: Set budget and Safelock goal.">Sign up with BVN/NIN</button>
+          <button class="btn-outline" data-instruction="Interactive demo: See how budgeting auto-feeds Safelock, surplus becomes investments.">See how it works</button>
+          <div class="hero-stats">
+            <div data-instruction="Signup takes 5 minutes. BVN+NIN for fast verification.">✓ 5‑min secure signup</div>
+            <div data-instruction="BVN and NIN required for KYC. Your data is encrypted.">✓ BVN + NIN required</div>
+            <div data-instruction="100% free – no premium tiers, no hidden fees.">✓ 100% free</div>
+          </div>
+        </div>
+        <div class="hero-visual" data-instruction="Live dashboard preview: budget progress, Safelock balance, investment growth.">
+          <div style="background:#fff; border-radius:24px; padding:20px;">
+            <div style="font-weight:600;">Dashboard preview</div>
+            <div style="background:#eef2f6; height:8px; width:70%; border-radius:4px; margin:8px 0;"></div>
+            <div style="display:flex; gap:12px; margin:20px 0;">
+              <div style="background:#2c5f2d; width:40px; height:40px; border-radius:20px;"></div>
+              <div><small>Budget: ₦245k left</small><div style="background:#e2e8f0; height:6px; width:140px; border-radius:3px;"><div style="background:#2c5f2d; width:65%; height:6px; border-radius:3px;"></div></div></div>
+            </div>
+            <div style="border-top:1px solid #edf2f7; margin:16px 0;"></div>
+            <div><span>🔒 Safelock: ₦85,000 locked</span> <span style="float:right;">✨ +12% this month</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; background: white; padding: 20px 28px; border-radius: 60px; margin: 20px 0;">
+      <span data-instruction="256-bit SSL encryption protects all data.">🔐 Bank-Level 256-bit SSL</span>
+      <span data-instruction="Rated 4.9/5 by over 12,000 Nigerian users.">⭐ 4.9/5 (12k+ reviews)</span>
+      <span data-instruction="Funds held in regulated accounts. Product of Rick Investments Ltd.">🏦 Secured by Rick Investments Ltd</span>
+      <span data-instruction="$0 fraud liability guarantee.">🛡️ $0 Fraud Liability</span>
+    </div>
+    <div>
+      <h2 class="section-title" data-instruction="Budgeting → Safelock → Investing: seamless integration.">Your financial ecosystem</h2>
+      <p class="section-sub" data-instruction="Every budget surplus can auto-flow to Safelock, and Safelock can fund investments.">Budgeting fuels Safelock, Safelock fuels investing — seamless and intelligent.</p>
+      <div class="cards-grid">
+        <div class="feature-card" data-instruction="Smart Budgeting: Auto-categorise, set limits, link to Safelock. Click to create first budget.">
+          <div class="card-icon">📊</div>
+          <h3>Smart Budgeting</h3>
+          <p>Auto-categorise expenses, track bills, and see spending patterns. Linked directly to your Safelock savings — every surplus can be auto-locked.</p>
+        </div>
+        <div class="feature-card" data-instruction="Safelock Savings: Goal-based vaults. Automatically receive budget leftovers. Round-ups, auto-sweep.">
+          <div class="card-icon">🔒</div>
+          <h3>Safelock Savings</h3>
+          <p>Goal-based vaults with penalty-free access only when you choose. Integrates with your budget: round-ups, auto-sweep, and milestone rewards.</p>
+          <div style="margin-top:12px; background:#eef2f6; padding:8px 12px; border-radius:24px;"><small>🔗 Linked to budgeting → save smarter</small></div>
+        </div>
+        <div class="feature-card" data-instruction="Micro-Investing: Start from ₦500. Fractional shares, Nigerian/global ETFs. No trading fees.">
+          <div class="card-icon">📈</div>
+          <h3>Micro-Investing</h3>
+          <p>Start with as low as ₦500. Diversified Nigerian & global ETFs. No hidden fees. Grow wealth alongside your savings.</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h2 class="section-title" data-instruction="Choose Strict (enforced savings) or Relaxed (gentle guidance).">Choose your financial discipline</h2>
+      <p class="section-sub">Strict mode enforces saving targets; Relaxed mode gives gentle nudges. Both help you win.</p>
+      <div class="modes-container">
+        <div class="mode-card" data-instruction="Strict Mode: Hard spending caps, auto-transfer to Safelock before you see funds. Lock savings periods.">
+          <div class="mode-badge strict">⚡ STRICT MODE</div>
+          <h3>Maximum accountability</h3>
+          <p>Hard spending caps, automatic transfer to Safelock before you see the funds. Lock savings for specific period. Overdraft alerts & freeze optional.</p>
+          <ul style="margin-top:16px; margin-left:20px;"><li>🔒 Mandatory monthly savings goal</li><li>⛔ Decline overspending categories</li></ul>
+        </div>
+        <div class="mode-card" data-instruction="Relaxed Mode: Smart insights, recommended savings, flexible contributions. No penalties.">
+          <div class="mode-badge relaxed">🌿 RELAXED MODE</div>
+          <h3>Gentle guidance</h3>
+          <p>Smart insights, recommended savings, and flexible Safelock contributions. No penalties — just encouragement to build better habits.</p>
+          <ul style="margin-top:16px; margin-left:20px;"><li>📢 Weekly saving tips</li><li>💡 'Spare change' round-ups optional</li></ul>
+        </div>
+      </div>
+    </div>
+    <div class="safelock-banner" data-instruction="Safelock + Budgeting integration: Every budget underspend can auto-flow to your Safelock vault. Set rules in settings.">
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between;">
+        <div><span style="font-size:2rem;">🔗</span> <strong style="font-size:1.4rem;">Safelock + Budgeting = True wealth control</strong>
+        <p style="margin-top:8px;">Every budget surplus can automatically flow into your Safelock vault. Watch your savings grow without lifting a finger.</p></div>
+        <button class="btn-primary" data-instruction="Explore Safelock: View vaults, create new goal, set auto-sweep rules from budget.">Explore Safelock</button>
+      </div>
+    </div>
+    <div>
+      <h2 class="section-title" data-instruction="Financial literacy from top Nigerian publications.">Financial literacy, powered by experts</h2>
+      <p class="section-sub">Learn from trusted Nigerian and African finance publications — curated inside Rilstack.</p>
+      <div class="resources-logos">
+        <div class="resource-item" data-instruction="Naira Metrics: Daily Nigerian economy, personal finance news.">📘 Naira Metrics</div>
+        <div class="resource-item" data-instruction="The Money Africa: Leading financial education for Africans.">💰 The Money Africa</div>
+        <div class="resource-item" data-instruction="Nairametrics: Business, market, investing insights.">📊 Nairametrics</div>
+        <div class="resource-item" data-instruction="Stears Business: Data-driven African economic analysis.">🌍 Stears Business</div>
+        <div class="resource-item" data-instruction="ThisIsAfrica Finance: Pan-African finance trends.">📰 ThisIsAfrica Finance</div>
+      </div>
+    </div>
+    <div class="signup-verify">
+      <div class="verify-badge" data-instruction="Trust & Verification: BVN+NIN prevent fraud, comply with CBN.">🔐 Trust & Verification</div>
+      <h2 style="font-size:1.9rem; margin-bottom:16px;">Sign up in 5 minutes with BVN & NIN</h2>
+      <p style="max-width:700px; margin:0 auto 28px;">Your identity is safe with us. BVN+NIN verification ensures fraud protection and unlocks all features — budgeting, Safelock, and investing.</p>
+      <button class="btn-primary" style="background:white; color:#1e2a3a;" data-instruction="Instruction: Provide BVN (11 digits) and NIN → OTP verification → set profile → start free.">Start 5-min secure signup →</button>
+      <p style="margin-top:24px;">🔒 No hidden fees. Free forever. Data encrypted.</p>
+    </div>
+    <div>
+      <h2 class="section-title" data-instruction="Meet the leaders driving Rilstack 2026.">Executive Leadership</h2>
+      <p class="section-sub" data-instruction="Experienced team committed to your financial freedom.">Built by experts in finance, law, technology, and customer success.</p>
+      <div class="team-grid">
+        <div class="team-card" data-instruction="Agbapuru Chiso – CEO & Board Chairman. Overall strategy and vision. Click to read full bio.">
+          <div class="team-name">Agbapuru Chiso</div>
+          <div class="team-title">CEO & Board Chairman</div>
+        </div>
+        <div class="team-card" data-instruction="Ojiaka Merit – CMO & Board Vice Chair. Marketing, brand, and user growth.">
+          <div class="team-name">Ojiaka Merit</div>
+          <div class="team-title">CMO & Board Vice Chair</div>
+        </div>
+        <div class="team-card" data-instruction="Agbapuru Chioma Esq. – CLO & Board Member. Legal, compliance, and corporate governance.">
+          <div class="team-name">Agbapuru Chioma Esq.</div>
+          <div class="team-title">CLO & Board Member</div>
+        </div>
+        <div class="team-card" data-instruction="Vicmanuel Love – Board Secretary & CRO. Risk management, regulatory oversight, and board operations.">
+          <div class="team-name">Vicmanuel Love</div>
+          <div class="team-title">Board Secretary & CRO</div>
+        </div>
+        <div class="team-card" data-instruction="Iwu Chidubem – COO & Board Member. Operations, product delivery, and scaling.">
+          <div class="team-name">Iwu Chidubem</div>
+          <div class="team-title">COO & Board Member</div>
+        </div>
+        <div class="team-card" data-instruction="Alabi Reuben – CPO & Board Member. Product design, user experience, and innovation.">
+          <div class="team-name">Alabi Reuben</div>
+          <div class="team-title">CPO & Board Member</div>
+        </div>
+        <div class="team-card" data-instruction="Roni Egbu – CCO & Board Member. Customer success, community, and support.">
+          <div class="team-name">Roni Egbu</div>
+          <div class="team-title">CCO & Board Member</div>
+        </div>
+      </div>
+    </div>
+    <div style="background: white; border-radius: 32px; padding: 40px; margin: 40px 0; text-align: center; border:1px solid #eef2f6;">
+      <h2 class="section-title" data-instruction="Rilstack is 100% free. No premium tiers, no credit card required.">100% free. No premium tiers.</h2>
+      <p class="section-sub" style="margin:0 auto;">Unlimited budgeting goals, Safelock vaults, and investment portfolios — all at zero cost.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 30px;">
+        <span data-instruction="Unlimited budget categories, sub-categories.">✅ Unlimited budget categories</span>
+        <span data-instruction="Create up to 20 separate Safelock vaults.">✅ 10+ Safelock vaults</span>
+        <span data-instruction="Invest from ₦500, fractional shares.">✅ Fractional investing</span>
+        <span data-instruction="24/7 in-app chat and email support.">✅ Priority support</span>
+      </div>
+    </div>
+    <div style="margin: 50px 0;">
+      <h2 class="section-title" data-instruction="Frequently asked questions about security, modes, and costs.">Quick answers</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap: 24px;">
+        <div data-instruction="Safelock funds in regulated trustee accounts. Investing carries risk, but we use low-risk ETFs."><strong>🔐 Is my money safe?</strong><br>Yes, Safelock funds are held in regulated trustee accounts. Investing carries risk, but we offer low‑risk portfolios.</div>
+        <div data-instruction="BVN and NIN required by CBN to prevent fraud. Bank-grade encryption."><strong>⏱️ Why BVN/NIN?</strong><br>To prevent fraud and comply with CBN regulations. Your data is encrypted.</div>
+        <div data-instruction="Go to Settings → Mode preference. Toggle anytime."><strong>⚙️ Can I switch modes?</strong><br>Anytime! Strict or Relaxed — adjust from settings.</div>
+        <div data-instruction="Zero charges. No monthly fees, no transaction fees for budgeting or Safelock."><strong>💸 Any hidden charges?</strong><br>Zero. Rilstack is completely free. No subscription, no fees.</div>
+      </div>
+    </div>
+    <div style="text-align: center; background: #eef2f7; padding: 56px 24px; border-radius: 56px; margin: 40px 0;">
+      <h2 style="font-size:2rem;" data-instruction="Join thousands of Nigerians using Rilstack to budget, save with Safelock, and invest.">Take charge of your Naira today</h2>
+      <p style="margin:16px 0 28px;">Join thousands of Nigerians building wealth with Rilstack's budgeting + Safelock + investing.</p>
+      <button class="btn-primary" style="padding:14px 36px; font-size:1.1rem;" data-instruction="Complete signup: BVN & NIN → verify → set monthly income → create budget → activate Safelock.">Create free account (BVN/NIN required)</button>
+      <p style="margin-top:20px;">Already have an account? <span style="color:#2c5f2d; cursor:pointer;" data-instruction="Go to login page. Enter BVN/NIN or email and password.">Log in</span></p>
+    </div>
+  </div>
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="logo" style="color:white; background:none; color:#cbdbe6;" data-instruction="Rilstack 2026 – Financial freedom for Nigerians.">RILSTACK 2026</div>
+          <p style="margin-top:16px;">Budget, Safelock savings, and investing — for every Nigerian.</p>
+          <p data-instruction="Copyright notice: Rilstack 2026, All rights reserved.">© rilstack 2026. All rights reserved.</p>
+        </div>
+        <div>
+          <h4 style="color:white;">Contact</h4>
+          <address class="footer-address" data-instruction="Lagos head office address. Support hours Mon-Fri 9am-5pm WAT.">19, Gabriel Bankole Close,<br>Amuwo Odofin, Lagos, Nigeria.</address>
+          <p style="margin-top:12px;" data-instruction="Email: hello@rilstack.com">📧 hello@rilstack.com</p>
+        </div>
+        <div>
+          <h4 style="color:white;">Legal</h4>
+          <p data-instruction="Privacy policy – how we handle BVN/NIN and financial data.">Privacy Policy</p>
+          <p data-instruction="Terms of service – user obligations, risk disclosures.">Terms of Service</p>
+          <p data-instruction="Security & Fraud – how we protect your account.">Security & Fraud</p>
+        </div>
+        <div>
+          <h4 style="color:white;">Owned by</h4>
+          <p data-instruction="Rilstack is a product of Rick Investments Limited, registered Nigerian company.">Rick Investments Limited</p>
+          <p data-instruction="RC Number: 7875041 (CAC).">RC: 7875041</p>
+        </div>
+      </div>
+      <div class="copyright">
+        <p data-instruction="⚠️ Investing involves risk of loss. Past performance does not guarantee future results. Safelock savings are secure, but investment portfolios may fluctuate.">⚠️ Investing involves risk of loss. Rilstack provides tools, not personal financial advice. Safelock savings are secure, but investment portfolios may fluctuate.</p>
+        <p style="margin-top:8px;" data-instruction="Proudly Nigerian – built to empower financial independence.">Made with 🇳🇬 for financial freedom.</p>
+      </div>
+    </div>
+  </footer>
+</div>
+<script>
+  document.querySelectorAll('[data-instruction]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const instruction = el.getAttribute('data-instruction');
+      if (instruction) alert(`📘 INSTRUCTION: ${instruction}`);
+    });
+    if (!/button|a|span/.test(el.tagName.toLowerCase())) el.style.cursor = 'pointer';
+  });
+</script>
+</body>
+</html>
