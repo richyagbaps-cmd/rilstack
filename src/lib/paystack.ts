@@ -8,6 +8,37 @@ export interface PaystackApiResponse<T> {
   data: T;
 }
 
+interface PaystackCustomer {
+  id: number;
+  customer_code: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+}
+
+interface PaystackDedicatedAccount {
+  id: number;
+  account_name?: string;
+  account_number?: string;
+  assigned_bank?: {
+    name?: string;
+    slug?: string;
+  };
+  customer?: {
+    id?: number;
+    customer_code?: string;
+    email?: string;
+  };
+}
+
+export interface PaystackWalletDetails {
+  walletId: string;
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+}
+
 export function getPaystackSecretKey() {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
@@ -68,4 +99,106 @@ export function mapPaystackChannelToMethod(channel?: string): 'card' | 'transfer
   if (channel === 'bank_transfer' || channel === 'bank') return 'transfer';
   if (channel === 'ussd') return 'ussd';
   return 'card';
+}
+
+function splitName(fullName?: string) {
+  const trimmed = fullName?.trim();
+
+  if (!trimmed) {
+    return {
+      firstName: 'RILSTACK',
+      lastName: 'User',
+    };
+  }
+
+  const [first, ...rest] = trimmed.split(/\s+/);
+
+  return {
+    firstName: first || 'RILSTACK',
+    lastName: rest.join(' ') || 'User',
+  };
+}
+
+function mapDedicatedAccountToWallet(account: PaystackDedicatedAccount): PaystackWalletDetails | null {
+  if (!account.account_number) return null;
+
+  return {
+    walletId: String(account.id),
+    accountName: account.account_name || 'RILSTACK Wallet',
+    accountNumber: account.account_number,
+    bankName: account.assigned_bank?.name || 'Paystack Bank',
+  };
+}
+
+async function getCustomerByEmail(email: string) {
+  try {
+    const response = await paystackRequest<PaystackCustomer>(`/customer/${encodeURIComponent(email)}`, {
+      method: 'GET',
+    });
+
+    return response.data;
+  } catch {
+    return null;
+  }
+}
+
+export async function ensurePaystackWalletForEmail(
+  email: string,
+  profile?: { name?: string; phone?: string },
+): Promise<PaystackWalletDetails> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const { firstName, lastName } = splitName(profile?.name);
+
+  let customer = await getCustomerByEmail(normalizedEmail);
+
+  if (!customer) {
+    const createdCustomer = await paystackRequest<PaystackCustomer>('/customer', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: normalizedEmail,
+        first_name: firstName,
+        last_name: lastName,
+        phone: profile?.phone || undefined,
+      }),
+    });
+
+    customer = createdCustomer.data;
+  }
+
+  const dedicatedAccounts = await paystackRequest<PaystackDedicatedAccount[]>(
+    `/dedicated_account?active=true&customer=${encodeURIComponent(customer.customer_code)}`,
+    {
+      method: 'GET',
+    },
+  );
+
+  const existingWallet = dedicatedAccounts.data
+    .filter((account) => {
+      const accountCustomerCode = account.customer?.customer_code;
+      const accountCustomerId = account.customer?.id;
+
+      return accountCustomerCode === customer?.customer_code || accountCustomerId === customer?.id;
+    })
+    .map(mapDedicatedAccountToWallet)
+    .find((wallet): wallet is PaystackWalletDetails => Boolean(wallet));
+
+  if (existingWallet) {
+    return existingWallet;
+  }
+
+  const createdDedicatedAccount = await paystackRequest<PaystackDedicatedAccount>('/dedicated_account', {
+    method: 'POST',
+    body: JSON.stringify({
+      customer: customer.customer_code,
+      preferred_bank: process.env.PAYSTACK_DEDICATED_ACCOUNT_BANK || 'wema-bank',
+    }),
+  });
+
+  const createdWallet = mapDedicatedAccountToWallet(createdDedicatedAccount.data);
+
+  if (!createdWallet) {
+    throw new Error('Unable to provision Paystack wallet account.');
+  }
+
+  return createdWallet;
 }

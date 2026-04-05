@@ -17,38 +17,7 @@ interface LockedSaving {
 }
 
 export default function LockedSavings() {
-  const [lockedSavings, setLockedSavings] = useState<LockedSaving[]>([
-    {
-      id: '1',
-      amount: 50000,
-      lockPeriod: 'monthly',
-      createdDate: '2024-03-01',
-      unlockDate: '2024-04-01',
-      status: 'locked',
-      description: 'Monthly Savings Goal',
-      interestRate: 4.5,
-    },
-    {
-      id: '2',
-      amount: 100000,
-      lockPeriod: 'yearly',
-      createdDate: '2024-03-03',
-      unlockDate: '2025-03-03',
-      status: 'locked',
-      description: 'Annual Emergency Fund',
-      interestRate: 7.2,
-    },
-    {
-      id: '3',
-      amount: 15000,
-      lockPeriod: 'daily',
-      createdDate: '2024-03-02',
-      unlockDate: '2024-03-03',
-      status: 'unlocked',
-      description: 'Daily Savings',
-      interestRate: 2.0,
-    },
-  ]);
+  const [lockedSavings, setLockedSavings] = useState<LockedSaving[]>([]);
 
   const [timeRemaining, setTimeRemaining] = useState<{ [key: string]: string }>({});
   const { register, handleSubmit, reset, formState: { errors } } = useForm<{

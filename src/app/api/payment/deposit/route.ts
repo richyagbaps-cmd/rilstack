@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mapDepositMethodToChannel, paystackRequest } from '@/lib/paystack';
+import { ensurePaystackWalletForEmail, mapDepositMethodToChannel, paystackRequest } from '@/lib/paystack';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,14 +16,19 @@ export async function POST(request: NextRequest) {
     const body: DepositRequest = await request.json();
     const { amount, method, description, userEmail, callbackUrl } = body;
 
-    if (!amount || amount < 5000) {
-      return NextResponse.json({ error: 'Minimum deposit amount is N5,000.' }, { status: 400 });
+    if (!amount || amount < 100) {
+      return NextResponse.json({ error: 'Minimum deposit amount is N100.' }, { status: 400 });
     }
 
     if (!['card', 'transfer', 'ussd'].includes(method)) {
       return NextResponse.json({ error: 'Invalid payment method.' }, { status: 400 });
     }
 
+    if (!userEmail) {
+      return NextResponse.json({ error: 'User email is required.' }, { status: 400 });
+    }
+
+    const wallet = await ensurePaystackWalletForEmail(userEmail);
     const reference = `RIL_${Date.now()}`;
     const response = await paystackRequest<{
       reference: string;
@@ -32,7 +37,7 @@ export async function POST(request: NextRequest) {
     }>('/transaction/initialize', {
       method: 'POST',
       body: JSON.stringify({
-        email: userEmail || 'user@rilstack.com',
+        email: userEmail,
         amount: amount * 100,
         currency: 'NGN',
         reference,
@@ -42,8 +47,10 @@ export async function POST(request: NextRequest) {
           description: description || 'RILSTACK Deposit',
           type: 'deposit',
           platform: 'rilstack',
-          userEmail: userEmail || 'user@rilstack.com',
+          userEmail,
           depositMethod: method,
+          walletAccountNumber: wallet.accountNumber,
+          walletBankName: wallet.bankName,
         },
       }),
     });
@@ -58,6 +65,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       paymentUrl: response.data.authorization_url,
       accessCode: response.data.access_code,
+      wallet,
       message: 'Payment link generated. Complete the flow on Paystack.',
     });
   } catch (error: any) {

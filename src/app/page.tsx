@@ -11,13 +11,27 @@ import BudgetSection from '@/components/BudgetSection';
 import Dashboard from '@/components/Dashboard';
 import InvestmentPortfolio from '@/components/InvestmentPortfolio';
 import Navigation from '@/components/Navigation';
-import NinValidation from '@/components/NinValidation';
+import SettingsSection from '@/components/SettingsSection';
 import UserProfile from '@/components/UserProfile';
+import AuthModal from '@/components/AuthModal';
 
-type Section = 'dashboard' | 'budget' | 'investments' | 'account' | 'nin-validation';
+type Section = 'dashboard' | 'budget' | 'investments' | 'account' | 'settings';
 
 function PublicLanding() {
   const handleGoogleAuth = () => signIn('google', { callbackUrl: '/' });
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
+  const teamMembers = [
+    { name: 'Amina Okoye', role: 'Product Lead' },
+    { name: 'Tunde Adebayo', role: 'Engineering Lead' },
+    { name: 'Ifeoma Nnadi', role: 'Customer Success' },
+  ];
+  const services = [
+    'Smart budgeting and category planning',
+    'Savings lock features with release dates',
+    'Investment tracking for T-Bills, bonds, and mutual funds',
+    'Paystack wallet deposits and withdrawals',
+    'KYC and NIN verification workflows',
+  ];
   const newsItems = [
     {
       title: 'CBN plans N3.95 trillion Treasury Bills auctions for Q2 2026',
@@ -69,13 +83,13 @@ function PublicLanding() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={handleGoogleAuth}
+              onClick={() => setAuthMode('login')}
               className="rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition-all hover:bg-cyan-400/20 md:px-4 md:text-sm"
             >
               Login
             </button>
             <button
-              onClick={handleGoogleAuth}
+              onClick={() => setAuthMode('signup')}
               className="rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-2 text-xs font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400 md:px-4 md:text-sm"
             >
               Sign Up
@@ -125,7 +139,7 @@ function PublicLanding() {
                 Continue with Google
               </button>
               <button
-                onClick={handleGoogleAuth}
+                onClick={() => setAuthMode('signup')}
                 className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition-all hover:bg-white/10"
               >
                 Create Account
@@ -170,6 +184,41 @@ function PublicLanding() {
           </div>
         </section>
 
+        <section className="grid gap-4 lg:grid-cols-3">
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">About</p>
+            <h3 className="mt-2 text-xl font-bold text-white">Who We Are</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              RILSTACK helps Nigerians budget smarter, save with discipline, and invest with clearer decisions from one modern financial workspace.
+            </p>
+          </article>
+
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Meet The Team</p>
+            <h3 className="mt-2 text-xl font-bold text-white">People Behind RILSTACK</h3>
+            <div className="mt-3 space-y-2">
+              {teamMembers.map((member) => (
+                <div key={member.name} className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2">
+                  <p className="text-sm font-semibold text-white">{member.name}</p>
+                  <p className="text-xs text-slate-400">{member.role}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Services</p>
+            <h3 className="mt-2 text-xl font-bold text-white">What We Offer</h3>
+            <ul className="mt-3 space-y-2">
+              {services.map((service) => (
+                <li key={service} className="text-sm text-slate-300">
+                  • {service}
+                </li>
+              ))}
+            </ul>
+          </article>
+        </section>
+
         <section className="rounded-[32px] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-xl lg:p-8">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
@@ -201,6 +250,7 @@ function PublicLanding() {
           </div>
         </section>
       </div>
+      {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} />}
     </div>
   );
 }
@@ -226,9 +276,11 @@ function HomeContent() {
       sectionParam === 'budget' ||
       sectionParam === 'investments' ||
       sectionParam === 'account' ||
-      sectionParam === 'nin-validation'
+      sectionParam === 'settings'
     ) {
       setCurrentSection(sectionParam);
+    } else if (sectionParam === 'nin-validation') {
+      setCurrentSection('settings');
     }
 
     if (savedMode === 'strict' || savedMode === 'relaxed') {
@@ -292,7 +344,7 @@ function HomeContent() {
         {currentSection === 'budget' && budgetMode && <BudgetSection budgetMode={budgetMode} />}
         {currentSection === 'investments' && <InvestmentPortfolio />}
         {currentSection === 'account' && <AccountBalance />}
-        {currentSection === 'nin-validation' && <NinValidation />}
+        {currentSection === 'settings' && <SettingsSection />}
       </main>
 
       {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}

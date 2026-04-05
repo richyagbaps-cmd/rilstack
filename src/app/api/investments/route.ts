@@ -5,8 +5,9 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   try {
     const mockInvestments = [
-      { id: '1', symbol: 'AAPL', name: 'Apple Inc.', shares: 10, currentPrice: 185, totalValue: 1850 },
-      { id: '2', symbol: 'GOOGL', name: 'Alphabet Inc.', shares: 5, currentPrice: 3150, totalValue: 15750 },
+      { id: '1', symbol: 'TBILL', name: 'Treasury Bills', shares: 0, currentPrice: 0, totalValue: 0 },
+      { id: '2', symbol: 'BOND', name: 'Government Bonds', shares: 0, currentPrice: 0, totalValue: 0 },
+      { id: '3', symbol: 'MUTUAL', name: 'Mutual Funds', shares: 0, currentPrice: 0, totalValue: 0 },
     ];
 
     return NextResponse.json(mockInvestments);

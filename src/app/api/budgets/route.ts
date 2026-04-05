@@ -9,8 +9,8 @@ export async function GET(request: Request) {
     // const budgets = await db.budget.findMany();
     
     const mockBudgets = [
-      { id: '1', category: 'Housing', limit: 8500, spent: 8200 },
-      { id: '2', category: 'Food', limit: 4500, spent: 4200 },
+      { id: '1', category: 'Housing', limit: 0, spent: 0 },
+      { id: '2', category: 'Food', limit: 0, spent: 0 },
     ];
 
     return NextResponse.json(mockBudgets);

@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   try {
     const mockGoals = [
-      { id: '1', name: 'Emergency Fund', targetAmount: 20000, currentAmount: 15000 },
-      { id: '2', name: 'Vacation', targetAmount: 5000, currentAmount: 2500 },
+      { id: '1', name: 'Emergency Fund', targetAmount: 20000, currentAmount: 0 },
+      { id: '2', name: 'Vacation', targetAmount: 5000, currentAmount: 0 },
     ];
 
     return NextResponse.json(mockGoals);

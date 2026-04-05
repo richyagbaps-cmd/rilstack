@@ -45,8 +45,8 @@ const getAIResponse = (userInput: string): string => {
     return "Risk Management in Investing:\n\nConservative Strategy:\n- 60% Bonds/T-Bills, 40% Savings\n- Lower returns, stable growth\n\nModerate Strategy:\n- 50% Bonds, 30% Mutual Funds, 20% T-Bills\n- Balanced risk and returns\n\nAggressive Strategy:\n- 50% Mutual Funds, 40% Stocks, 10% Bonds\n- Higher returns, more volatility\n\nConsider your age, income, and financial goals when choosing your strategy.";
   }
 
-  if (lowerInput.match(/nin|validation|identity|verify|national id/i)) {
-    return "NIN Validation Process:\n\nOur NIN Validation system:\n- Validates your 11-digit NIN\n- Auto-populates your profile with verified details\n- Ensures KYC compliance\n- Supports secure verification workflows\n\nBenefits:\n- Quick profile setup\n- Enhanced security\n- Full access to RILSTACK features\n- Regulatory compliance\n\nGo to the 'NIN Validation' section to get started.";
+  if (lowerInput.match(/nin|validation|identity|verify|national id|kyc|settings/i)) {
+    return "NIN Validation Process:\n\nOur NIN Validation system:\n- Validates your 11-digit NIN\n- Auto-populates your profile with verified details\n- Ensures KYC compliance\n- Supports secure verification workflows\n\nBenefits:\n- Quick profile setup\n- Enhanced security\n- Full access to RILSTACK features\n- Regulatory compliance\n\nGo to the 'Settings' section to get started.";
   }
 
   if (lowerInput.match(/account|deposit|withdraw|balance|transaction|payment method/i)) {
@@ -70,7 +70,7 @@ const getAIResponse = (userInput: string): string => {
   }
 
   if (lowerInput.match(/feature|rilstack|what|available|platform/i)) {
-    return "RILSTACK Features Overview:\n\n- Dashboard - Financial overview and quick insights\n- Budget - 50/30/20 and zero-based budgeting\n- Savings Goals - Track goals with deadlines\n- Locked Savings - Time-locked funds with interest\n- Investments - T-Bills, Bonds, Mutual Funds\n- Account - Balance, transactions, deposits/withdrawals\n- AI Assistant - Financial guidance\n- NIN Validation - Identity verification and auto-population\n\nEach feature is designed to help you achieve financial freedom.";
+    return "RILSTACK Features Overview:\n\n- Dashboard - Financial overview and quick insights\n- Budgets and Savings - 50/30/20, zero-based planning, and savings controls\n- Investments - T-Bills, Bonds, Mutual Funds\n- Account - Balance, transactions, deposits/withdrawals\n- Settings - Profile photo, date of birth, KYC details, and NIN validation\n- AI Assistant - Financial guidance\n\nEach feature is designed to help you achieve financial freedom.";
   }
 
   if (lowerInput.match(/thankyou|thanks|thank you|appreciate|good idea/i)) {

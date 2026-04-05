@@ -1,7 +1,7 @@
 import React from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 
-type Section = 'dashboard' | 'budget' | 'investments' | 'account' | 'nin-validation';
+type Section = 'dashboard' | 'budget' | 'investments' | 'account' | 'settings';
 
 interface NavigationProps {
   currentSection: Section;
@@ -11,12 +11,12 @@ interface NavigationProps {
   onChangeBudgetMode?: () => void;
 }
 
-const navItems: Array<{ id: Section; label: string; icon: string }> = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'Dashboard' },
-  { id: 'budget', label: 'Budget & Savings', icon: 'Budget' },
-  { id: 'investments', label: 'Investments', icon: 'Invest' },
-  { id: 'account', label: 'Account', icon: 'Account' },
-  { id: 'nin-validation', label: 'NIN Validation', icon: 'NIN' },
+const navItems: Array<{ id: Section; label: string }> = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'budget', label: 'Budgets and Savings' },
+  { id: 'investments', label: 'Investments' },
+  { id: 'account', label: 'Account' },
+  { id: 'settings', label: 'Settings' },
 ];
 
 export default function Navigation({
@@ -112,6 +112,12 @@ export default function Navigation({
           )}
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => setCurrentSection('dashboard')}
+              className="whitespace-nowrap rounded-lg border border-cyan-300/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition-all hover:bg-cyan-500/20 md:text-sm"
+            >
+              Home
+            </button>
             <div className="flex min-w-max gap-2">
               {navItems.map((item) => (
                 <button
@@ -123,7 +129,7 @@ export default function Navigation({
                       : 'text-slate-300 hover:bg-slate-700 hover:text-white'
                   }`}
                 >
-                  {item.icon} {item.label}
+                  {item.label}
                 </button>
               ))}
             </div>

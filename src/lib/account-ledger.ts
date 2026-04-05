@@ -1,4 +1,9 @@
-import { isReferenceForEmail, mapPaystackChannelToMethod, paystackRequest } from '@/lib/paystack';
+import {
+  isReferenceForEmail,
+  mapPaystackChannelToMethod,
+  paystackRequest,
+  type PaystackWalletDetails,
+} from '@/lib/paystack';
 
 interface PaystackTransaction {
   id: number;
@@ -63,11 +68,18 @@ export interface AccountLedger {
     balance: number;
     availableBalance: number;
     currency: 'NGN';
+    walletId?: string;
+    accountNumber?: string;
+    accountName?: string;
+    bankName?: string;
   }>;
   transactions: LedgerTransaction[];
 }
 
-export async function getPaystackLedgerForEmail(email: string): Promise<AccountLedger> {
+export async function getPaystackLedgerForEmail(
+  email: string,
+  options?: { wallet?: PaystackWalletDetails | null },
+): Promise<AccountLedger> {
   const normalizedEmail = email.trim().toLowerCase();
   const [transactionResponse, transferResponse] = await Promise.all([
     paystackRequest<PaystackTransaction[]>('/transaction?perPage=100&page=1'),
@@ -135,6 +147,10 @@ export async function getPaystackLedgerForEmail(email: string): Promise<AccountL
         balance: totalBalance,
         availableBalance: totalBalance,
         currency: 'NGN',
+        walletId: options?.wallet?.walletId,
+        accountNumber: options?.wallet?.accountNumber,
+        accountName: options?.wallet?.accountName,
+        bankName: options?.wallet?.bankName,
       },
       {
         id: '2',

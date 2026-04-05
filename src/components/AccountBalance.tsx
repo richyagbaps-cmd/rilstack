@@ -13,6 +13,10 @@ interface Account {
   balance: number;
   availableBalance: number;
   currency: string;
+  walletId?: string;
+  accountNumber?: string;
+  accountName?: string;
+  bankName?: string;
 }
 
 interface Transaction {
@@ -233,6 +237,10 @@ export default function AccountBalance() {
       setProcessError('Enter a valid deposit amount.');
       return;
     }
+    if (!session?.user?.email) {
+      setProcessError('You need a signed-in email before making a deposit.');
+      return;
+    }
 
     setIsSubmittingDeposit(true);
     setProcessError(null);
@@ -249,7 +257,7 @@ export default function AccountBalance() {
           amount,
           method: data.method,
           description: data.description || 'Wallet top-up',
-          userEmail: session?.user?.email || 'user@rilstack.com',
+          userEmail: session?.user?.email,
           callbackUrl,
         }),
       });
@@ -274,6 +282,10 @@ export default function AccountBalance() {
       setProcessError('Enter a valid withdrawal amount.');
       return;
     }
+    if (!session?.user?.email) {
+      setProcessError('You need a signed-in email before making a withdrawal.');
+      return;
+    }
 
     if (amount > totalAvailable) {
       setProcessError('Withdrawal exceeds your available Paystack balance.');
@@ -296,7 +308,7 @@ export default function AccountBalance() {
           bankCode: data.bankCode,
           recipientName: data.recipientName,
           narration: data.narration,
-          userEmail: session?.user?.email || 'user@rilstack.com',
+          userEmail: session?.user?.email,
         }),
       });
       const result = await response.json();
@@ -527,6 +539,12 @@ export default function AccountBalance() {
                     <p className="font-semibold text-amber-600">{formatCurrency(account.balance - account.availableBalance)}</p>
                   </div>
                 </div>
+                {account.type === 'checking' && account.accountNumber && (
+                  <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-900">
+                    Deposit account: {account.accountNumber} ({account.bankName || 'Paystack'}) -{' '}
+                    {account.accountName || account.name}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -586,12 +604,12 @@ export default function AccountBalance() {
                 <label className="mb-2 block text-sm font-semibold">Amount (N)</label>
                 <input
                   type="number"
-                  min="5000"
+                  min="100"
                   placeholder="Enter amount"
                   {...depositForm.register('amount', { required: true })}
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
                 />
-                <p className="mt-1 text-xs text-slate-500">Minimum Paystack deposit is N5,000.</p>
+                <p className="mt-1 text-xs text-slate-500">Minimum Paystack deposit is N100.</p>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-semibold">Paystack Channel</label>
