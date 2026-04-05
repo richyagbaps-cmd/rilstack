@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import AccountBalance from '@/components/AccountBalance';
 import AIChatbot from '@/components/AIChatbot';
@@ -37,7 +38,7 @@ function PublicLanding() {
       date: 'March 30, 2026',
       source: 'DMO Nigeria',
       href: 'https://www.dmo.gov.ng/fgn-bonds/nigerian-treasury-bills?filter%5Bsearch%5D=&limit=100&limitstart=0',
-      summary: 'Nigeria’s debt office continues to release official auction summaries that investors can track for bond market direction.',
+      summary: 'Nigeria\u2019s debt office continues to release official auction summaries that investors can track for bond market direction.',
     },
   ];
   const featureCards = [
@@ -156,7 +157,7 @@ function PublicLanding() {
             </p>
           </div>
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <h3 className="text-lg font-bold text-white">Saving</h3>
+            <h3 className="text-lg font-bold text-white">Savings</h3>
             <p className="mt-3 text-sm leading-6 text-slate-300">
               Use strict-mode safelock to hold back category funds until their release dates and earn projected interest on longer locks.
             </p>
@@ -190,7 +191,7 @@ function PublicLanding() {
                 className="rounded-[26px] border border-white/10 bg-slate-950/50 p-5 transition-all hover:-translate-y-1 hover:border-cyan-300/30"
               >
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">
-                  {item.source} · {item.date}
+                  {item.source} {'\u00b7'} {item.date}
                 </p>
                 <h4 className="mt-3 text-lg font-semibold text-white">{item.title}</h4>
                 <p className="mt-3 text-sm leading-6 text-slate-300">{item.summary}</p>
@@ -204,8 +205,9 @@ function PublicLanding() {
   );
 }
 
-export default function Home() {
+function HomeContent() {
   const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
   const [currentSection, setCurrentSection] = useState<Section>('dashboard');
   const [showProfile, setShowProfile] = useState(false);
   const [showChatbot, setShowChatbot] = useState(true);
@@ -214,9 +216,20 @@ export default function Home() {
 
   useEffect(() => {
     const savedMode = localStorage.getItem('budgetMode');
+    const sectionParam = searchParams.get('section');
     const chatbotTimer = window.setTimeout(() => {
       setShowChatbot(false);
     }, 1000);
+
+    if (
+      sectionParam === 'dashboard' ||
+      sectionParam === 'budget' ||
+      sectionParam === 'investments' ||
+      sectionParam === 'account' ||
+      sectionParam === 'nin-validation'
+    ) {
+      setCurrentSection(sectionParam);
+    }
 
     if (savedMode === 'strict' || savedMode === 'relaxed') {
       setBudgetMode(savedMode);
@@ -227,7 +240,7 @@ export default function Home() {
     return () => {
       window.clearTimeout(chatbotTimer);
     };
-  }, []);
+  }, [searchParams]);
 
   const handleModeSelect = (mode: 'strict' | 'relaxed') => {
     setBudgetMode(mode);
@@ -298,5 +311,13 @@ export default function Home() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+      <HomeContent />
+    </Suspense>
   );
 }

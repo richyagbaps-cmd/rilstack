@@ -61,7 +61,7 @@ export default function UserProfile({ onClose }: UserProfileProps) {
         <div className="sticky top-0 flex items-center justify-between bg-blue-600 p-6 text-white">
           <h2 className="text-2xl font-bold">User Profile</h2>
           <button onClick={onClose} className="rounded px-2 py-0 text-2xl font-bold hover:bg-blue-700">
-            x
+            ×
           </button>
         </div>
 

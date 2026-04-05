@@ -1,7 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 
 interface Account {
@@ -21,6 +23,7 @@ interface Transaction {
   date: string;
   status: 'completed';
   description?: string;
+  reference?: string;
 }
 
 interface FormData {
@@ -28,9 +31,6 @@ interface FormData {
   method: string;
   description: string;
 }
-
-const STORAGE_KEY = 'rilstack-accounts';
-const TRANSACTION_KEY = 'rilstack-transactions';
 
 const INITIAL_ACCOUNTS: Account[] = [
   { id: '1', type: 'checking', name: 'Primary Wallet', balance: 0, availableBalance: 0, currency: 'NGN' },
@@ -41,43 +41,60 @@ const INITIAL_ACCOUNTS: Account[] = [
 const formatCurrency = (amount: number) => `N${amount.toLocaleString()}`;
 
 export default function AccountBalance() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [accounts, setAccounts] = useState<Account[]>(INITIAL_ACCOUNTS);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [processError, setProcessError] = useState<string | null>(null);
   const [processSuccess, setProcessSuccess] = useState<string | null>(null);
+  const [isSubmittingDeposit, setIsSubmittingDeposit] = useState(false);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
 
   const { register, handleSubmit, reset } = useForm<FormData>();
+  const storageSuffix = useMemo(
+    () => session?.user?.email || session?.user?.name || 'guest',
+    [session?.user?.email, session?.user?.name],
+  );
+  const accountStorageKey = useMemo(() => `rilstack-accounts-${storageSuffix}`, [storageSuffix]);
+  const transactionStorageKey = useMemo(() => `rilstack-transactions-${storageSuffix}`, [storageSuffix]);
 
   useEffect(() => {
-    const storedAccounts = localStorage.getItem(STORAGE_KEY);
-    const storedTransactions = localStorage.getItem(TRANSACTION_KEY);
+    const storedAccounts = localStorage.getItem(accountStorageKey);
+    const storedTransactions = localStorage.getItem(transactionStorageKey);
 
     if (storedAccounts) {
       try {
         setAccounts(JSON.parse(storedAccounts) as Account[]);
       } catch {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(accountStorageKey);
+        setAccounts(INITIAL_ACCOUNTS);
       }
+    } else {
+      setAccounts(INITIAL_ACCOUNTS);
     }
 
     if (storedTransactions) {
       try {
         setTransactions(JSON.parse(storedTransactions) as Transaction[]);
       } catch {
-        localStorage.removeItem(TRANSACTION_KEY);
+        localStorage.removeItem(transactionStorageKey);
+        setTransactions([]);
       }
+    } else {
+      setTransactions([]);
     }
-  }, []);
+  }, [accountStorageKey, transactionStorageKey]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
-  }, [accounts]);
+    localStorage.setItem(accountStorageKey, JSON.stringify(accounts));
+  }, [accounts, accountStorageKey]);
 
   useEffect(() => {
-    localStorage.setItem(TRANSACTION_KEY, JSON.stringify(transactions));
-  }, [transactions]);
+    localStorage.setItem(transactionStorageKey, JSON.stringify(transactions));
+  }, [transactions, transactionStorageKey]);
 
   const totalBalance = useMemo(() => accounts.reduce((sum, account) => sum + account.balance, 0), [accounts]);
   const totalAvailable = useMemo(
@@ -118,7 +135,65 @@ export default function AccountBalance() {
     setTransactions((current) => [newTransaction, ...current]);
   };
 
+  useEffect(() => {
+    const reference = searchParams.get('reference') || searchParams.get('trxref');
+    const section = searchParams.get('section');
+
+    if (!reference || section !== 'account' || isVerifyingPayment) {
+      return;
+    }
+
+    const alreadyApplied = transactions.some((transaction) => transaction.reference === reference);
+    if (alreadyApplied) {
+      setProcessSuccess('This Paystack payment has already been added to your wallet.');
+      return;
+    }
+
+    const verifyPayment = async () => {
+      setIsVerifyingPayment(true);
+      setProcessError(null);
+
+      try {
+        const response = await fetch('/api/payment/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ reference }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || result.message || 'Payment verification failed.');
+        }
+
+        updatePrimaryWallet(result.amount, 'deposit');
+        recordTransaction({
+          type: 'deposit',
+          amount: result.amount,
+          method: 'card',
+          description: 'Paystack card deposit',
+          reference,
+        });
+        setProcessSuccess(`Paystack deposit confirmed. ${formatCurrency(result.amount)} was added to your wallet.`);
+      } catch (error: any) {
+        setProcessError(error.message || 'Payment verification failed.');
+      } finally {
+        setIsVerifyingPayment(false);
+        router.replace('/?section=account', { scroll: false });
+      }
+    };
+
+    verifyPayment();
+  }, [isVerifyingPayment, router, searchParams, transactions]);
+
   const onDepositSubmit = (data: FormData) => {
+    if (data.method === 'card') {
+      void handleCardDeposit(data);
+      return;
+    }
+
     const amount = Number(data.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
       setProcessError('Enter a valid deposit amount.');
@@ -140,6 +215,47 @@ export default function AccountBalance() {
       setShowDepositModal(false);
       setProcessSuccess(null);
     }, 1200);
+  };
+
+  const handleCardDeposit = async (data: FormData) => {
+    const amount = Number(data.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setProcessError('Enter a valid deposit amount.');
+      return;
+    }
+
+    setIsSubmittingDeposit(true);
+    setProcessError(null);
+    setProcessSuccess(null);
+
+    try {
+      const callbackUrl = `${window.location.origin}/?section=account`;
+      const response = await fetch('/api/payment/deposit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount,
+          method: 'card',
+          description: data.description || 'Wallet top-up',
+          userEmail: session?.user?.email || 'user@rilstack.com',
+          callbackUrl,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.paymentUrl) {
+        throw new Error(result.error || 'Unable to start Paystack payment.');
+      }
+
+      window.location.href = result.paymentUrl;
+    } catch (error: any) {
+      setProcessError(error.message || 'Unable to start Paystack payment.');
+    } finally {
+      setIsSubmittingDeposit(false);
+    }
   };
 
   const onWithdrawalSubmit = (data: FormData) => {
@@ -183,7 +299,7 @@ export default function AccountBalance() {
         <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
           <div className="space-y-4">
             <p className="text-xs uppercase tracking-[0.26em] text-cyan-200">Wallet Overview</p>
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Every user now starts from N0 and grows from real activity.</h2>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Every user starts at N0 and grows through real activity.</h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
               Your balance no longer shows demo money. Deposits add to the wallet, withdrawals reduce the wallet, and
               the account screen reflects those changes immediately.
@@ -307,7 +423,7 @@ export default function AccountBalance() {
             <div className="flex items-center justify-between rounded-t-3xl bg-blue-800 p-5 text-white">
               <h3 className="text-lg font-bold">Deposit Funds</h3>
               <button onClick={() => setShowDepositModal(false)} className="rounded px-2 text-xl font-bold hover:bg-blue-900">
-                x
+                ×
               </button>
             </div>
             <form onSubmit={handleSubmit(onDepositSubmit)} className="space-y-4 p-5">
@@ -345,8 +461,12 @@ export default function AccountBalance() {
               {processError && <p className="text-sm text-red-600">{processError}</p>}
               {processSuccess && <p className="text-sm text-emerald-600">{processSuccess}</p>}
               <div className="flex gap-3">
-                <button type="submit" className="flex-1 rounded-2xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700">
-                  Confirm Deposit
+                <button
+                  type="submit"
+                  disabled={isSubmittingDeposit}
+                  className="flex-1 rounded-2xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isSubmittingDeposit ? 'Redirecting...' : 'Confirm Deposit'}
                 </button>
                 <button
                   type="button"
@@ -367,7 +487,7 @@ export default function AccountBalance() {
             <div className="flex items-center justify-between rounded-t-3xl bg-green-600 p-5 text-white">
               <h3 className="text-lg font-bold">Withdraw Funds</h3>
               <button onClick={() => setShowWithdrawalModal(false)} className="rounded px-2 text-xl font-bold hover:bg-green-700">
-                x
+                ×
               </button>
             </div>
             <form onSubmit={handleSubmit(onWithdrawalSubmit)} className="space-y-4 p-5">

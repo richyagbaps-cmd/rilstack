@@ -5,6 +5,7 @@ interface DepositRequest {
   method: 'card' | 'transfer' | 'ussd';
   description?: string;
   userEmail?: string;
+  callbackUrl?: string;
 }
 
 /**
@@ -14,7 +15,7 @@ interface DepositRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: DepositRequest = await request.json();
-    const { amount, method, description, userEmail } = body;
+    const { amount, method, description, userEmail, callbackUrl } = body;
 
     // Validate input
     if (!amount || amount < 5000) {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Process based on payment method
     switch (method) {
       case 'card':
-        return await processCardPayment(amount, description, userEmail);
+        return await processCardPayment(amount, description, userEmail, callbackUrl);
       case 'transfer':
         return await processBankTransfer(amount, description);
       case 'ussd':
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processCardPayment(amount: number, description?: string, email?: string) {
+async function processCardPayment(amount: number, description?: string, email?: string, callbackUrl?: string) {
   // Real Paystack Integration
   const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
   
@@ -66,6 +67,7 @@ async function processCardPayment(amount: number, description?: string, email?: 
   }
 
   try {
+    const reference = `RIL_${Date.now()}`;
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
@@ -76,6 +78,8 @@ async function processCardPayment(amount: number, description?: string, email?: 
         email: email || 'user@rilstack.com',
         amount: amount * 100, // Paystack expects amount in kobo (1 kobo = 0.01 Naira)
         currency: 'NGN',
+        reference,
+        callback_url: callbackUrl,
         metadata: {
           description: description || 'RILSTACK Deposit',
           type: 'deposit',
@@ -94,6 +98,7 @@ async function processCardPayment(amount: number, description?: string, email?: 
     return NextResponse.json({
       success: true,
       transactionId: data.data.reference,
+      reference: data.data.reference,
       amount,
       method: 'card',
       description: description || 'Card Payment',

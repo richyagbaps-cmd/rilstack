@@ -55,12 +55,6 @@ const FOCUS_CONTENT: Record<
   },
 };
 
-const journeyFrames = [
-  { label: 'Savings Visual', image: '/images/savings-orbit.svg' },
-  { label: 'Investment Visual', image: '/images/investment-grid.svg' },
-  { label: 'Budget Visual', image: '/images/budget-map.svg' },
-];
-
 const monthlyData = [
   { month: 'Jan', income: 150000, expenses: 96000, invest: 28000 },
   { month: 'Feb', income: 156000, expenses: 102000, invest: 29500 },
@@ -140,11 +134,11 @@ export default function Dashboard() {
 
               <div className="max-w-3xl">
                 <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-6xl">
-                  Safelock-led money management with a more cinematic future-facing dashboard.
+                  Safelock-led money management in a more cinematic, forward-looking dashboard.
                 </h1>
                 <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 md:text-base md:leading-7">
                   RILSTACK now feels less like a spreadsheet and more like a financial operating system. Savings,
-                  budgeting, and investing each get their own visual layer, while the hero section reacts as you switch focus.
+                  budgeting, and investing each have a dedicated visual layer, while the hero section reacts as you switch focus.
                 </p>
               </div>
 
@@ -341,32 +335,36 @@ export default function Dashboard() {
           <div className="glass-panel rounded-[24px] border border-white/10 p-4 md:rounded-[30px] md:p-6">
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Media Wall</p>
-                <h3 className="mt-2 text-xl font-bold text-white md:text-2xl">Savings, Investing, Budgeting Visuals</h3>
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Strategy Notes</p>
+                <h3 className="mt-2 text-xl font-bold text-white md:text-2xl">Actionable planning signals</h3>
               </div>
               <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.22em] text-slate-300">
-                Picture Deck
+                Insight Deck
               </span>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-              {journeyFrames.map((frame) => (
-                <div key={frame.label} className="group overflow-hidden rounded-[24px] border border-white/10 bg-slate-950/60">
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={frame.image}
-                      alt={frame.label}
-                      width={1200}
-                      height={800}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    <p className="absolute bottom-4 left-4 text-sm font-semibold tracking-[0.14em] text-white">
-                      {frame.label}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 p-5">
+                <p className="text-xs uppercase tracking-[0.22em] text-cyan-200">Savings</p>
+                <h4 className="mt-3 text-lg font-bold text-white">Release dates stay visible</h4>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                  Keep strict-mode locks tied to real spending dates so protected funds do not blend into daily cash.
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-violet-400/20 bg-violet-400/10 p-5">
+                <p className="text-xs uppercase tracking-[0.22em] text-violet-200">Investments</p>
+                <h4 className="mt-3 text-lg font-bold text-white">Contributions shape momentum</h4>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                  Portfolio growth becomes easier to read when recurring contributions stay consistent across treasury bills, bonds, and funds.
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-emerald-400/20 bg-emerald-400/10 p-5">
+                <p className="text-xs uppercase tracking-[0.22em] text-emerald-200">Budgeting</p>
+                <h4 className="mt-3 text-lg font-bold text-white">Categories need room to breathe</h4>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                  Cleaner category planning helps you spot pressure early and adjust before overspending reaches your wallet.
+                </p>
+              </div>
             </div>
 
             <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(135deg,_rgba(99,240,214,0.08),_rgba(176,140,255,0.08),_rgba(78,161,255,0.08))] p-4 md:p-5">
