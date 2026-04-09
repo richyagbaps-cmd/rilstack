@@ -1,375 +1,217 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
-import { signIn, useSession } from 'next-auth/react';
-import AccountBalance from '@/components/AccountBalance';
-import AIChatbot from '@/components/AIChatbot';
-import BudgetModeSelector from '@/components/BudgetModeSelector';
-import BudgetSection from '@/components/BudgetSection';
-import Dashboard from '@/components/Dashboard';
-import InvestmentPortfolio from '@/components/InvestmentPortfolio';
-import Navigation from '@/components/Navigation';
-import SettingsSection from '@/components/SettingsSection';
-import UserProfile from '@/components/UserProfile';
-import AuthModal from '@/components/AuthModal';
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import AuthModal from "@/components/AuthModal";
+import KYCVerification from "@/components/KYCVerification";
+import TopBarNavigation from "@/components/TopBarNavigation";
+import RecentActivity from "@/components/RecentActivity";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import SavingsInvestmentsCarousel from '@/components/SavingsInvestmentsCarousel';
+import MetricCardsCarousel from '@/components/MetricCardsCarousel';
 
-type Section = 'dashboard' | 'budget' | 'investments' | 'account' | 'settings';
 
-function PublicLanding() {
-  const handleGoogleAuth = () => signIn('google', { callbackUrl: '/' });
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
-  const teamMembers = [
-    { name: 'Amina Okoye', role: 'Product Lead' },
-    { name: 'Tunde Adebayo', role: 'Engineering Lead' },
-    { name: 'Ifeoma Nnadi', role: 'Customer Success' },
-  ];
-  const services = [
-    'Smart budgeting and category planning',
-    'Savings lock features with release dates',
-    'Investment tracking for T-Bills, bonds, and mutual funds',
-    'Paystack wallet deposits and withdrawals',
-    'KYC and NIN verification workflows',
-  ];
-  const newsItems = [
-    {
-      title: 'CBN plans N3.95 trillion Treasury Bills auctions for Q2 2026',
-      date: 'April 3, 2026',
-      source: 'Nairametrics',
-      href: 'https://nairametrics.com/2026/04/03/cbn-plans-n3-95-trillion-treasury-bills-auction-in-q2-2026-n750bn-net-issuance/',
-      summary: 'The issuance calendar points to continued heavy supply in 364-day bills as fixed-income demand stays strong.',
-    },
-    {
-      title: 'CBN cut stop rates at the March 25, 2026 treasury bill auction',
-      date: 'March 26, 2026',
-      source: 'Nairametrics',
-      href: 'https://nairametrics.com/2026/03/26/cbn-cuts-rates-at-march-25-ntb-auction-amid-liquidity-glut/',
-      summary: 'Lower stop rates on the 182-day and 364-day tenors signalled easing yields amid stronger liquidity.',
-    },
-    {
-      title: 'DMO published the March 2026 FGN bond auction results',
-      date: 'March 30, 2026',
-      source: 'DMO Nigeria',
-      href: 'https://www.dmo.gov.ng/fgn-bonds/nigerian-treasury-bills?filter%5Bsearch%5D=&limit=100&limitstart=0',
-      summary: 'Nigeria\u2019s debt office continues to release official auction summaries that investors can track for bond market direction.',
-    },
-  ];
-  const featureCards = [
-    {
-      title: 'Budgeting',
-      description: 'Plan every month with guided budget styles, editable AI allocations, and clearer category control.',
-      image: '/images/budget-map.svg',
-    },
-    {
-      title: 'Savings',
-      description: 'Use strict-mode safelock to protect money until the right date and build stronger habits.',
-      image: '/images/savings-orbit.svg',
-    },
-    {
-      title: 'Investing',
-      description: 'Track funds, treasury bills, and portfolio growth in a more visual command-center experience.',
-      image: '/images/investment-grid.svg',
-    },
-  ];
+const summaryCards = [
+  { label: "Income", value: "₦150,000", color: "bg-[#f3f4fa]", detail: "Total income this month", tone: "border-[#E9EDF2] bg-white" },
+  { label: "Expense", value: "₦94,000", color: "bg-[#f3f4fa]", detail: "Total expenses this month", tone: "border-[#E9EDF2] bg-white" },
+  { label: "Balance", value: "₦56,000", color: "bg-[#f3f4fa]", detail: "Current account balance", tone: "border-[#E9EDF2] bg-white" },
+  { label: "Savings", value: "₦12,000", color: "bg-[#f3f4fa]", detail: "Total savings this month", tone: "border-[#E9EDF2] bg-white" },
+];
+const barData = [
+  { name: "Jan", income: 20000, expense: 12000 },
+  { name: "Feb", income: 25000, expense: 15000 },
+  { name: "Mar", income: 18000, expense: 9000 },
+  { name: "Apr", income: 30000, expense: 20000 },
+  { name: "May", income: 22000, expense: 11000 },
+  { name: "Jun", income: 35000, expense: 17000 },
+];
 
-  return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(74,222,255,0.14),_transparent_22%),radial-gradient(circle_at_top_right,_rgba(176,140,255,0.16),_transparent_24%),linear-gradient(180deg,_#050816_0%,_#09101d_48%,_#050816_100%)] text-white">
-      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-6 md:px-6 md:py-8">
-        <header className="flex items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-xl md:px-6">
-          <div>
-            <p className="text-xs uppercase tracking-[0.26em] text-cyan-200">RILSTACK</p>
-            <h1 className="mt-1 text-lg font-bold md:text-2xl">Budget. Save. Invest with discipline.</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setAuthMode('login')}
-              className="rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition-all hover:bg-cyan-400/20 md:px-4 md:text-sm"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => setAuthMode('signup')}
-              className="rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-2 text-xs font-semibold text-white shadow-md transition-all hover:from-purple-500 hover:to-purple-400 md:px-4 md:text-sm"
-            >
-              Sign Up
-            </button>
-          </div>
-        </header>
+const pieData = [
+  { name: "Essentials", value: 50, color: "#7C3AED" },
+  { name: "Flexible", value: 30, color: "#6366F1" },
+  { name: "Goals", value: 20, color: "#A5B4FC" },
+];
 
-        <section className="grid gap-8 rounded-[32px] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-xl lg:grid-cols-[1.05fr,0.95fr] lg:p-8">
-          <div className="space-y-6">
-            <div className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-emerald-100 md:text-xs">
-              Modern finance workflow
-            </div>
-            <div className="space-y-4">
-              <h2 className="max-w-3xl text-3xl font-bold tracking-tight md:text-5xl">
-                Budget smarter, lock savings with purpose, and track Nigerian investment signals from one app.
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-slate-300 md:text-base md:leading-7">
-                RILSTACK is a personal finance workspace built for budgeting, savings discipline, and investment tracking.
-                Users can create structured budget plans, assign daily spending limits, set dates when money becomes available,
-                and manage deposits or withdrawals from a live balance that starts from zero.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 md:text-xs">Budget Styles</p>
-                <p className="mt-2 text-lg font-bold text-white md:text-xl">3 Modes</p>
-                <p className="mt-1 text-xs text-slate-400 md:text-sm">Strict or relaxed mode, plus 50/30/20, zero-based, or custom planning.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 md:text-xs">Savings Guard</p>
-                <p className="mt-2 text-lg font-bold text-white md:text-xl">Safelock</p>
-                <p className="mt-1 text-xs text-slate-400 md:text-sm">Strict mode can lock category funds until a chosen spending date.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 md:text-xs">Growth View</p>
-                <p className="mt-2 text-lg font-bold text-white md:text-xl">Live Signals</p>
-                <p className="mt-1 text-xs text-slate-400 md:text-sm">Monitor balances, fixed-income signals, and portfolio visuals in one dashboard.</p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleGoogleAuth}
-                className="rounded-2xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02]"
-              >
-                Continue with Google
-              </button>
-              <button
-                onClick={() => setAuthMode('signup')}
-                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition-all hover:bg-white/10"
-              >
-                Create Account
-              </button>
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            {featureCards.map((card) => (
-              <div key={card.title} className="overflow-hidden rounded-[26px] border border-white/10 bg-slate-950/60">
-                <div className="relative aspect-[4/3]">
-                  <Image src={card.image} alt={card.title} fill className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-200 md:text-xs">{card.title}</p>
-                    <p className="mt-2 text-sm font-semibold text-white md:text-base">{card.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <h3 className="text-lg font-bold text-white">Budgeting</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              Build profession-based plans, set category allocations, and define daily spending targets to reduce confusion before the month starts.
-            </p>
-          </div>
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <h3 className="text-lg font-bold text-white">Savings</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              Use strict-mode safelock to hold back category funds until their release dates and earn projected interest on longer locks.
-            </p>
-          </div>
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <h3 className="text-lg font-bold text-white">Investing</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              Track treasury bills, bonds, and portfolio momentum while staying aware of current fixed-income moves in Nigeria.
-            </p>
-          </div>
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-3">
-          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">About</p>
-            <h3 className="mt-2 text-xl font-bold text-white">Who We Are</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              RILSTACK helps Nigerians budget smarter, save with discipline, and invest with clearer decisions from one modern financial workspace.
-            </p>
-          </article>
-
-          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Meet The Team</p>
-            <h3 className="mt-2 text-xl font-bold text-white">People Behind RILSTACK</h3>
-            <div className="mt-3 space-y-2">
-              {teamMembers.map((member) => (
-                <div key={member.name} className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2">
-                  <p className="text-sm font-semibold text-white">{member.name}</p>
-                  <p className="text-xs text-slate-400">{member.role}</p>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Services</p>
-            <h3 className="mt-2 text-xl font-bold text-white">What We Offer</h3>
-            <ul className="mt-3 space-y-2">
-              {services.map((service) => (
-                <li key={service} className="text-sm text-slate-300">
-                  • {service}
-                </li>
-              ))}
-            </ul>
-          </article>
-        </section>
-
-        <section className="rounded-[32px] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-xl lg:p-8">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">Nigeria Investment News</p>
-              <h3 className="mt-2 text-2xl font-bold text-white md:text-3xl">Current market updates visitors can scan before signing in</h3>
-            </div>
-            <p className="max-w-xl text-sm leading-6 text-slate-300">
-              These updates highlight recent treasury bill and bond signals in Nigeria, so the home page feels more informed and grounded in the market.
-            </p>
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            {newsItems.map((item) => (
-              <a
-                key={item.title}
-                href={item.href}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-[26px] border border-white/10 bg-slate-950/50 p-5 transition-all hover:-translate-y-1 hover:border-cyan-300/30"
-              >
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">
-                  {item.source} {'\u00b7'} {item.date}
-                </p>
-                <h4 className="mt-3 text-lg font-semibold text-white">{item.title}</h4>
-                <p className="mt-3 text-sm leading-6 text-slate-300">{item.summary}</p>
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">Open source</p>
-              </a>
-            ))}
-          </div>
-        </section>
-      </div>
-      {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} />}
-    </div>
-  );
-}
-
-function HomeContent() {
+export default function Home() {
   const { data: session, status } = useSession();
-  const searchParams = useSearchParams();
-  const [currentSection, setCurrentSection] = useState<Section>('dashboard');
-  const [showProfile, setShowProfile] = useState(false);
-  const [showChatbot, setShowChatbot] = useState(true);
-  const [budgetMode, setBudgetMode] = useState<'strict' | 'relaxed' | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showKYC, setShowKYC] = useState(false);
+  const [kycChecked, setKycChecked] = useState(false);
+  const [kycGender, setKycGender] = useState<string | undefined>(undefined);
+  const [showFrontAuth, setShowFrontAuth] = useState(false);
 
   useEffect(() => {
-    const savedMode = localStorage.getItem('budgetMode');
-    const sectionParam = searchParams.get('section');
-    const chatbotTimer = window.setTimeout(() => {
-      setShowChatbot(false);
-    }, 1000);
-
-    if (
-      sectionParam === 'dashboard' ||
-      sectionParam === 'budget' ||
-      sectionParam === 'investments' ||
-      sectionParam === 'account' ||
-      sectionParam === 'settings'
-    ) {
-      setCurrentSection(sectionParam);
-    } else if (sectionParam === 'nin-validation') {
-      setCurrentSection('settings');
-    }
-
-    if (savedMode === 'strict' || savedMode === 'relaxed') {
-      setBudgetMode(savedMode);
-    }
-
-    setIsLoaded(true);
-
-    return () => {
-      window.clearTimeout(chatbotTimer);
+    if (status === "loading") return;
+    const checkKyc = async () => {
+      if (!session) return;
+      try {
+        const res = await fetch("/api/kyc/status");
+        const data = await res.json();
+        if (!data.success || (data.status && data.status.kycLevel < 5)) {
+          setShowKYC(true);
+        } else {
+          setShowKYC(false);
+        }
+        if (data.status && data.status.gender) {
+          setKycGender(data.status.gender);
+        }
+      } catch {
+        setShowKYC(true);
+      } finally {
+        setKycChecked(true);
+      }
     };
-  }, [searchParams]);
+    checkKyc();
+  }, [session, status]);
 
-  const handleModeSelect = (mode: 'strict' | 'relaxed') => {
-    setBudgetMode(mode);
-    localStorage.setItem('budgetMode', mode);
-  };
-
-  const handleChangeBudgetMode = () => {
-    localStorage.removeItem('budgetMode');
-    setBudgetMode(null);
-  };
-
-  if (!isLoaded || status === 'loading') {
-    return <div className="min-h-screen bg-slate-950"></div>;
-  }
-
-  if (!session) {
-    return <PublicLanding />;
-  }
-
-  if (currentSection === 'budget' && budgetMode === null) {
+  if (!session || showAuth || showFrontAuth) {
     return (
-      <div className="min-h-screen bg-slate-950">
-        <Navigation
-          currentSection={currentSection}
-          setCurrentSection={setCurrentSection}
-          onProfileClick={() => setShowProfile(true)}
-          budgetMode={budgetMode}
-          onChangeBudgetMode={handleChangeBudgetMode}
-        />
-        <main className="container mx-auto px-4 py-8">
-          <BudgetModeSelector onModeSelect={handleModeSelect} />
+      <div className="min-h-screen w-full bg-gradient-to-br from-[#1a2253] via-[#1a1e3a] to-[#181A20] flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="w-full flex items-center justify-end px-6 py-6 gap-4">
+          <div className="flex-1 flex items-center">
+            <span className="text-2xl font-extrabold text-white tracking-wide ml-auto">Rilstack</span>
+          </div>
+          <button
+            className="text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#2c3e5f]/30 transition"
+            onClick={() => setShowFrontAuth(true)}
+          >Login</button>
+          <button
+            className="bg-[#00e096] text-white font-bold px-5 py-2 rounded-lg shadow hover:bg-[#00c080] transition"
+            onClick={() => setShowFrontAuth(true)}
+          >Get Started</button>
+        </header>
+        {/* Hero Section */}
+        <main className="flex-1 flex flex-col md:flex-row items-center justify-center px-6 md:px-16 gap-12">
+          <div className="flex-1 flex flex-col items-start justify-center max-w-xl">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
+              Welcome to <span className="text-[#00e096]">Rilstack</span>
+            </h1>
+            <p className="text-lg text-[#e0e6f7] mb-8">Your all-in-one platform for budgeting, saving, investing, and financial growth. Take control of your money with smart tools and real insights.</p>
+            <a href="#" className="inline-block mt-2">
+              <img src="/google-play-badge.png" alt="Get it on Google Play" className="h-12" />
+            </a>
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center">
+            {/* Feature widgets */}
+            <div className="flex flex-row gap-4">
+              <div className="rounded-2xl bg-white/90 shadow-xl p-4 w-48 h-72 flex flex-col items-center justify-center">
+                <div className="w-32 h-48 bg-[#eaf2fa] rounded-xl mb-2 flex items-center justify-center text-[#2c3e5f] font-bold text-lg">Budgeting</div>
+                <span className="text-[#2c3e5f] font-bold text-center">Plan & track your spending</span>
+              </div>
+              <div className="rounded-2xl bg-white/80 shadow-lg p-4 w-48 h-72 flex flex-col items-center justify-center scale-90">
+                <div className="w-32 h-48 bg-[#e0f0e8] rounded-xl mb-2 flex items-center justify-center text-[#4A5B6E] font-bold text-lg">Savings</div>
+                <span className="text-[#4A5B6E] font-bold text-center">Set & reach savings goals</span>
+              </div>
+              <div className="rounded-2xl bg-white/80 shadow-lg p-4 w-48 h-72 flex flex-col items-center justify-center scale-90">
+                <div className="w-32 h-48 bg-[#fffbe6] rounded-xl mb-2 flex items-center justify-center text-[#FFD700] font-bold text-lg">Investments</div>
+                <span className="text-[#FFD700] font-bold text-center">Grow your wealth smartly</span>
+              </div>
+              <div className="rounded-2xl bg-white/80 shadow-lg p-4 w-48 h-72 flex flex-col items-center justify-center scale-90">
+                <div className="w-32 h-48 bg-[#ede9fe] rounded-xl mb-2 flex items-center justify-center text-[#8B5CF6] font-bold text-lg">Security</div>
+                <span className="text-[#8B5CF6] font-bold text-center">Your data is always safe</span>
+              </div>
+            </div>
+          </div>
         </main>
-        {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
+        {showFrontAuth && <AuthModal mode="login" onClose={() => setShowFrontAuth(false)} />}
       </div>
     );
   }
 
+  if (showKYC && kycChecked) {
+    return <KYCVerification onComplete={() => setShowKYC(false)} />;
+  }
+
+  // ...existing code for logged-in users...
   return (
-    <div className="min-h-screen bg-slate-950">
-      <Navigation
-        currentSection={currentSection}
-        setCurrentSection={setCurrentSection}
-        onProfileClick={() => setShowProfile(true)}
-        budgetMode={budgetMode}
-        onChangeBudgetMode={handleChangeBudgetMode}
-      />
-      <main className="container mx-auto px-3 py-6 md:px-4 md:py-8">
-        {currentSection === 'dashboard' && <Dashboard />}
-        {currentSection === 'budget' && budgetMode && <BudgetSection budgetMode={budgetMode} />}
-        {currentSection === 'investments' && <InvestmentPortfolio />}
-        {currentSection === 'account' && <AccountBalance />}
-        {currentSection === 'settings' && <SettingsSection />}
-      </main>
-
-      {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
-
-      <div className="fixed bottom-0 left-0 z-40 flex items-end gap-3 p-3 md:gap-4 md:p-4">
-        {showChatbot ? (
-          <AIChatbot onClose={() => setShowChatbot(false)} />
-        ) : (
-          <button
-            onClick={() => setShowChatbot(true)}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-cyan-600 to-cyan-500 text-xs font-semibold text-white shadow-lg transition-all hover:scale-110 hover:shadow-xl md:h-16 md:w-16 md:text-sm"
-            title="Open AI Assistant"
-          >
-            Chat
-          </button>
-        )}
+    <div className="min-h-screen w-full bg-[#181A20] flex flex-col items-center justify-start">
+      <div className="w-full max-w-[1400px] mx-auto flex flex-col min-h-screen">
+        <TopBarNavigation />
+        <main className="flex-1 flex flex-col items-center justify-start w-full px-2 py-4 sm:px-4 sm:py-8">
+          <div className="w-full bg-white rounded-3xl shadow-2xl p-4 sm:p-8 mt-4 sm:mt-8">
+            <h1 className="text-2xl font-bold text-[#2c3e5f] mb-2">
+              {(() => {
+                const name = session?.user?.name?.split(' ')[0];
+                const sessionUser = session?.user as typeof session.user & { gender?: string };
+                const gender = (kycGender || sessionUser?.gender)?.toLowerCase?.();
+                let title = 'champ';
+                if (gender === 'male' || gender === 'm') title = 'brother';
+                else if (gender === 'female' || gender === 'f') title = 'sister';
+                return `Welcome back, ${name || title || 'champ'}!`;
+              })()}
+            </h1>
+            <p className="text-[#4A5B6E] mb-6 sm:mb-8">Here’s your financial overview for this month.</p>
+            {/* Carousel for Budgets & Savings and Investments */}
+            <div className="mb-8">
+              <SavingsInvestmentsCarousel />
+            </div>
+            {/* Metric cards carousel for mobile */}
+            <div className="mb-8 block sm:hidden">
+              <MetricCardsCarousel cards={summaryCards} />
+            </div>
+            {/* Desktop summary cards grid */}
+            <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+              {summaryCards.map((card, i) => (
+                <div key={i} className={`rounded-2xl p-6 shadow border border-[#E9EDF2] ${card.color}`}>
+                  <div className="text-xs text-[#7a869a] mb-1">{card.label}</div>
+                  <div className="text-2xl font-bold text-[#2c3e5f]">{card.value}</div>
+                </div>
+              ))}
+            </div>
+            {/* Charts section */}
+            <div className="flex flex-col md:flex-row gap-8 mb-8">
+              {/* Bar Chart */}
+              <div className="flex-1 bg-[#f8f9fc] rounded-2xl p-6 shadow">
+                <h2 className="text-lg font-semibold text-[#2c3e5f] mb-4">Income & Expenses</h2>
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={barData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#7C3AED" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366F1" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="name" stroke="#7a869a"/>
+                    <YAxis stroke="#7a869a"/>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="income" stroke="#7C3AED" fillOpacity={1} fill="url(#colorIncome)" />
+                    <Area type="monotone" dataKey="expense" stroke="#6366F1" fillOpacity={1} fill="url(#colorExpense)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Pie Chart */}
+              <div className="w-full md:w-80 bg-[#f8f9fc] rounded-2xl p-6 shadow flex flex-col items-center">
+                <h2 className="text-lg font-semibold text-[#2c3e5f] mb-4">Spending Breakdown</h2>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label>
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <ul className="mt-4 space-y-1 text-xs text-[#4A5B6E]">
+                  {pieData.map((item, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="inline-block w-3 h-3 rounded-full" style={{ background: item.color }}></span>
+                      {item.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            {/* Recent Activity */}
+            <RecentActivity />
+          </div>
+        </main>
       </div>
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
-      <HomeContent />
-    </Suspense>
   );
 }

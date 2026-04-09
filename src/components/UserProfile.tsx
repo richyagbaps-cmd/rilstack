@@ -58,7 +58,7 @@ export default function UserProfile({ onClose }: UserProfileProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="mx-4 max-h-screen w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-2xl">
-        <div className="sticky top-0 flex items-center justify-between bg-blue-600 p-6 text-white">
+        <div className="sticky top-0 flex items-center justify-between bg-[#2c3e5f] p-6 text-white">
           <h2 className="text-2xl font-bold">User Profile</h2>
           <button onClick={onClose} className="rounded px-2 py-0 text-2xl font-bold hover:bg-blue-700">
             ×
@@ -68,7 +68,7 @@ export default function UserProfile({ onClose }: UserProfileProps) {
         <div className="p-6">
           {!isEditing && userProfile ? (
             <div className="space-y-4">
-              <div className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+              <div className="rounded-[28px] bg-[#2c3e5f] p-6 text-white">
                 <p className="mb-1 text-sm opacity-90">USER ID</p>
                 <p className="text-3xl font-bold">{userProfile.userId}</p>
                 <p className="mt-2 text-xs opacity-75">Unique identifier for your account</p>
@@ -106,7 +106,7 @@ export default function UserProfile({ onClose }: UserProfileProps) {
                   setIsEditing(true);
                   reset(userProfile);
                 }}
-                className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition-all hover:bg-blue-700"
+                className="w-full rounded-[40px] bg-[#2c3e5f] py-3 font-semibold text-white transition-all hover:bg-[#1e2d46]"
               >
                 Edit Profile
               </button>
@@ -170,7 +170,7 @@ export default function UserProfile({ onClose }: UserProfileProps) {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 rounded-lg bg-blue-600 py-3 font-semibold text-white transition-all hover:bg-blue-700"
+                  className="flex-1 rounded-[40px] bg-[#2c3e5f] py-3 font-semibold text-white transition-all hover:bg-[#1e2d46]"
                 >
                   Save Changes
                 </button>

@@ -2,10 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
 :root {
-  --app-bg: #050816;
-  --app-fg: #e8eef8;
+  --app-bg: #F8F9FC;
+  --app-fg: #1E2A3A;
+  --app-blue: #2c3e5f;
+  --app-blue-light: #eaf2fa;
+  --app-white: #fff;
+  --app-border: #E9EDF2;
+  --app-gray: #F1F4F9;
 }
+
+
 
 * {
   margin: 0;
@@ -17,11 +26,9 @@ html {
   scroll-behavior: smooth;
 }
 
+
 body {
-  background:
-    radial-gradient(circle at top left, rgba(74, 222, 255, 0.08), transparent 18%),
-    radial-gradient(circle at top right, rgba(176, 140, 255, 0.08), transparent 20%),
-    linear-gradient(180deg, #050816 0%, #08111d 46%, #050816 100%);
+  background: var(--app-bg);
   color: var(--app-fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -34,17 +41,14 @@ code {
 }
 
 .glass-panel {
-  background: linear-gradient(180deg, rgba(10, 18, 31, 0.82), rgba(7, 12, 21, 0.72));
-  box-shadow: 0 24px 80px rgba(4, 10, 18, 0.45);
-  backdrop-filter: blur(20px);
+  background: var(--app-white);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--app-border);
+  border-radius: 28px;
 }
 
 .dashboard-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-  background-size: 72px 72px;
-  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9), transparent 95%);
+  display: none;
 }
 
 .reel-bars {
@@ -52,7 +56,7 @@ code {
 }
 
 .reel-bar {
-  background: linear-gradient(180deg, #63f0d6 0%, #4ea1ff 55%, #b08cff 100%);
+  background: linear-gradient(180deg, #2c5f2d 0%, #4A8B6E 55%, #6BAF8D 100%);
   animation: budgetPulse 1.8s ease-in-out infinite;
   transform-origin: bottom;
 }
@@ -67,5 +71,16 @@ code {
   50% {
     height: 100%;
     opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }

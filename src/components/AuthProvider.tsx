@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SessionProvider, signOut, useSession } from 'next-auth/react';
 
-const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+// Set inactivity timeout to 30 minutes (max allowed)
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 
 function SessionGuard({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasLoggedOutRef = useRef(false);
+  const [showLogoutMsg, setShowLogoutMsg] = useState(false);
 
   useEffect(() => {
     if (status !== 'authenticated' || !session) {
@@ -23,7 +25,11 @@ function SessionGuard({ children }: { children: React.ReactNode }) {
     const logoutNow = async () => {
       if (hasLoggedOutRef.current) return;
       hasLoggedOutRef.current = true;
-      await signOut({ callbackUrl: '/' });
+      setShowLogoutMsg(true);
+      setTimeout(async () => {
+        setShowLogoutMsg(false);
+        await signOut({ callbackUrl: '/' });
+      }, 2500);
     };
 
     const resetInactivityTimer = () => {
@@ -44,26 +50,16 @@ function SessionGuard({ children }: { children: React.ReactNode }) {
       'click',
     ];
 
-    const handleTabClose = () => {
-      if (hasLoggedOutRef.current) return;
-      hasLoggedOutRef.current = true;
-      navigator.sendBeacon('/api/auth/logout-on-close');
-    };
-
+    // Remove beforeunload logout so reload doesn't log out
     activityEvents.forEach((eventName) => {
       window.addEventListener(eventName, resetInactivityTimer, { passive: true });
     });
-
-    window.addEventListener('beforeunload', handleTabClose);
     resetInactivityTimer();
 
     return () => {
       activityEvents.forEach((eventName) => {
         window.removeEventListener(eventName, resetInactivityTimer);
       });
-
-      window.removeEventListener('beforeunload', handleTabClose);
-
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
@@ -71,7 +67,14 @@ function SessionGuard({ children }: { children: React.ReactNode }) {
     };
   }, [session, status]);
 
-  return <>{children}</>;
+  return <>
+    {showLogoutMsg && (
+      <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999}} className="bg-red-500 text-white text-center py-3 font-semibold shadow-lg animate-fade-in">
+        You have been logged out due to inactivity.
+      </div>
+    )}
+    {children}
+  </>;
 }
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {

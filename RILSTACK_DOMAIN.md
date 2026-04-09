@@ -15,7 +15,7 @@
 
 ## What is RILSTACK?
 
-RILSTACK is a professional financial management platform built for Nigerians. The name represents a "stack" of integrated financial tools:
+RILSTACK is a professional financial management platform. The name represents a "stack" of integrated financial tools:
 
 - **R** - Real-world payment processing (Paystack)
 - **I** - Identity verification (NIN validation)

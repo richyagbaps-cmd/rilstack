@@ -18,6 +18,9 @@
     "declarationMap": true,
     "sourceMap": true,
     "baseUrl": ".",
+    
+
+
     "paths": {
       "@/*": [
         "./src/*"
@@ -27,22 +30,17 @@
     "allowJs": true,
     "noEmit": true,
     "incremental": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     "plugins": [
       {
         "name": "next"
       }
-    ]
-  },
+      ]
+    },
   "include": [
     "src",
     ".next/types/**/*.ts"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
   ],
   "exclude": [
     "node_modules"

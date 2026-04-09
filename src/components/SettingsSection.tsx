@@ -1,10 +1,80 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
-import NinValidation from '@/components/NinValidation';
+import ReviewsWidget from './ReviewsWidget';
+
+// Withdrawal Bank Section
+function WithdrawalBankSection() {
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("rilstack_bank");
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        setBankName(data.bankName || "");
+        setAccountNumber(data.accountNumber || "");
+        setAccountName(data.accountName || "");
+      } catch {}
+    }
+  }, []);
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
+      setError("All fields are required.");
+      return;
+    }
+    localStorage.setItem("rilstack_bank", JSON.stringify({ bankName, accountNumber, accountName }));
+    setSuccess("Bank details updated.");
+    setError("");
+    setTimeout(() => setSuccess(""), 2000);
+  };
+
+  return (
+    <form onSubmit={handleSave} className="space-y-3">
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">Bank Name</label>
+        <input
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
+          value={bankName}
+          onChange={e => setBankName(e.target.value)}
+          placeholder="e.g. Access Bank"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">Account Number</label>
+        <input
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
+          value={accountNumber}
+          onChange={e => setAccountNumber(e.target.value.replace(/[^0-9]/g, ""))}
+          maxLength={10}
+          placeholder="e.g. 0123456789"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">Account Name</label>
+        <input
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
+          value={accountName}
+          onChange={e => setAccountName(e.target.value)}
+          placeholder="e.g. John Doe"
+        />
+      </div>
+      {error && <div className="text-red-600 text-xs">{error}</div>}
+      {success && <div className="text-green-600 text-xs">{success}</div>}
+      <button
+        type="submit"
+        className="rounded-xl bg-[#2c3e5f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1e2d46]"
+      >Save Bank Details</button>
+    </form>
+  );
+}
 
 interface SettingsFormData {
   fullName: string;
@@ -54,37 +124,25 @@ export default function SettingsSection() {
 
   const onProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-
     if (!file) return;
-
     if (profilePhotoUrl) {
       URL.revokeObjectURL(profilePhotoUrl);
     }
-
     setProfilePhotoUrl(URL.createObjectURL(file));
     setSaveSuccess('Profile photo updated. Remember to save your settings.');
   };
 
   const onSubmit = (data: SettingsFormData) => {
     setSaveError(null);
-
     if (!data.dateOfBirth) {
       setSaveError('Date of birth is required.');
       return;
     }
-
     setSaveSuccess('Settings saved successfully.');
   };
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Settings</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Manage your profile and KYC details in one place.
-        </p>
-      </section>
-
       <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
         <h3 className="text-lg font-bold text-slate-900 md:text-xl">Profile Photo</h3>
         <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
@@ -102,7 +160,7 @@ export default function SettingsSection() {
               <span className="text-xs font-semibold text-slate-500">No Photo</span>
             )}
           </div>
-          <label className="cursor-pointer rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+          <label className="cursor-pointer rounded-xl bg-[#2c3e5f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1e2d46]">
             {profilePhotoUrl ? 'Change Photo' : 'Add Photo'}
             <input type="file" accept="image/*" onChange={onProfilePhotoChange} className="hidden" />
           </label>
@@ -200,22 +258,38 @@ export default function SettingsSection() {
 
           <button
             type="submit"
-            className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+            className="rounded-xl bg-[#2c3e5f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1e2d46]"
           >
             Save Settings
           </button>
         </form>
       </section>
 
+
+
+
       <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <h3 className="text-lg font-bold text-slate-900 md:text-xl">NIN Validation</h3>
-        <p className="mt-2 text-sm text-slate-600">
-          Validate your NIN and auto-populate KYC profile information.
-        </p>
+        <h3 className="text-lg font-bold text-slate-900 md:text-xl mb-2">Withdrawal Bank</h3>
+        <a
+          href="/settings/bank"
+          className="block w-full rounded-xl bg-[#2c3e5f] px-5 py-3 text-sm font-semibold text-white text-center hover:bg-[#1e2d46] transition"
+        >
+          Change Withdrawal Bank
+        </a>
+      </section>
+
+
+
+      <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <h3 className="text-lg font-bold text-slate-900 md:text-xl">Write a Review</h3>
+        <p className="mt-2 text-sm text-slate-600">Share your experience with Rilstack. Your feedback helps us improve!</p>
         <div className="mt-4">
-          <NinValidation />
+          {/* ReviewsWidget allows users to write and view reviews */}
+          <ReviewsWidget />
         </div>
       </section>
+
+
 
       <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
         <h3 className="text-lg font-bold text-slate-900 md:text-xl">Support</h3>
@@ -223,7 +297,7 @@ export default function SettingsSection() {
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <a
             href="tel:08116883025"
-            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="rounded-xl bg-[#2c3e5f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1e2d46]"
           >
             Contact Us
           </a>

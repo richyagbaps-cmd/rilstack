@@ -148,7 +148,7 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
 
   return (
     <div className="flex max-h-[70vh] w-[calc(100vw-1.5rem)] max-w-96 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl sm:max-h-96">
-      <div className="flex items-center justify-between bg-gradient-to-r from-blue-900 to-blue-800 p-4 text-white shadow-lg">
+      <div className="flex items-center justify-between bg-[#2c3e5f] p-4 text-white shadow-lg">
         <div>
           <h2 className="text-lg font-bold">AI Assistant</h2>
           <p className="text-xs text-blue-100">Financial guidance</p>
@@ -190,7 +190,7 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
             <div
               className={`max-w-xs rounded px-3 py-2 text-sm ${
                 msg.type === 'user'
-                  ? 'rounded-br-none bg-blue-800 text-white'
+                  ? 'rounded-br-none bg-[#2c3e5f] text-white'
                   : 'rounded-bl-none bg-gray-200 text-gray-800'
               }`}
             >
@@ -242,7 +242,7 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="rounded bg-blue-800 px-3 py-2 text-sm font-bold text-white transition-all hover:bg-blue-900 disabled:opacity-50"
+            className="rounded bg-[#2c3e5f] px-3 py-2 text-sm font-bold text-white transition-all hover:bg-[#1e2d46] disabled:opacity-50"
           >
             {isLoading ? '...' : 'Send'}
           </button>

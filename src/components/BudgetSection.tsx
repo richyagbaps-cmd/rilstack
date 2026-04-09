@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import React, { useEffect, useMemo, useState } from 'react';
+import PinConfirmModal from './PinConfirmModal';
 
 type BudgetMode = 'strict' | 'relaxed';
 type BudgetStyle = '50-30-20' | 'zero-based' | 'custom';
@@ -27,6 +27,11 @@ interface LockedSummary {
   totalLocked: number;
   eligibleInterest: number;
   annualInterestRate: number;
+  pinHash: string;
+  startDate: string;
+  endDate: string;
+  unlockFrequency: 'daily' | 'weekly' | 'monthly';
+  schedule: { date: string; amount: number }[];
 }
 
 interface BudgetPlan {
@@ -40,6 +45,7 @@ interface BudgetPlan {
 
 interface BudgetSectionProps {
   budgetMode: BudgetMode;
+  onChangeBudgetMode?: () => void;
 }
 
 const PROFESSION_LABELS: Record<Profession, string> = {
@@ -70,7 +76,7 @@ const BUDGET_STYLE_INFO: Array<{
   {
     id: 'custom',
     title: 'Custom Budget',
-    description: 'Start from an AI draft, then shape the plan around your own priorities.',
+    description: 'Start from a smart draft, then shape the plan around your own priorities.',
     explanation: 'Good if you want more freedom while still using profession-based category suggestions.',
   },
 ];
@@ -156,8 +162,8 @@ const DAYS_PER_CADENCE: Record<SpendingCadence, number> = {
   monthly: 30,
 };
 
-const OPAY_ANNUAL_RATE_BELOW_100K = 14.95;
-const OPAY_ANNUAL_RATE_ABOVE_100K = 4.95;
+const OPAY_ANNUAL_RATE_BELOW_100K = 14;
+const OPAY_ANNUAL_RATE_ABOVE_100K = 4;
 
 const formatCurrency = (amount: number) => `N${Math.round(amount).toLocaleString()}`;
 
@@ -249,8 +255,11 @@ const allocateAcrossCategories = (
   });
 };
 
-export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
+type BudgetView = 'menu' | 'create' | 'manage';
+
+export default function BudgetSection({ budgetMode, onChangeBudgetMode }: BudgetSectionProps) {
   const storageKey = `budget-plan-${budgetMode}`;
+  const [view, setView] = useState<BudgetView>('menu');
   const [profession, setProfession] = useState<Profession | null>(null);
   const [budgetStyle, setBudgetStyle] = useState<BudgetStyle | null>(null);
   const [income, setIncome] = useState('');
@@ -259,6 +268,35 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryGroup, setNewCategoryGroup] = useState<CategoryGroup>('Flexible Expenses');
   const [newCategoryCadence, setNewCategoryCadence] = useState<SpendingCadence>('weekly');
+  const [justCreated, setJustCreated] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinAction, setPinAction] = useState<'lock' | 'unlock' | null>(null);
+  const [lockStartDate, setLockStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [lockEndDate, setLockEndDate] = useState(() => {
+    const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().split('T')[0];
+  });
+  const [lockFrequency, setLockFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+
+  const generateSchedule = (total: number, start: string, end: string, freq: 'daily' | 'weekly' | 'monthly') => {
+    const startD = new Date(start);
+    const endD = new Date(end);
+    if (endD <= startD) return [];
+    const dates: Date[] = [];
+    const current = new Date(startD);
+    while (current <= endD) {
+      dates.push(new Date(current));
+      if (freq === 'daily') current.setDate(current.getDate() + 1);
+      else if (freq === 'weekly') current.setDate(current.getDate() + 7);
+      else current.setMonth(current.getMonth() + 1);
+    }
+    if (dates.length === 0) return [];
+    const perSlot = Math.floor(total / dates.length);
+    const remainder = total - perSlot * dates.length;
+    return dates.map((d, i) => ({
+      date: d.toISOString().split('T')[0],
+      amount: perSlot + (i === dates.length - 1 ? remainder : 0),
+    }));
+  };
 
   useEffect(() => {
     const savedPlan = localStorage.getItem(storageKey);
@@ -281,23 +319,6 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
     localStorage.setItem(storageKey, JSON.stringify(budgetPlan));
   }, [budgetPlan, storageKey]);
 
-  const modeDetails = useMemo(() => {
-    return budgetMode === 'strict'
-      ? {
-          title: 'Strict Budget Planner',
-          subtitle: 'Build a complete daily spending plan and lock each category until its approved spending date.',
-          rule: 'Funds stay locked until the chosen open date. After you finalize the plan, you can continue and lock the funds.',
-          penalty: 'Funds locked for more than 7 days earn estimated interest using an OPay-inspired rate reduced by 0.05 percentage points.',
-          accent: 'from-cyan-700 to-blue-900',
-        }
-      : {
-          title: 'Relaxed Budget Planner',
-          subtitle: 'Create a flexible daily spending plan with dates that guide when money should be opened.',
-          rule: 'Each category still gets a spend-open date, but early withdrawals remain possible before that date.',
-          penalty: 'Any withdrawal before the category open date attracts a 2% fee on the amount withdrawn.',
-          accent: 'from-emerald-700 to-teal-900',
-        };
-  }, [budgetMode]);
 
   const groupedCategories = useMemo(() => {
     const categories = budgetPlan?.categories ?? [];
@@ -311,6 +332,10 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
   const totalAllocated = (budgetPlan?.categories ?? []).reduce((sum, item) => sum + item.amount, 0);
   const remainingBalance = (budgetPlan?.income ?? 0) - totalAllocated;
   const planInterest = calculateInterestPreview(budgetPlan?.categories ?? []);
+
+  const previewSchedule = useMemo(() => {
+    return generateSchedule(totalAllocated, lockStartDate, lockEndDate, lockFrequency);
+  }, [totalAllocated, lockStartDate, lockEndDate, lockFrequency]);
 
   const generatePlan = () => {
     if (!profession || !budgetStyle || !income) return;
@@ -332,6 +357,10 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
       categories,
       createdAt: new Date().toISOString(),
     });
+
+    setJustCreated(true);
+    setView('manage');
+    setTimeout(() => setJustCreated(false), 4000);
   };
 
   const handleProfessionSelect = (value: Profession) => {
@@ -404,7 +433,13 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
 
   const lockFunds = () => {
     if (!budgetPlan || remainingBalance < 0) return;
+    setPinAction('lock');
+    setShowPinModal(true);
+  };
 
+  const executeLock = () => {
+    if (!budgetPlan) return;
+    const schedule = generateSchedule(totalAllocated, lockStartDate, lockEndDate, lockFrequency);
     setBudgetPlan({
       ...budgetPlan,
       lockedSummary: {
@@ -412,8 +447,26 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
         totalLocked: totalAllocated,
         eligibleInterest: planInterest.estimatedInterest,
         annualInterestRate: planInterest.annualRate,
+        pinHash: '',
+        startDate: lockStartDate,
+        endDate: lockEndDate,
+        unlockFrequency: lockFrequency,
+        schedule,
       },
     });
+    setShowPinModal(false);
+    setPinAction(null);
+  };
+
+  const requestUnlock = () => {
+    setPinAction('unlock');
+    setShowPinModal(true);
+  };
+
+  const executeUnlock = () => {
+    setShowPinModal(false);
+    setPinAction(null);
+    resetPlan();
   };
 
   const resetPlan = () => {
@@ -423,40 +476,63 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
     setBudgetStyle(null);
     setIncome('');
     setSetupStep('profession');
+    setView('create');
   };
 
-  return (
-    <div className="space-y-8">
-      <section className={`rounded-3xl bg-gradient-to-br ${modeDetails.accent} p-8 text-white shadow-2xl`}>
-        <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
+  /* ── MENU VIEW ── */
+  if (view === 'menu') {
+    return (
+      <div className="mx-auto max-w-2xl space-y-6 py-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Budget Planner</h2>
+          <p className="mt-2 text-sm text-slate-500">Plan, lock, and track your spending with discipline</p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <button
+            onClick={() => { resetPlan(); setView('create'); }}
+            className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-[#2c3e5f] hover:shadow-md"
+          >
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl">+</div>
+            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">Create New Budget Plan</h3>
+            <p className="mt-1 text-sm text-slate-500">Pick your profession, budget style, and income to generate a full plan.</p>
+          </button>
+
+          <button
+            onClick={() => setView('manage')}
+            className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-[#2c3e5f] hover:shadow-md"
+          >
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-2xl">📊</div>
+            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">Manage Existing</h3>
+            <p className="mt-1 text-sm text-slate-500">View your budget, edit allocations, and lock funds.</p>
+            {budgetPlan && (
+              <span className="mt-3 inline-block rounded-full bg-[#2c3e5f] px-3 py-1 text-xs font-semibold text-white">
+                {budgetPlan.categories.length} categories
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── CREATE VIEW ── */
+  if (view === 'create') {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setView('menu')}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+          >
+            ←
+          </button>
           <div>
-            <p className="text-sm uppercase tracking-[0.28em] text-white/70">{budgetMode} mode</p>
-            <h2 className="mt-3 text-3xl font-bold">{modeDetails.title}</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/85">{modeDetails.subtitle}</p>
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
-                <p className="text-xs uppercase tracking-[0.24em] text-white/60">Spending Rule</p>
-                <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.rule}</p>
-              </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 p-5">
-                <p className="text-xs uppercase tracking-[0.24em] text-white/60">Locking Notice</p>
-                <p className="mt-2 text-sm leading-6 text-white/90">{modeDetails.penalty}</p>
-              </div>
-            </div>
-          </div>
-          <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20">
-            <Image
-              src="/images/budget-map.svg"
-              alt="Budget planning illustration"
-              width={1200}
-              height={800}
-              className="h-full w-full object-cover"
-            />
+            <h2 className="text-xl font-bold text-slate-900">Create New Budget Plan</h2>
+            <p className="text-sm text-slate-500">Set up your personalised spending plan in 3 steps</p>
           </div>
         </div>
-      </section>
 
-      {!budgetPlan ? (
         <section className="mx-auto max-w-4xl rounded-3xl bg-white p-8 shadow-xl md:p-10">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -585,24 +661,70 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
             </div>
           )}
         </section>
+      </div>
+    );
+  }
+
+  /* ── MANAGE VIEW ── */
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setView('menu')}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+          >
+            ←
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Your Budget Plan</h2>
+            <p className="text-sm text-slate-500">View and manage your spending allocations</p>
+          </div>
+        </div>
+        <button
+          onClick={() => { resetPlan(); setView('create'); }}
+          className="rounded-xl bg-[#2c3e5f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#244d24]"
+        >
+          + New Plan
+        </button>
+      </div>
+
+      {justCreated && (
+        <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          Budget plan created successfully! Your spending categories have been generated.
+        </div>
+      )}
+
+      {!budgetPlan ? (
+        <div className="rounded-[24px] border border-dashed border-slate-300 bg-white p-12 text-center">
+          <p className="text-4xl mb-3">📋</p>
+          <h3 className="text-lg font-semibold text-slate-700">No budget plan yet</h3>
+          <p className="mt-1 text-sm text-slate-500">Create your first budget plan to start managing your spending.</p>
+          <button
+            onClick={() => { resetPlan(); setView('create'); }}
+            className="mt-4 rounded-xl bg-[#2c3e5f] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#244d24]"
+          >
+            Create Budget Plan
+          </button>
+        </div>
       ) : (
         <>
           <section className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl bg-white p-5 shadow-md">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Profession</p>
-              <p className="mt-2 text-xl font-bold text-slate-900">{PROFESSION_LABELS[budgetPlan.profession]}</p>
+            <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">Profession</p>
+              <p className="mt-1 text-xl font-bold text-slate-900">{PROFESSION_LABELS[budgetPlan.profession]}</p>
             </div>
-            <div className="rounded-2xl bg-white p-5 shadow-md">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Budget Type</p>
-              <p className="mt-2 text-xl font-bold text-slate-900">{budgetPlan.budgetStyle}</p>
+            <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">Budget Type</p>
+              <p className="mt-1 text-xl font-bold text-slate-900">{budgetPlan.budgetStyle}</p>
             </div>
-            <div className="rounded-2xl bg-white p-5 shadow-md">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Income</p>
-              <p className="mt-2 text-xl font-bold text-slate-900">{formatCurrency(budgetPlan.income)}</p>
+            <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">Income</p>
+              <p className="mt-1 text-xl font-bold text-slate-900">{formatCurrency(budgetPlan.income)}</p>
             </div>
-            <div className="rounded-2xl bg-white p-5 shadow-md">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Remaining</p>
-              <p className={`mt-2 text-xl font-bold ${remainingBalance < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+            <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">Remaining</p>
+              <p className={`mt-1 text-xl font-bold ${remainingBalance < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                 {formatCurrency(remainingBalance)}
               </p>
             </div>
@@ -618,14 +740,17 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
                     date the money should open for spending.
                   </p>
                 </div>
-                <button
-                  onClick={resetPlan}
-                  className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
-                >
-                  Start Over
-                </button>
+                {!budgetPlan.lockedSummary && (
+                  <button
+                    onClick={resetPlan}
+                    className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
+                  >
+                    Start Over
+                  </button>
+                )}
               </div>
 
+              {!budgetPlan.lockedSummary && (
               <div className="mt-8 grid gap-8">
                 {(Object.keys(groupedCategories) as CategoryGroup[]).map((group) => (
                   <div key={group} className={`rounded-3xl border p-5 ${GROUP_COLORS[group]}`}>
@@ -687,9 +812,6 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
                                 }
                                 className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
                               />
-                              <p className="mt-2 text-xs text-slate-500">
-                                Suggested from the category amount, but fully editable.
-                              </p>
                             </div>
 
                             <div>
@@ -742,9 +864,11 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
             <div className="space-y-6">
+              {!budgetPlan.lockedSummary && (
               <section className="rounded-3xl bg-white p-8 shadow-xl">
                 <h3 className="text-2xl font-bold text-slate-900">Add more categories</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -783,35 +907,106 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
                   </button>
                 </div>
               </section>
+              )}
 
+              {!budgetPlan.lockedSummary && (
               <section className="rounded-3xl bg-white p-8 shadow-xl">
-                <h3 className="text-2xl font-bold text-slate-900">Lock preview</h3>
-                <div className="mt-6 space-y-4 text-sm leading-6 text-slate-600">
-                  <p>When you continue, the app treats this plan as your active spending lock schedule.</p>
-                  <p>Categories with open dates more than 7 days ahead are marked as interest-eligible.</p>
-                  <p>
-                    Interest estimate uses an inferred OPay-style annual rate of{' '}
-                    <span className="font-semibold text-slate-900">{planInterest.annualRate.toFixed(2)}%</span> after
-                    deducting 0.05 percentage points.
-                  </p>
+                <h3 className="text-2xl font-bold text-slate-900">Lock &amp; Schedule</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  Choose a start date, end date, and how often you want funds released.
+                </p>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Start Date</label>
+                    <input
+                      type="date"
+                      value={lockStartDate}
+                      onChange={(e) => setLockStartDate(e.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">End Date</label>
+                    <input
+                      type="date"
+                      value={lockEndDate}
+                      min={lockStartDate}
+                      onChange={(e) => setLockEndDate(e.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Unlock Frequency</label>
+                  <div className="mt-2 flex gap-2">
+                    {(['daily', 'weekly', 'monthly'] as const).map((freq) => (
+                      <button
+                        key={freq}
+                        onClick={() => setLockFrequency(freq)}
+                        className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
+                          lockFrequency === freq
+                            ? 'bg-cyan-600 text-white shadow-md'
+                            : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {previewSchedule.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-bold text-slate-900">Disbursement Schedule</h4>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {formatCurrency(totalAllocated)} split into {previewSchedule.length}{' '}
+                      {lockFrequency} release{previewSchedule.length > 1 ? 's' : ''}
+                    </p>
+                    <div className="mt-3 max-h-48 overflow-y-auto rounded-2xl border border-slate-200">
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Date</th>
+                            <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {previewSchedule.map((entry, i) => (
+                            <tr key={i} className="hover:bg-slate-50">
+                              <td className="px-4 py-2.5 text-slate-700">
+                                {new Date(entry.date).toLocaleDateString('en-NG', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                              </td>
+                              <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">
+                                {formatCurrency(entry.amount)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {previewSchedule.length === 0 && (
+                  <p className="mt-4 text-xs text-red-600">End date must be after start date.</p>
+                )}
+
+                <div className="mt-6 space-y-3 text-sm text-slate-600">
                   <p>
                     Eligible locked amount:{' '}
                     <span className="font-semibold text-slate-900">{formatCurrency(planInterest.eligibleAmount)}</span>
                   </p>
                   <p>
-                    Estimated interest preview:{' '}
+                    Estimated interest:{' '}
                     <span className="font-semibold text-emerald-700">{formatCurrency(planInterest.estimatedInterest)}</span>
-                  </p>
-                  <p>
-                    {budgetMode === 'strict'
-                      ? 'Strict mode keeps funds locked until their spending dates.'
-                      : 'Relaxed mode still allows early withdrawals, but the 2% fee warning remains.'}
                   </p>
                 </div>
 
                 <button
                   onClick={lockFunds}
-                  disabled={remainingBalance < 0}
+                  disabled={remainingBalance < 0 || previewSchedule.length === 0}
                   className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-700 px-5 py-4 text-sm font-semibold text-white transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Continue and Lock Funds
@@ -822,36 +1017,93 @@ export default function BudgetSection({ budgetMode }: BudgetSectionProps) {
                   </p>
                 )}
               </section>
+              )}
 
               {budgetPlan.lockedSummary && (
                 <section className="rounded-3xl border border-cyan-200 bg-cyan-50 p-8 shadow-xl">
-                  <p className="text-xs uppercase tracking-[0.24em] text-cyan-700">Funds locked</p>
-                  <h3 className="mt-2 text-2xl font-bold text-slate-900">Budget plan activated</h3>
-                  <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    <div className="rounded-2xl bg-white p-4 shadow-sm">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Total Locked</p>
-                      <p className="mt-2 text-xl font-bold text-slate-900">
-                        {formatCurrency(budgetPlan.lockedSummary.totalLocked)}
-                      </p>
+                  <div className="text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-100">
+                      <svg className="h-8 w-8 text-cyan-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
                     </div>
-                    <div className="rounded-2xl bg-white p-4 shadow-sm">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Interest Estimate</p>
-                      <p className="mt-2 text-xl font-bold text-emerald-700">
-                        {formatCurrency(budgetPlan.lockedSummary.eligibleInterest)}
-                      </p>
-                    </div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-cyan-700">Funds Secured</p>
+                    <h3 className="mt-2 text-2xl font-bold text-slate-900">Your budget is locked</h3>
+                    <p className="mt-3 text-sm text-slate-500">
+                      {formatCurrency(budgetPlan.lockedSummary.totalLocked)} locked since{' '}
+                      {new Date(budgetPlan.lockedSummary.lockedAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </p>
+                    <p className="mt-1 text-sm text-emerald-600 font-medium">
+                      Estimated interest: {formatCurrency(budgetPlan.lockedSummary.eligibleInterest)}
+                    </p>
+                    <p className="mt-2 text-xs text-slate-500">
+                      Releasing {budgetPlan.lockedSummary.unlockFrequency} from{' '}
+                      {new Date(budgetPlan.lockedSummary.startDate).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
+                      {' '}to{' '}
+                      {new Date(budgetPlan.lockedSummary.endDate).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
                   </div>
-                  <p className="mt-4 text-sm leading-6 text-slate-600">
-                    Lock timestamp: {new Date(budgetPlan.lockedSummary.lockedAt).toLocaleString()}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Applied annual rate: {budgetPlan.lockedSummary.annualInterestRate.toFixed(2)}%.
-                  </p>
+
+                  {budgetPlan.lockedSummary.schedule.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="text-sm font-bold text-slate-900">Release Schedule</h4>
+                      <div className="mt-2 max-h-56 overflow-y-auto rounded-2xl border border-cyan-200 bg-white">
+                        <table className="w-full text-sm">
+                          <thead className="sticky top-0 bg-cyan-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-cyan-700">Date</th>
+                              <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider text-cyan-700">Available</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-cyan-100">
+                            {budgetPlan.lockedSummary.schedule.map((entry, i) => {
+                              const isPast = new Date(entry.date) <= new Date();
+                              return (
+                                <tr key={i} className={isPast ? 'bg-emerald-50' : ''}>
+                                  <td className="px-4 py-2.5 text-slate-700">
+                                    {new Date(entry.date).toLocaleDateString('en-NG', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                                    {isPast && <span className="ml-2 text-xs text-emerald-600">&#10003; Released</span>}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">
+                                    {formatCurrency(entry.amount)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-6 text-center">
+                    <p className="text-xs text-slate-400">
+                      Enter your 4-digit PIN to unlock all funds early.
+                    </p>
+                    <button
+                      onClick={requestUnlock}
+                      className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-100"
+                    >
+                      Unlock Funds (Requires PIN)
+                    </button>
+                  </div>
                 </section>
               )}
             </div>
           </section>
         </>
+      )}
+
+      {showPinModal && (
+        <PinConfirmModal
+          title={pinAction === 'unlock' ? 'Unlock Funds' : 'Lock Funds'}
+          description={pinAction === 'unlock' ? 'Enter your PIN to unlock and release funds' : 'Enter your PIN to secure your locked funds'}
+          onConfirm={() => {
+            if (pinAction === 'lock') executeLock();
+            else if (pinAction === 'unlock') executeUnlock();
+          }}
+          onCancel={() => { setShowPinModal(false); setPinAction(null); }}
+        />
       )}
     </div>
   );

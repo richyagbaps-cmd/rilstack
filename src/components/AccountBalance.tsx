@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
+import PinConfirmModal from './PinConfirmModal';
 
 interface Account {
   id: string;
@@ -97,6 +98,13 @@ export default function AccountBalance() {
   const [isSendingStatement, setIsSendingStatement] = useState(false);
   const [pendingTransferCode, setPendingTransferCode] = useState<string | null>(null);
   const [pendingWithdrawalAmount, setPendingWithdrawalAmount] = useState<number | null>(null);
+  const [showPinModal, setShowPinModal] = useState(false);
+  // Terms agreement state for withdrawal
+  const [agreedToTermsWithdrawal, setAgreedToTermsWithdrawal] = useState(false);
+  const [pinAction, setPinAction] = useState<'deposit' | 'withdrawal' | 'statement' | null>(null);
+  const [pendingDepositData, setPendingDepositData] = useState<DepositFormData | null>(null);
+  const [pendingWithdrawalData, setPendingWithdrawalData] = useState<WithdrawalFormData | null>(null);
+  const [pendingStatementData, setPendingStatementData] = useState<StatementFormData | null>(null);
 
   const depositForm = useForm<DepositFormData>({
     defaultValues: {
@@ -230,9 +238,8 @@ export default function AccountBalance() {
     }
   };
 
-  const onDepositSubmit = async (data: DepositFormData) => {
+  const onDepositSubmit = (data: DepositFormData) => {
     const amount = Number(data.amount);
-
     if (!Number.isFinite(amount) || amount <= 0) {
       setProcessError('Enter a valid deposit amount.');
       return;
@@ -241,6 +248,15 @@ export default function AccountBalance() {
       setProcessError('You need a signed-in email before making a deposit.');
       return;
     }
+    setPendingDepositData(data);
+    setPinAction('deposit');
+    setShowPinModal(true);
+  };
+
+  const executeDeposit = async () => {
+    if (!pendingDepositData) return;
+    const data = pendingDepositData;
+    const amount = Number(data.amount);
 
     setIsSubmittingDeposit(true);
     setProcessError(null);
@@ -275,9 +291,8 @@ export default function AccountBalance() {
     }
   };
 
-  const onWithdrawalSubmit = async (data: WithdrawalFormData) => {
+  const onWithdrawalSubmit = (data: WithdrawalFormData) => {
     const amount = Number(data.amount);
-
     if (!Number.isFinite(amount) || amount <= 0) {
       setProcessError('Enter a valid withdrawal amount.');
       return;
@@ -286,11 +301,19 @@ export default function AccountBalance() {
       setProcessError('You need a signed-in email before making a withdrawal.');
       return;
     }
-
     if (amount > totalAvailable) {
       setProcessError('Withdrawal exceeds your available Paystack balance.');
       return;
     }
+    setPendingWithdrawalData(data);
+    setPinAction('withdrawal');
+    setShowPinModal(true);
+  };
+
+  const executeWithdrawal = async () => {
+    if (!pendingWithdrawalData) return;
+    const data = pendingWithdrawalData;
+    const amount = Number(data.amount);
 
     setIsSubmittingWithdrawal(true);
     setProcessError(null);
@@ -378,11 +401,19 @@ export default function AccountBalance() {
     return 'USSD';
   };
 
-  const onStatementSubmit = async (data: StatementFormData) => {
+  const onStatementSubmit = (data: StatementFormData) => {
     if (!session?.user?.email) {
       setProcessError('You need a signed-in email before requesting a statement.');
       return;
     }
+    setPendingStatementData(data);
+    setPinAction('statement');
+    setShowPinModal(true);
+  };
+
+  const executeStatement = async () => {
+    if (!pendingStatementData || !session) return;
+    const data = pendingStatementData;
 
     setIsSendingStatement(true);
     setProcessError(null);
@@ -395,9 +426,9 @@ export default function AccountBalance() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userEmail: session.user.email,
+          userEmail: session.user?.email,
           deliveryEmail: data.deliveryEmail,
-          accountName: session.user.name || session.user.email,
+          accountName: session.user?.name || session.user?.email,
         }),
       });
       const result = await response.json();
@@ -411,7 +442,7 @@ export default function AccountBalance() {
         `Your account statement, including the balance at generation and dated deposits and withdrawals, was sent to ${data.deliveryEmail}.`,
       );
       statementForm.reset({
-        deliveryEmail: session.user.email,
+        deliveryEmail: session.user?.email || '',
       });
     } catch (error: any) {
       setProcessError(error.message || 'Unable to send your account statement.');
@@ -420,42 +451,41 @@ export default function AccountBalance() {
     }
   };
 
+  const onPinConfirm = () => {
+    setShowPinModal(false);
+    if (pinAction === 'deposit') executeDeposit();
+    else if (pinAction === 'withdrawal') executeWithdrawal();
+    else if (pinAction === 'statement') executeStatement();
+    setPinAction(null);
+  };
+
+  const onPinCancel = () => {
+    setShowPinModal(false);
+    setPinAction(null);
+    setPendingDepositData(null);
+    setPendingWithdrawalData(null);
+    setPendingStatementData(null);
+  };
+
   return (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(74,222,255,0.18),_transparent_24%),linear-gradient(135deg,_rgba(8,17,29,0.96),_rgba(6,14,24,0.92))] p-5 text-white shadow-2xl md:p-8">
+    <div className="space-y-6" style={{ color: 'var(--app-fg)' }}>
+      <section className="overflow-hidden rounded-[28px] border p-5 shadow-sm md:p-8" style={{ background: 'var(--app-blue)', borderColor: 'var(--app-border)', color: 'var(--app-white)' }}>
         <div className="grid gap-6 lg:grid-cols-[1.05fr,0.95fr]">
           <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.26em] text-cyan-200">Paystack Wallet Ledger</p>
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Deposits, withdrawals, and wallet balance now follow confirmed Paystack activity.</h2>
-            <p className="max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
-              RILSTACK now rebuilds your visible wallet balance from Paystack-confirmed deposits and Paystack-confirmed withdrawals,
-              so pending or OTP-stage activity does not change the amount you see.
-            </p>
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total Balance</p>
-                <p className="mt-2 text-2xl font-bold text-white">{formatCurrency(totalBalance)}</p>
+                <div className="rounded-[28px] border p-4" style={{ borderColor: 'var(--app-white)', background: 'rgba(255,255,255,0.10)' }}>
+                <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.60)' }}>Total Balance</p>
+                <p className="mt-2 text-2xl font-bold" style={{ color: 'var(--app-white)' }}>{formatCurrency(totalBalance)}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Available</p>
-                <p className="mt-2 text-2xl font-bold text-emerald-300">{formatCurrency(totalAvailable)}</p>
+                <div className="rounded-[28px] border p-4" style={{ borderColor: 'var(--app-white)', background: 'rgba(255,255,255,0.10)' }}>
+                <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.60)' }}>Available</p>
+                <p className="mt-2 text-2xl font-bold" style={{ color: '#6EE7B7' }}>{formatCurrency(totalAvailable)}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Pending Confirmation</p>
-                <p className="mt-2 text-2xl font-bold text-amber-300">{formatCurrency(lockedBalance)}</p>
-              </div>
+
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20">
-            <Image
-              src="/images/savings-orbit.svg"
-              alt="Paystack wallet illustration"
-              width={1200}
-              height={800}
-              className="h-full w-full object-cover"
-            />
-          </div>
+
         </div>
       </section>
 
@@ -467,7 +497,7 @@ export default function AccountBalance() {
             depositForm.reset({ amount: '', method: 'card', description: '' });
             setShowDepositModal(true);
           }}
-          className="rounded-2xl bg-blue-800 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-900"
+          className="rounded-[28px] bg-[#2c3e5f] py-3 text-sm font-semibold text-white transition-all hover:bg-[#1e2d46]"
         >
           Deposit with Paystack
         </button>
@@ -478,7 +508,7 @@ export default function AccountBalance() {
             void loadBanks();
             setShowWithdrawalModal(true);
           }}
-          className="rounded-2xl bg-green-600 py-3 text-sm font-semibold text-white transition-all hover:bg-green-700"
+          className="rounded-[28px] bg-[#4A8B6E] py-3 text-sm font-semibold text-white transition-all hover:bg-[#2c3e5f]"
         >
           Withdraw with Paystack
         </button>
@@ -491,7 +521,7 @@ export default function AccountBalance() {
             });
             setShowStatementModal(true);
           }}
-          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50"
+          className="rounded-2xl border border-slate-200 bg-white dark:bg-[#232f3e] px-4 py-3 text-center text-sm font-semibold text-slate-700 dark:text-[#F8F9FC] shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-[#181C23]"
         >
           {isLoadingLedger ? 'Refreshing Paystack ledger...' : 'Email account statement'}
         </button>
@@ -509,19 +539,20 @@ export default function AccountBalance() {
       )}
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-        <section className="rounded-[26px] bg-white p-5 shadow-md md:p-6">
+        <section className="rounded-[26px] p-5 shadow-md md:p-6" style={{ background: 'var(--app-white)' }}>
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-lg font-bold text-slate-900 md:text-xl">Account Details</h3>
+            <h3 className="text-lg font-bold md:text-xl" style={{ color: 'var(--app-fg)' }}>Account Details</h3>
             <button
               onClick={() => void loadLedger()}
-              className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-xl border px-3 py-2 text-xs font-semibold transition hover:bg-[var(--app-gray)]"
+              style={{ borderColor: 'var(--app-border)', color: 'var(--app-fg)' }}
             >
               Refresh
             </button>
           </div>
           <div className="mt-4 space-y-3">
             {accounts.map((account) => (
-              <div key={account.id} className="rounded-2xl border border-slate-200 p-4 hover:bg-slate-50">
+              <div key={account.id} className="rounded-2xl border p-4 hover:bg-[var(--app-gray)]" style={{ borderColor: 'var(--app-border)' }}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-base font-semibold text-slate-900">{account.name}</p>
@@ -532,15 +563,11 @@ export default function AccountBalance() {
                 <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-slate-500">Available</p>
-                    <p className="font-semibold text-emerald-600">{formatCurrency(account.availableBalance)}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Pending Confirmation</p>
-                    <p className="font-semibold text-amber-600">{formatCurrency(account.balance - account.availableBalance)}</p>
+                    <p className="font-semibold" style={{ color: '#059669' }}>{formatCurrency(account.availableBalance)}</p>
                   </div>
                 </div>
                 {account.type === 'checking' && account.accountNumber && (
-                  <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-900">
+                  <div className="mt-3 rounded-xl border px-3 py-2 text-xs" style={{ borderColor: 'var(--app-blue)', background: 'var(--app-blue-light)', color: 'var(--app-blue)' }}>
                     Deposit account: {account.accountNumber} ({account.bankName || 'Paystack'}) -{' '}
                     {account.accountName || account.name}
                   </div>
@@ -550,8 +577,8 @@ export default function AccountBalance() {
           </div>
         </section>
 
-        <section className="rounded-[26px] bg-white p-5 shadow-md md:p-6">
-          <h3 className="text-lg font-bold text-slate-900 md:text-xl">Recent Paystack Transactions</h3>
+        <section className="rounded-[26px] p-5 shadow-md md:p-6" style={{ background: 'var(--app-white)' }}>
+          <h3 className="text-lg font-bold md:text-xl" style={{ color: 'var(--app-fg)' }}>Recent Paystack Transactions</h3>
           {transactions.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
               <p className="text-sm font-semibold text-slate-700">No Paystack activity yet</p>
@@ -560,20 +587,20 @@ export default function AccountBalance() {
           ) : (
             <div className="mt-4 space-y-3">
               {transactions.slice(0, 8).map((transaction) => (
-                <div key={transaction.id} className="rounded-2xl border border-slate-200 p-4 hover:bg-slate-50">
+                <div key={transaction.id} className="rounded-2xl border p-4 hover:bg-[var(--app-gray)]" style={{ borderColor: 'var(--app-border)' }}>
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold capitalize text-slate-900">
+                      <p className="text-sm font-semibold capitalize" style={{ color: 'var(--app-fg)' }}>
                         {transaction.type} via {getMethodLabel(transaction.method)}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs" style={{ color: '#64748b' }}>
                         {new Date(transaction.date).toLocaleString()} · {formatTransactionStatus(transaction.status)}
                       </p>
                       {transaction.description && (
-                        <p className="mt-1 text-xs text-slate-500">{transaction.description}</p>
+                        <p className="mt-1 text-xs" style={{ color: '#64748b' }}>{transaction.description}</p>
                       )}
                       {transaction.type === 'withdrawal' && transaction.accountNumber && (
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs" style={{ color: '#64748b' }}>
                           {transaction.bankName || 'Bank'} · {transaction.accountNumber}
                         </p>
                       )}
@@ -592,10 +619,10 @@ export default function AccountBalance() {
 
       {showDepositModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between rounded-t-3xl bg-blue-800 p-5 text-white">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#232f3e] shadow-2xl">
+            <div className="flex items-center justify-between rounded-t-3xl bg-[#2c3e5f] p-5 text-white dark:bg-[#181C23] dark:text-[#F8F9FC]">
               <h3 className="text-lg font-bold">Deposit with Paystack</h3>
-              <button onClick={() => setShowDepositModal(false)} className="rounded px-2 text-xl font-bold hover:bg-blue-900">
+              <button onClick={() => setShowDepositModal(false)} className="rounded px-2 text-xl font-bold hover:bg-[#1e2d46]">
                 x
               </button>
             </div>
@@ -607,7 +634,7 @@ export default function AccountBalance() {
                   min="100"
                   placeholder="Enter amount"
                   {...depositForm.register('amount', { required: true })}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-blue-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                 />
                 <p className="mt-1 text-xs text-slate-500">Minimum Paystack deposit is N100.</p>
               </div>
@@ -615,7 +642,7 @@ export default function AccountBalance() {
                 <label className="mb-2 block text-sm font-semibold">Paystack Channel</label>
                 <select
                   {...depositForm.register('method', { required: true })}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-blue-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                 >
                   <option value="card">Card</option>
                   <option value="transfer">Bank Transfer</option>
@@ -628,21 +655,21 @@ export default function AccountBalance() {
                   type="text"
                   placeholder="e.g. Wallet top-up"
                   {...depositForm.register('description')}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-blue-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                 />
               </div>
               <div className="flex gap-3">
                 <button
                   type="submit"
                   disabled={isSubmittingDeposit}
-                  className="flex-1 rounded-2xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="flex-1 rounded-2xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-[#059669] dark:hover:bg-[#6EE7B7] dark:text-[#181C23]"
                 >
                   {isSubmittingDeposit ? 'Redirecting...' : 'Continue to Paystack'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowDepositModal(false)}
-                  className="flex-1 rounded-2xl bg-slate-200 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-300"
+                  className="flex-1 rounded-2xl bg-slate-200 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-300 dark:bg-[#232f3e] dark:text-[#F8F9FC] dark:hover:bg-[#181C23]"
                 >
                   Cancel
                 </button>
@@ -654,10 +681,10 @@ export default function AccountBalance() {
 
       {showWithdrawalModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between rounded-t-3xl bg-green-600 p-5 text-white">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#232f3e] shadow-2xl">
+            <div className="flex items-center justify-between rounded-t-3xl bg-[#2c3e5f] p-5 text-white dark:bg-[#181C23] dark:text-[#F8F9FC]">
               <h3 className="text-lg font-bold">Withdraw with Paystack</h3>
-              <button onClick={() => setShowWithdrawalModal(false)} className="rounded px-2 text-xl font-bold hover:bg-green-700">
+              <button onClick={() => setShowWithdrawalModal(false)} className="rounded px-2 text-xl font-bold hover:bg-[#1e2d46]">
                 x
               </button>
             </div>
@@ -674,14 +701,14 @@ export default function AccountBalance() {
                     type="text"
                     placeholder="Enter Paystack OTP"
                     {...otpForm.register('otp', { required: true })}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-green-500"
+                    className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-green-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                   />
                 </div>
                 <div className="flex gap-3">
                   <button
                     type="submit"
                     disabled={isSubmittingWithdrawal}
-                    className="flex-1 rounded-2xl bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="flex-1 rounded-[28px] bg-[#2c3e5f] py-3 text-sm font-semibold text-white hover:bg-[#1e2d46] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isSubmittingWithdrawal ? 'Confirming...' : 'Confirm OTP'}
                   </button>
@@ -700,6 +727,21 @@ export default function AccountBalance() {
               </form>
             ) : (
               <form onSubmit={withdrawalForm.handleSubmit(onWithdrawalSubmit)} className="space-y-4 p-5">
+                                {/* Terms and Conditions Agreement */}
+                                <div className="flex items-start gap-2 rounded-2xl border border-yellow-200 bg-yellow-50 p-3 text-xs text-yellow-800">
+                                  <input
+                                    id="withdrawal-terms-checkbox"
+                                    type="checkbox"
+                                    checked={agreedToTermsWithdrawal}
+                                    onChange={e => setAgreedToTermsWithdrawal(e.target.checked)}
+                                    className="mt-1 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                  />
+                                  <label htmlFor="withdrawal-terms-checkbox" className="ml-2 cursor-pointer select-none">
+                                    I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-green-700">Terms &amp; Conditions</a>
+                                    , <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-green-700">Privacy Policy</a>
+                                    , and all legal documents before making a withdrawal.
+                                  </label>
+                                </div>
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
                   Available to withdraw: {formatCurrency(totalAvailable)}
                 </div>
@@ -710,7 +752,7 @@ export default function AccountBalance() {
                     min="5000"
                     placeholder="Enter amount"
                     {...withdrawalForm.register('amount', { required: true })}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-green-500"
+                    className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-green-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                   />
                   <p className="mt-1 text-xs text-slate-500">Minimum Paystack withdrawal is N5,000.</p>
                 </div>
@@ -718,7 +760,7 @@ export default function AccountBalance() {
                   <label className="mb-2 block text-sm font-semibold">Bank</label>
                   <select
                     {...withdrawalForm.register('bankCode', { required: true })}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-green-500"
+                    className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-green-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                   >
                     <option value="">{isLoadingBanks ? 'Loading banks...' : 'Select bank'}</option>
                     {banks.map((bank) => (
@@ -734,7 +776,7 @@ export default function AccountBalance() {
                     type="text"
                     placeholder="Enter account number"
                     {...withdrawalForm.register('accountNumber', { required: true })}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-green-500"
+                    className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-green-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                   />
                 </div>
                 <div>
@@ -743,7 +785,7 @@ export default function AccountBalance() {
                     type="text"
                     placeholder="Enter account name"
                     {...withdrawalForm.register('recipientName', { required: true })}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-green-500"
+                    className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-green-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                   />
                 </div>
                 <div>
@@ -752,21 +794,21 @@ export default function AccountBalance() {
                     type="text"
                     placeholder="e.g. Wallet withdrawal"
                     {...withdrawalForm.register('narration')}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-green-500"
+                    className="w-full rounded-2xl border border-slate-300 dark:border-[#444] px-4 py-3 text-sm outline-none focus:border-green-500 dark:bg-[#181C23] dark:text-[#F8F9FC]"
                   />
                 </div>
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    disabled={isSubmittingWithdrawal}
-                    className="flex-1 rounded-2xl bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    disabled={isSubmittingWithdrawal || !agreedToTermsWithdrawal}
+                    className="flex-1 rounded-[28px] bg-[#2c3e5f] py-3 text-sm font-semibold text-white hover:bg-[#1e2d46] disabled:cursor-not-allowed disabled:opacity-70 dark:bg-[#059669] dark:hover:bg-[#6EE7B7] dark:text-[#181C23]"
                   >
                     {isSubmittingWithdrawal ? 'Submitting...' : 'Start Withdrawal'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowWithdrawalModal(false)}
-                    className="flex-1 rounded-2xl bg-slate-200 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-300"
+                    className="flex-1 rounded-2xl bg-slate-200 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-300 dark:bg-[#232f3e] dark:text-[#F8F9FC] dark:hover:bg-[#181C23]"
                   >
                     Cancel
                   </button>
@@ -779,8 +821,8 @@ export default function AccountBalance() {
 
       {showStatementModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between rounded-t-3xl bg-slate-900 p-5 text-white">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#232f3e] shadow-2xl">
+            <div className="flex items-center justify-between rounded-t-3xl bg-slate-900 p-5 text-white dark:bg-[#181C23] dark:text-[#F8F9FC]">
               <h3 className="text-lg font-bold">Email Account Statement</h3>
               <button onClick={() => setShowStatementModal(false)} className="rounded px-2 text-xl font-bold hover:bg-slate-800">
                 x
@@ -818,6 +860,15 @@ export default function AccountBalance() {
             </form>
           </div>
         </div>
+      )}
+
+      {showPinModal && (
+        <PinConfirmModal
+          title={pinAction === 'deposit' ? 'Confirm Deposit' : pinAction === 'withdrawal' ? 'Confirm Withdrawal' : 'Confirm Statement'}
+          description="Enter your 4-digit PIN to proceed"
+          onConfirm={onPinConfirm}
+          onCancel={onPinCancel}
+        />
       )}
     </div>
   );

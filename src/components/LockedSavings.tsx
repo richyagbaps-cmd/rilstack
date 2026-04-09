@@ -122,10 +122,10 @@ export default function LockedSavings() {
 
   const getPeriodColor = (period: string) => {
     const colors: { [key: string]: string } = {
-      hourly: 'from-blue-400 to-blue-500',
-      daily: 'from-green-400 to-green-500',
-      monthly: 'from-purple-400 to-purple-500',
-      yearly: 'from-orange-400 to-orange-500',
+      hourly: 'from-[#4A8B6E] to-[#2c3e5f]',
+      daily: 'from-[#6BAF8D] to-[#4A8B6E]',
+      monthly: 'from-[#2c3e5f] to-[#1e2d46]',
+      yearly: 'from-[#1e2d46] to-[#143316]',
     };
     return colors[period] || 'from-gray-400 to-gray-500';
   };
@@ -134,19 +134,19 @@ export default function LockedSavings() {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-lg shadow-lg">
+        <div className="bg-[#2c3e5f] text-white p-6 rounded-[28px] shadow-sm">
           <p className="text-sm opacity-90 mb-2">TOTAL LOCKED</p>
           <p className="text-4xl font-bold mb-2">₦{totalLocked.toLocaleString()}</p>
           <p className="text-xs opacity-75">Funds in active lock period</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg shadow-lg">
+        <div className="bg-[#4A8B6E] text-white p-6 rounded-[28px] shadow-sm">
           <p className="text-sm opacity-90 mb-2">READY TO UNLOCK</p>
           <p className="text-4xl font-bold mb-2">₦{totalUnlocked.toLocaleString()}</p>
           <p className="text-xs opacity-75">Available to withdraw</p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
+        <div className="bg-[#6BAF8D] text-white p-6 rounded-[28px] shadow-sm">
           <p className="text-sm opacity-90 mb-2">INTEREST (PAID AT UNLOCK)</p>
           <p className="text-4xl font-bold mb-2">₦{getTotalInterest()}</p>
           <p className="text-xs opacity-75">Earnings upon unlock date</p>
@@ -298,7 +298,7 @@ export default function LockedSavings() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all"
+            className="w-full bg-[#2c3e5f] text-white py-3 rounded-[40px] font-semibold hover:bg-[#1e2d46] transition-all"
           >
             Lock Savings
           </button>
