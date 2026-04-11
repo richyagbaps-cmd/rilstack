@@ -35,6 +35,7 @@ interface PinConfirmModalProps {
   description?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  open?: boolean;
 }
 
 export default function PinConfirmModal({
@@ -42,7 +43,9 @@ export default function PinConfirmModal({
   description = 'Enter your 4-digit PIN to continue',
   onConfirm,
   onCancel,
+  open = true,
 }: PinConfirmModalProps) {
+  if (!open) return null;
   const [step, setStep] = useState<'enter' | 'create' | 'confirm'>(() =>
     hasPin() ? 'enter' : 'create'
   );

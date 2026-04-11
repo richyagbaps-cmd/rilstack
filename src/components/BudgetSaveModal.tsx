@@ -42,23 +42,7 @@ export default function BudgetSaveModal({ open, onClose }: { open: boolean; onCl
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-        {/* Terms Agreement (always visible) */}
-        <div className="mb-4 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <input
-            type="checkbox"
-            id="budget-agree-terms"
-            checked={agreed}
-            onChange={e => setAgreed(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-[#2c3e5f] cursor-pointer"
-          />
-          <label htmlFor="budget-agree-terms" className="text-xs text-slate-600 leading-relaxed cursor-pointer">
-            I agree to Rilstack&apos;s{' '}
-            <a href="/terms" target="_blank" className="text-[#2c3e5f] font-semibold underline">Terms of Service</a>,{' '}
-            <a href="/privacy" target="_blank" className="text-[#2c3e5f] font-semibold underline">Privacy Policy</a>, and{' '}
-            <a href="/security" target="_blank" className="text-[#2c3e5f] font-semibold underline">Security &amp; Fraud</a>{' '}
-            policies. I understand that my data will be processed in accordance with these policies.
-          </label>
-        </div>
+        {/* Terms Agreement removed as requested */}
         {/* Step: Choose Budget Mode */}
         {step === "chooseBudgetMode" && (
           <>
@@ -85,6 +69,7 @@ export default function BudgetSaveModal({ open, onClose }: { open: boolean; onCl
           </>
         )}
         {/* ...rest of the component code... */}
+        {/* Ensure all steps and JSX are properly closed. If more steps are needed, add them here. */}
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import PinConfirmModal from './PinConfirmModal';
 
 interface Investment {
   id: string;
-  type: 'tbill' | 'bond' | 'mutual-fund';
+  type: 'tbill' | 'bond' | 'mutual-fund' | 'secondary-bond';
   name: string;
   symbol: string;
   principal: number;
@@ -22,9 +22,13 @@ interface Investment {
     amountSold: number;
     status: 'open' | 'closed' | 'expired';
   }[];
+  sip?: {
+    freq: string;
+    start: string;
+  };
 }
 
-type InvestmentType = 'tbill' | 'bond' | 'mutual-fund';
+type InvestmentType = 'tbill' | 'bond' | 'mutual-fund' | 'secondary-bond';
 type View = 'menu' | 'manage' | 'choose-plan' | 'invest';
 type Timeline = 3 | 6 | 9 | 12;
 
@@ -86,6 +90,18 @@ const INVESTMENT_PLANS: Array<{
     bgColor: 'bg-emerald-50',
     borderColor: 'border-emerald-200',
     icon: '💰',
+  },
+  {
+    type: 'secondary-bond',
+    label: 'Secondary Bonds',
+    description: 'Bonds issued by companies or governments, traded on secondary markets. Higher risk, higher return.',
+    baseRate: 10.5,
+    rateByTimeline: { 3: 5.0, 6: 8.5, 9: 10.5, 12: 13.0 },
+    symbolPrefix: 'SBOND',
+    color: 'text-red-700',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    icon: '🪙',
   },
 ];
 
@@ -473,6 +489,28 @@ export default function InvestmentPortfolio() {
                     <p className="text-sm font-semibold text-slate-700">{inv.maturityDate}</p>
                   </div>
                 </div>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-slate-500">Face Value</p>
+                    <p className="text-sm font-semibold text-slate-700">₦{inv.principal.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Days to Maturity</p>
+                    <p className="text-sm font-semibold text-slate-700">{daysTo(inv.maturityDate)}</p>
+                  </div>
+                  {inv.type === 'bond' && (
+                    <React.Fragment>
+                      <div>
+                        <p className="text-xs text-slate-500">Next Coupon Date</p>
+                        <p className="text-sm font-semibold text-slate-700">{formatDate(inv.maturityDate)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Current Yield</p>
+                        <p className="text-sm font-semibold text-slate-700">{inv.interestRate}%</p>
+                      </div>
+                    </React.Fragment>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -489,4 +527,47 @@ export default function InvestmentPortfolio() {
       )}
     </div>
   );
+}
+
+// --- Portfolio Enhancements ---
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString();
+}
+
+function daysTo(dateStr: string) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  return Math.max(0, Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+}
+
+function InvestmentActions({ inv, onReinvest, onRedeem, onSell }: { inv: any, onReinvest?: () => void, onRedeem?: () => void, onSell?: () => void }) {
+  if (inv.type === 'tbill' || inv.type === 'bond') {
+    if (inv.isClosed || daysTo(inv.maturityDate) === 0) {
+      return (
+        <div className="flex gap-2 mt-2">
+          <button className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700" onClick={onReinvest}>Reinvest</button>
+          <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700" onClick={onRedeem}>Redeem to Wallet</button>
+        </div>
+      );
+    }
+    return null;
+  }
+  if (inv.type === 'mutual-fund') {
+    return (
+      <div className="flex gap-2 mt-2">
+        <button className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Additional Investment</button>
+        <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700">Redeem</button>
+        <button className="px-3 py-1 rounded bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700">Switch Fund</button>
+      </div>
+    );
+  }
+  if (inv.type === 'secondary-bond') {
+    return (
+      <div className="flex gap-2 mt-2">
+        <button className="px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700" onClick={onSell}>Sell</button>
+      </div>
+    );
+  }
+  return null;
 }

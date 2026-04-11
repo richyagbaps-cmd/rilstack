@@ -29,19 +29,19 @@ export default function Navigation() {
 		}
 	}, []);
 
-	return (
-		<nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E9EDF2] flex justify-around items-center h-16 shadow-lg">
-			{navItems.map((item, idx) => (
-				<button
-					key={item.label}
-					className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors ${active === idx ? "text-[#2c3e5f]" : "text-[#4A5B6E]"}`}
-					onClick={() => { setActive(idx); router.push(item.href); }}
-					aria-label={item.label}
-				>
-					<span className="mb-1">{item.icon}</span>
-					<span className="text-xs font-medium">{item.label}</span>
-				</button>
-			))}
-		</nav>
-	);
+		return (
+			<nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E9EDF2] flex justify-around items-center h-20 shadow-lg px-2 md:px-8">
+				{navItems.map((item, idx) => (
+					<button
+						key={item.label}
+						className={`flex flex-col items-center justify-center flex-1 py-3 md:py-4 transition-colors gap-2 ${active === idx ? "text-[#2c3e5f]" : "text-[#4A5B6E]"}`}
+						onClick={() => { setActive(idx); router.push(item.href); }}
+						aria-label={item.label}
+					>
+						<span className="mb-2 md:mb-3">{item.icon}</span>
+						<span className="text-xs md:text-sm font-medium tracking-wide">{item.label}</span>
+					</button>
+				))}
+			</nav>
+		);
 }

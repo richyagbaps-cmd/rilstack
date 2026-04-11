@@ -10,7 +10,7 @@ import RilSnackGame from "./SnakeMoneyGame";
 
 
 interface WidgetCard {
-  type: "budgets" | "savings" | "investments" | "account" | "ril-snack";
+  type: "budgets" | "savings" | "investments" | "ril-snack";
   title?: string;
   description?: string;
   icon?: React.ReactNode;
@@ -21,27 +21,15 @@ interface WidgetCard {
 const CARDS: WidgetCard[] = [
   {
     type: "budgets",
-    title: "Budgets",
+    title: "Budgets & Savings",
     icon: <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#2c3e5f"/><path d="M12 28h16v-2H12v2zm0-6h16v-2H12v2zm0-6h16v-2H12v2z" fill="#fff"/></svg>,
     bg: "bg-[#eaf2fa] dark:bg-[#1E2A3A]",
-  },
-  {
-    type: "savings",
-    title: "Savings",
-    icon: <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#4A8B6E"/><path d="M14 26l6-12 6 12H14z" fill="#fff"/></svg>,
-    bg: "bg-[#e0f0e8] dark:bg-[#232f3e]",
   },
   {
     type: "investments",
     title: "Investments",
     icon: <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#FFD700"/><path d="M20 12l6 12H14l6-12z" fill="#fff"/></svg>,
     bg: "bg-[#fffbe6] dark:bg-[#232f3e]",
-  },
-  {
-    type: "account",
-    title: "Account",
-    icon: <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#8B5CF6"/><path d="M20 12a8 8 0 100 16 8 8 0 000-16zm0 2a6 6 0 110 12 6 6 0 010-12zm0 14c-4.418 0-8 1.79-8 4v2h16v-2c0-2.21-3.582-4-8-4z" fill="#fff"/></svg>,
-    bg: "bg-[#ede9fe] dark:bg-[#232f3e]",
   },
   {
     type: "ril-snack",
@@ -139,9 +127,8 @@ export default function SavingsInvestmentsCarousel() {
               setPaused(true);
               setTimeout(() => setPaused(false), 4000);
               if (card.type === "ril-snack") router.push("/snake");
-              else if (card.type === "budgets" || card.type === "savings") setShowBudgetSaveModal(true);
+              else if (card.type === "budgets") router.push("/budgets");
               else if (card.type === "investments") router.push("/investments");
-              else if (card.type === "account") router.push("/account");
             }}
             aria-label={CARDS[active].title}
           >

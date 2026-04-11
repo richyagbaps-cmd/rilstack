@@ -1,8 +1,10 @@
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
 
 
 function WithdrawalBankSection() {
+  const router = useRouter();
   const [bankName, setBankName] = React.useState("");
   const [accountNumber, setAccountNumber] = React.useState("");
   const [accountName, setAccountName] = React.useState("");
@@ -34,7 +36,7 @@ function WithdrawalBankSection() {
     }
     setLoading(true);
     try {
-      // Map bank name to bank code (should be dynamic in production)
+      // Map bank name to bank code for live mode
       const bankCodes: Record<string, string> = {
         "Access Bank": "044",
         "GTBank": "058",
@@ -55,6 +57,9 @@ function WithdrawalBankSection() {
         setAccountName(data.data.account_name);
         localStorage.setItem("rilstack_bank", JSON.stringify({ bankName, accountNumber, accountName: data.data.account_name }));
         setSuccess("Bank details confirmed and saved.");
+        setTimeout(() => {
+          router.push("/settings");
+        }, 1200);
       } else {
         setError(data.message || "Could not confirm account. Check details and try again.");
       }
@@ -62,8 +67,7 @@ function WithdrawalBankSection() {
       setError("Network or server error. Try again.");
     } finally {
       setLoading(false);
-      setTimeout(() => setSuccess("");
-    }, 2000);
+      setTimeout(() => setSuccess("") , 2000);
     }
   };
 
@@ -87,6 +91,7 @@ function WithdrawalBankSection() {
               <option value="First Bank" />
               <option value="UBA" />
               <option value="Zenith Bank" />
+              {/* Add more banks as needed */}
             </datalist>
           </div>
           <div>

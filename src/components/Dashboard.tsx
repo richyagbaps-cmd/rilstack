@@ -5,6 +5,14 @@ import React, { useState } from 'react';
 import SavingsInvestmentsCarousel from './SavingsInvestmentsCarousel';
 import ReviewsWidget from './ReviewsWidget';
 import MetricCardsCarousel from './MetricCardsCarousel';
+import StepIndicator from './StepIndicator';
+import LoadingDots from './LoadingDots';
+import EmptyStatePiggy from './EmptyStatePiggy';
+import SkeletonCard from './SkeletonCard';
+import FeeWarningToast from './FeeWarningToast';
+import MagicWandAI from './MagicWandAI';
+import PinPad from './PinPad';
+import LockAnimation from './LockAnimation';
 import {
   Area,
   AreaChart,
@@ -55,22 +63,76 @@ const metricCards = [
 ];
 
 export default function Dashboard({ onNavigate }: { onNavigate?: (section: string) => void }) {
+  // Example state for demoing micro-interactions (replace with real data logic)
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
+  const [showFeeToast, setShowFeeToast] = useState(false);
+  const [showLock, setShowLock] = useState(false);
+  const [pin, setPin] = useState("");
+  const [empty, setEmpty] = useState(false);
+
   return (
-    <div className="relative min-h-screen overflow-hidden px-2 pb-16 pt-6 bg-gradient-to-br from-[#F8F9FC] via-[#f3f7fa] to-[#eaf2fa] text-[#1E2A3A]" style={{ color: 'var(--app-fg)' }}>
+    <div
+      className="relative min-h-screen overflow-hidden px-2 pb-16 pt-6 bg-glass backdrop-blur-xl text-app-fg font-inter animate-fade-in"
+      style={{ color: 'var(--app-fg)' }}
+    >
+      {/* Step indicator for onboarding or budgeting flows */}
+      <StepIndicator step={step} total={4} />
+
       {/* ReviewsWidget at the top */}
-      <div className="mb-8">
+      <div className="mb-8 rounded-3xl bg-glass shadow-lg p-4 animate-fade-in-up">
         <ReviewsWidget />
       </div>
+
       {/* Carousel below reviews */}
-      <div className="mb-12">
+      <div className="mb-12 rounded-3xl bg-glass shadow-lg p-4 animate-fade-in-up">
         <SavingsInvestmentsCarousel />
       </div>
+
       {/* Metric cards carousel */}
-      <div className="rounded-[32px] border-2 p-2 shadow-xl overflow-hidden bg-white mb-12" style={{ borderColor: 'var(--app-border)' }}>
+      <div className="rounded-[32px] border-2 p-2 shadow-xl overflow-hidden bg-white bg-glass mb-12 animate-fade-in-up" style={{ borderColor: 'var(--app-border)' }}>
         <div className="relative w-full">
           <MetricCardsCarousel cards={metricCards} />
         </div>
       </div>
+
+      {/* Loading state example */}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <SkeletonCard className="w-full max-w-md" />
+          <LoadingDots className="ml-4" />
+        </div>
+      )}
+
+      {/* Empty state example */}
+      {empty && (
+        <EmptyStatePiggy message="No data yet. Start budgeting or saving!" />
+      )}
+
+      {/* Fee warning toast example */}
+      {showFeeToast && (
+        <FeeWarningToast
+          fee={350}
+          onConfirm={() => setShowFeeToast(false)}
+          onCancel={() => setShowFeeToast(false)}
+        />
+      )}
+
+      {/* MagicWandAI example (AI allocation) */}
+      <div className="flex justify-center my-8">
+        <MagicWandAI
+          onShuffle={() => {}}
+          onUndo={() => {}}
+          disabled={false}
+        />
+      </div>
+
+      {/* PinPad and LockAnimation example (PIN/lock step) */}
+      <div className="flex flex-col items-center gap-4 my-8">
+        <PinPad value={pin} onChange={setPin} onBiometric={() => setShowLock(true)} />
+        <LockAnimation show={showLock} />
+      </div>
+
       {/* Main content section (hero, charts, etc.) would follow here, as in the original layout */}
     </div>
   );

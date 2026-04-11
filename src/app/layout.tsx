@@ -35,8 +35,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={inter.className}>

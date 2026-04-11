@@ -194,10 +194,12 @@ export default function KYCVerification({ onComplete }: { onComplete: () => void
     <div className="min-h-screen bg-[#F8F9FC]">
       {/* Header */}
       <div className="sticky top-0 z-50 border-b border-[#E9EDF2] bg-white shadow-sm">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <img src="/images/rilstack-logo.png" alt="Rilstack" className="h-60 md:h-72" />
-            <span className="text-sm font-medium text-[#4A5B6E]">Hi, {status.name?.split(' ')[0]}</span>
+        <div className="container mx-auto flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <span className="text-2xl md:text-3xl font-extrabold text-[#2c3e5f]">Rilstack</span>
+              <span className="text-xs font-medium text-[#4A5B6E]">Hi, {status.name?.split(' ')[0]}</span>
+            </div>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
@@ -208,7 +210,7 @@ export default function KYCVerification({ onComplete }: { onComplete: () => void
         </div>
       </div>
 
-      <div className="container mx-auto max-w-2xl px-4 py-8">
+      <div className="container mx-auto max-w-2xl px-4 py-8 min-h-[75vh] flex flex-col justify-center">
         {/* Title */}
         <div className="mb-8 text-center">
           <div className="inline-block rounded-full bg-amber-100 px-4 py-1.5 text-sm font-semibold text-amber-800 mb-4">

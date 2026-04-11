@@ -1,0 +1,39 @@
+// Prisma schema for concurrency-safe investment reservation
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Product {
+  id                     String   @id
+  name                   String
+  type                   String
+  min_investment         Int
+  available_for_purchase Int
+  active                 Boolean
+  investmentOrders       InvestmentOrder[]
+}
+
+model User {
+  id             String   @id
+  kyc_verified   Boolean
+  active         Boolean
+  wallet_balance Int
+  investmentOrders InvestmentOrder[]
+}
+
+model InvestmentOrder {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  String
+  amount     Int
+  status     String   // e.g., 'pending_execution', 'completed', etc.
+  createdAt  DateTime @default(now())
+}

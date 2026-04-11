@@ -3,33 +3,50 @@ import React from "react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+import { useSession } from "next-auth/react";
+import { FaBell, FaSearch, FaMoon, FaSun, FaChevronDown } from "react-icons/fa";
+
 export default function TopBarNavigation() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
+  const [profileOpen, setProfileOpen] = React.useState(false);
+  const user = session?.user;
+
   return (
-    <header className="w-full bg-gradient-to-r from-[#2c3e5f] to-[#4A8B6E] shadow-md py-4 px-6 flex items-center justify-between">
-      {/* Left: Logo and greeting */}
-      <div className="flex items-center gap-4">
-        <img src="/images/rilstack-logo.png" alt="Rilstack" className="h-16 w-auto" />
-        <span className="text-white text-lg font-bold tracking-wide">Hi, CHISO</span>
+    <header className="fixed top-0 left-0 w-full z-40 bg-white flex items-center justify-between px-4 py-2 border-b border-[#E9EDF2] shadow-sm">
+      {/* Left: Avatar and Hi User */}
+      <div className="flex items-center gap-3">
+        <img src={user?.image || undefined} alt="Avatar" className="h-9 w-9 rounded-full border border-[#2c3e5f] bg-white object-cover" />
+        <span className="text-[#2c3e5f] text-base font-bold">{user?.name ? `Hi, ${user.name.split(' ')[0]}` : 'Hi, User'}</span>
       </div>
-      {/* Right: Settings and Sign out */}
-      <div className="flex items-center gap-6 ml-auto">
-        <button
-          className="text-white font-medium hover:underline flex items-center gap-1"
-          onClick={() => router.push('/settings')}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" />
-          </svg>
-          Settings
+      {/* Right: Notification and Profile */}
+      <div className="flex items-center gap-3">
+        <button className="text-[#4A5B6E] hover:text-[#2c3e5f] relative" aria-label="Notifications">
+          <FaBell size={20} />
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#00e096] rounded-full border-2 border-white"></span>
         </button>
-        <button
-          className="text-white font-medium hover:underline px-4 py-2 rounded-xl border border-white/30"
-          onClick={() => signOut({ callbackUrl: '/' })}
-        >
-          Sign out
-        </button>
+        <div className="relative">
+          <button
+            className="flex items-center gap-2 text-[#2c3e5f] font-medium px-2 py-1 rounded-lg border border-[#E9EDF2] bg-white"
+            onClick={() => setProfileOpen((v) => !v)}
+            aria-label="Profile menu"
+          >
+            <FaChevronDown size={14} />
+          </button>
+          {profileOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-[#E9EDF2] z-50">
+              <button
+                className="w-full text-left px-4 py-3 hover:bg-[#f3f4fa] text-[#2c3e5f]"
+                onClick={() => { setProfileOpen(false); router.push('/settings'); }}
+              >Settings</button>
+              <button
+                className="w-full text-left px-4 py-3 hover:bg-[#f3f4fa] text-[#2c3e5f]"
+                onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/' }); }}
+              >Sign out</button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

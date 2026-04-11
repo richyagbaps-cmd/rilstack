@@ -18,15 +18,13 @@
     "declarationMap": true,
     "sourceMap": true,
     "baseUrl": ".",
-    
-
-
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": [
         "./src/*"
       ]
     },
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "allowJs": true,
     "noEmit": true,
     "incremental": true,
@@ -36,11 +34,12 @@
       {
         "name": "next"
       }
-      ]
-    },
+    ],
+  },
   "include": [
     "src",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

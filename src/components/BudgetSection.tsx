@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import PinConfirmModal from './PinConfirmModal';
+import SpendingBreakdown from './SpendingBreakdown';
+import IncomeExpensesChart from './IncomeExpensesChart';
 
 type BudgetMode = 'strict' | 'relaxed';
 type BudgetStyle = '50-30-20' | 'zero-based' | 'custom';
@@ -329,6 +331,16 @@ export default function BudgetSection({ budgetMode, onChangeBudgetMode }: Budget
     };
   }, [budgetPlan]);
 
+  // For Spending Breakdown
+  const essentialsTotal = groupedCategories['Essential Expenses']?.reduce((sum, c) => sum + c.amount, 0) || 0;
+  const flexibleTotal = groupedCategories['Flexible Expenses']?.reduce((sum, c) => sum + c.amount, 0) || 0;
+  const goalsTotal = groupedCategories['Savings & Goals']?.reduce((sum, c) => sum + c.amount, 0) || 0;
+
+  // For Income & Expenses Chart (mock data for Jan-Jun)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  const incomeData = [0, 9000, 18000, 27000, 36000, budgetPlan?.income || 0];
+  const expensesData = [0, 7000, 15000, 21000, 32000, essentialsTotal + flexibleTotal + goalsTotal];
+
   const totalAllocated = (budgetPlan?.categories ?? []).reduce((sum, item) => sum + item.amount, 0);
   const remainingBalance = (budgetPlan?.income ?? 0) - totalAllocated;
   const planInterest = calculateInterestPreview(budgetPlan?.categories ?? []);
@@ -402,6 +414,18 @@ export default function BudgetSection({ budgetMode, onChangeBudgetMode }: Budget
       return {
         ...current,
         categories,
+        lockedSummary: undefined,
+      };
+    });
+  };
+
+  // Remove category (for goals)
+  const removeCategory = (categoryId: string) => {
+    setBudgetPlan((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        categories: current.categories.filter((cat) => cat.id !== categoryId),
         lockedSummary: undefined,
       };
     });
@@ -770,7 +794,7 @@ export default function BudgetSection({ budgetMode, onChangeBudgetMode }: Budget
 
                     <div className="space-y-4">
                       {groupedCategories[group].map((category) => (
-                        <div key={category.id} className="rounded-2xl bg-white p-4 shadow-sm">
+                        <div key={category.id} className="rounded-2xl bg-white p-4 shadow-sm flex flex-col gap-2">
                           <div className="grid gap-4 xl:grid-cols-[1fr,0.8fr,0.8fr,0.9fr]">
                             <div>
                               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -858,11 +882,26 @@ export default function BudgetSection({ budgetMode, onChangeBudgetMode }: Budget
                               </p>
                             </div>
                           </div>
+
+                          {/* Remove button for goals */}
+                          {group === 'Savings & Goals' && (
+                            <button
+                              className="mt-2 self-end text-xs text-red-600 hover:underline"
+                              onClick={() => removeCategory(category.id)}
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
                 ))}
+                        {/* Spending Breakdown and Income/Expenses Chart */}
+                        <div className="mt-8 grid gap-8 md:grid-cols-2">
+                          <SpendingBreakdown essentials={essentialsTotal} flexible={flexibleTotal} goals={goalsTotal} />
+                          <IncomeExpensesChart months={months} income={incomeData} expenses={expensesData} />
+                        </div>
               </div>
               )}
             </div>
