@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from 'react';
 import {
   fetchProfiles, fetchKycDetails, fetchBudgets, fetchBudgetCategories, fetchTransactions, fetchSavingsGoals, fetchSafeLocks, fetchInterestLogs
