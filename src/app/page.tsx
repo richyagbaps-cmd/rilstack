@@ -18,19 +18,14 @@ export default function Home() {
         <nav style={{ position: "fixed", top: 20, left: "5%", right: "5%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.8rem 2rem", background: "rgba(10, 20, 40, 0.6)", backdropFilter: "blur(12px)", borderRadius: 60, border: "1px solid rgba(79, 172, 254, 0.3)", zIndex: 100, boxShadow: "0 8px 20px rgba(0,0,0,0.2)" }}>
           <div className="logo" style={{ fontSize: "1.8rem", fontWeight: 800, background: "linear-gradient(135deg, #fff, #6bc5ff)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>RILSTACK<span style={{ fontSize: "0.9rem" }}>.xyz</span></div>
           <div className="nav-links" style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
-            <a href="#">Home</a>
-            <a href="#">Platform</a>
-            <a href="#">Pricing</a>
-            <a href="#">Insights</a>
-            <button className="btn-outline" style={{ background: "transparent", border: "1.5px solid rgba(79,172,254,0.7)", padding: "0.5rem 1.3rem", borderRadius: 40, fontWeight: 600, color: "#6bc5ff", cursor: "pointer" }} onClick={() => alert("🔐 Launching Rilstack App — Secure, intuitive, and packed with next-gen features.")}>Launch App</button>
+            <button className="btn-outline" style={{ background: "transparent", border: "1.5px solid rgba(79,172,254,0.7)", padding: "0.5rem 1.3rem", borderRadius: 40, fontWeight: 600, color: "#6bc5ff", cursor: "pointer" }} onClick={() => window.location.href = "/login"}>Launch App</button>
           </div>
         </nav>
         <div className="hero" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "2rem" }}>
-          <h1 style={{ fontSize: "4.5rem", fontWeight: 800, background: "linear-gradient(135deg, #fff, #a0e0ff, #3e8eff)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", marginBottom: "1rem" }}>Save. Budget. Invest.<br />Your wealth, 3D powered.</h1>
-          <p style={{ fontSize: "1.2rem", maxWidth: 600, marginBottom: "2rem", color: "#cce4ff" }}>Rilstack fuses AI, real-time analytics & immersive design — take control of your financial future.</p>
+          <h1 style={{ fontSize: "4.5rem", fontWeight: 800, background: "linear-gradient(135deg, #fff, #a0e0ff, #3e8eff)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", marginBottom: "1rem" }}>Save. Budget. Invest.</h1>
+
           <div className="cta-group" style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
-            <button className="btn-primary" style={{ background: "linear-gradient(105deg, #2b6ef0, #1645b0)", border: "none", padding: "0.9rem 2rem", borderRadius: 60, fontWeight: 700, color: "white", cursor: "pointer", boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }} onClick={() => alert("🚀 Rilstack: Start your journey — AI savings, smart budgets, and dynamic investing.")}>Get Started</button>
-            <button className="btn-secondary" style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(4px)", border: "1px solid rgba(79,172,254,0.6)", padding: "0.9rem 2rem", borderRadius: 60, fontWeight: 600, color: "#e0f0ff", cursor: "pointer" }} onClick={() => alert("✨ Explore Rilstack's immersive financial dashboard, real-time analytics & portfolio tools.")}>Explore Ecosystem</button>
+            <button className="btn-primary" style={{ background: "linear-gradient(105deg, #2b6ef0, #1645b0)", border: "none", padding: "0.9rem 2rem", borderRadius: 60, fontWeight: 700, color: "white", cursor: "pointer", boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }} onClick={() => window.location.href = "/login"}>Get Started</button>
           </div>
         </div>
         <div className="features" style={{ display: "flex", justifyContent: "center", gap: "2rem", flexWrap: "wrap", padding: "4rem 2rem", background: "linear-gradient(180deg, rgba(5,15,30,0.7), rgba(1,5,15,0.9))", backdropFilter: "blur(10px)" }}>
