@@ -99,7 +99,7 @@ export default function ThreeDHome() {
       scene.add(particleSystem);
       // Small orbiting cubes
       const orbCount = 40;
-      const orbs = [];
+      const orbs: THREE.Mesh[] = [];
       for (let i = 0; i < orbCount; i++) {
         const size = 0.06 + Math.random() * 0.05;
         const cubeMat = new THREE.MeshStandardMaterial({ color: [0x4cd964, 0xffb347, 0x3e8eff][Math.floor(Math.random()*3)], emissiveIntensity: 0.3 });
