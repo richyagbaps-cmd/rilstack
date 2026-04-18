@@ -1,5 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { suggestPocketFrequency } from "@/utils/ai-pocket-frequency";
 import TermsCheckbox from "@/components/TermsCheckbox";
@@ -17,7 +18,7 @@ function daysBetween(start: string, end: string) {
   return Math.max(0, Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
-export default function BudgetSummaryPage() {
+function BudgetSummaryPage() {
   const router = useRouter();
   const params = useSearchParams();
   const type = params.get("type") || "custom";
@@ -172,4 +173,13 @@ export default function BudgetSummaryPage() {
       </div>
     </div>
   );
+}
+
+export default function BudgetSummaryPageWithSuspense() {
+  return (
+    <Suspense fallback={null}>
+      <BudgetSummaryPage />
+    </Suspense>
+  );
+}
 }
