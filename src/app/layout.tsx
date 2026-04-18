@@ -16,15 +16,13 @@ const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [showOnboarding, setShowOnboarding] = React.useState(false);
-  const [showSplash, setShowSplash] = React.useState(true);
+  // Splash screen removed
 
   React.useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 1500);
     if (typeof window !== 'undefined') {
       const seen = localStorage.getItem('rilstack_onboarding_complete');
       if (!seen) setShowOnboarding(true);
     }
-    return () => clearTimeout(timer);
   }, []);
 
   const handleOnboardingClose = () => {
@@ -43,16 +41,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={inter.className}>
-        {showSplash && <SplashScreen />}
-        {!showSplash && (
-          <>
-            {/* ThemeToggle removed: app is always light mode */}
-            <AuthProvider>{children}</AuthProvider>
-            <AppFooter />
-            <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
-            <PushNotificationPrompt />
-          </>
-        )}
+        {/* SplashScreen removed for faster load */}
+        {/* ThemeToggle removed: app is always light mode */}
+        <AuthProvider>{children}</AuthProvider>
+        <AppFooter />
+        <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
+        <PushNotificationPrompt />
         <Analytics />
         <script
           dangerouslySetInnerHTML={{
