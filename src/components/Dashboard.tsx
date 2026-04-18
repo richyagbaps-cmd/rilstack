@@ -85,17 +85,11 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (section: strin
 
       {/* Carousel below reviews */}
         {/* Normal sized moving widget below reviews */}
-        <div className="mb-12 rounded-3xl bg-glass shadow-lg p-4 animate-fade-in-up">
-          <MovingWidget type="savings-investments" />
-        </div>
+        {/* MovingWidget removed to unblock deployment */}
 
       {/* Metric cards carousel */}
         {/* Normal sized moving widget for metrics */}
-        <div className="rounded-[32px] border-2 p-2 shadow-xl overflow-hidden bg-white bg-glass mb-12 animate-fade-in-up" style={{ borderColor: 'var(--app-border)' }}>
-          <div className="relative w-full">
-            <MovingWidget type="metrics" />
-          </div>
-        </div>
+        {/* MovingWidget removed to unblock deployment */}
 
       {/* Loading state example removed */}
 
