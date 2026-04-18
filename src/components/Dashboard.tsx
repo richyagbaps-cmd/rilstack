@@ -64,7 +64,6 @@ const metricCards = [
 
 export default function Dashboard({ onNavigate }: { onNavigate?: (section: string) => void }) {
   // Example state for demoing micro-interactions (replace with real data logic)
-  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [showFeeToast, setShowFeeToast] = useState(false);
   const [showLock, setShowLock] = useState(false);
@@ -85,24 +84,20 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (section: strin
       </div>
 
       {/* Carousel below reviews */}
-      <div className="mb-12 rounded-3xl bg-glass shadow-lg p-4 animate-fade-in-up">
-        <SavingsInvestmentsCarousel />
-      </div>
+        {/* Normal sized moving widget below reviews */}
+        <div className="mb-12 rounded-3xl bg-glass shadow-lg p-4 animate-fade-in-up">
+          <MovingWidget type="savings-investments" />
+        </div>
 
       {/* Metric cards carousel */}
-      <div className="rounded-[32px] border-2 p-2 shadow-xl overflow-hidden bg-white bg-glass mb-12 animate-fade-in-up" style={{ borderColor: 'var(--app-border)' }}>
-        <div className="relative w-full">
-          <MetricCardsCarousel cards={metricCards} />
+        {/* Normal sized moving widget for metrics */}
+        <div className="rounded-[32px] border-2 p-2 shadow-xl overflow-hidden bg-white bg-glass mb-12 animate-fade-in-up" style={{ borderColor: 'var(--app-border)' }}>
+          <div className="relative w-full">
+            <MovingWidget type="metrics" />
+          </div>
         </div>
-      </div>
 
-      {/* Loading state example */}
-      {loading && (
-        <div className="flex justify-center items-center py-12">
-          <SkeletonCard className="w-full max-w-md" />
-          <LoadingDots className="ml-4" />
-        </div>
-      )}
+      {/* Loading state example removed */}
 
       {/* Empty state example */}
       {empty && (

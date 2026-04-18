@@ -53,6 +53,11 @@ export default function Home() {
         </header>
         <main className="flex-1 flex flex-col items-center justify-center px-0 bg-gradient-to-b from-[#f5f5f7] to-[#e5e7eb]">
           <h1 className="text-4xl font-bold text-[#181A20] mb-6">Welcome to Rilstack</h1>
+          <div className="w-full flex justify-center mb-8">
+            <div className="max-w-xl w-full rounded-3xl overflow-hidden shadow-xl border border-[#e5e7eb] bg-white/80">
+              {/* Spline 3D scene removed */}
+            </div>
+          </div>
           <button className="bg-[#00e096] text-white font-bold px-10 py-4 rounded-xl shadow-lg text-xl hover:bg-[#00c080] transition" onClick={() => setShowFrontAuth(true)}>Get Started</button>
         </main>
         {showFrontAuth && <AuthModal mode="login" onClose={() => setShowFrontAuth(false)} />}
@@ -66,8 +71,13 @@ export default function Home() {
       <TopBarNavigation />
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         <h1 className="text-3xl font-bold text-[#181A20] mb-6">Welcome back, {session?.user?.name || 'User'}!</h1>
-        <MetricCardsCarousel cards={summaryCards} />
-        <SavingsInvestmentsCarousel />
+        <div className="w-full flex justify-center mb-8">
+          <div className="max-w-xl w-full rounded-3xl overflow-hidden shadow-xl border border-[#e5e7eb] bg-white/80">
+            {/* Spline 3D scene removed */}
+          </div>
+        </div>
+        <MovingWidget type="metrics" />
+        <MovingWidget type="savings-investments" />
         <RecentActivity />
       </main>
     </div>

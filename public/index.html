@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Rilstack.xyz | Save • Budget • Invest — Intelligent Fintech</title>
+    <meta name="description" content="Rilstack helps you save smarter, budget in real-time, and invest for the future — all in one seamless 3D-powered platform.">
+    <!-- Google Fonts + Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #030712; color: #ffffff; overflow-x: hidden; scroll-behavior: smooth; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; outline: none; }
+        .content { position: relative; z-index: 10; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 5%; background: rgba(3, 7, 18, 0.7); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0, 255, 255, 0.2); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.9rem; font-weight: 800; background: linear-gradient(135deg, #A5F0FF, #4FACFE, #00E5FF); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.5px; }
+        .logo span { font-size: 0.9rem; font-weight: 400; color: #6c8eff; background: none; -webkit-background-clip: unset; background-clip: unset; }
+        .nav-links { display: flex; gap: 2.2rem; align-items: center; }
+        .nav-links a { color: #eef5ff; text-decoration: none; font-weight: 500; transition: 0.2s; font-size: 0.95rem; }
+        .nav-links a:hover { color: #4FACFE; text-shadow: 0 0 6px rgba(79,172,254,0.5); }
+        .btn-outline { background: transparent; border: 1.5px solid rgba(79, 172, 254, 0.7); padding: 0.45rem 1.3rem; border-radius: 40px; font-weight: 600; color: #4FACFE; transition: 0.2s; cursor: pointer; }
+        .btn-outline:hover { background: rgba(79,172,254,0.15); border-color: #4FACFE; box-shadow: 0 0 12px rgba(79,172,254,0.3); }
+        .hero { min-height: 90vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem 1rem; }
+        .hero-content { max-width: 950px; background: radial-gradient(circle at center, rgba(5, 20, 45, 0.6), rgba(2, 8, 20, 0.75)); backdrop-filter: blur(8px); border-radius: 60px; padding: 2.8rem 2rem; border: 1px solid rgba(79, 172, 254, 0.4); box-shadow: 0 30px 50px rgba(0,0,0,0.4); }
+        .hero h1 { font-size: 3.6rem; font-weight: 800; background: linear-gradient(135deg, #FFF, #A5F0FF, #4FACFE); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1.2; margin-bottom: 1.2rem; }
+        .hero p { font-size: 1.2rem; color: #cfebff; margin-bottom: 2rem; max-width: 700px; margin-left: auto; margin-right: auto; }
+        .cta-buttons { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; }
+        .btn-primary { background: linear-gradient(95deg, #2b6ef0, #1c4ed8); border: none; padding: 0.85rem 2rem; border-radius: 60px; font-weight: 700; font-size: 1rem; color: white; cursor: pointer; transition: 0.2s; box-shadow: 0 8px 20px rgba(27,78,200,0.4); }
+        .btn-primary:hover { transform: translateY(-3px); background: linear-gradient(95deg, #3a7ef5, #2b5ed8); box-shadow: 0 12px 28px rgba(27,78,200,0.6); }
+        .btn-secondary { background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border: 1px solid rgba(79,172,254,0.6); padding: 0.85rem 2rem; border-radius: 60px; font-weight: 600; color: #e0f0ff; transition: 0.2s; cursor: pointer; }
+        .btn-secondary:hover { background: rgba(79,172,254,0.2); border-color: #4FACFE; }
+        .features { padding: 5rem 5%; text-align: center; background: linear-gradient(180deg, rgba(3,10,25,0.7) 0%, rgba(1,4,12,0.95) 100%); backdrop-filter: blur(4px); }
+        .section-title { font-size: 2.6rem; font-weight: 700; margin-bottom: 1rem; background: linear-gradient(120deg, #FFF, #8ecaff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .section-sub { color: #a0c4ff; margin-bottom: 3rem; font-size: 1.1rem; }
+        .card-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; max-width: 1300px; margin: 0 auto; }
+        .card { background: rgba(15, 25, 50, 0.65); backdrop-filter: blur(12px); border-radius: 32px; padding: 2rem 1.8rem; width: 300px; transition: all 0.3s ease; border: 1px solid rgba(79, 172, 254, 0.3); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .card:hover { transform: translateY(-10px); border-color: rgba(79, 172, 254, 0.7); background: rgba(25, 40, 70, 0.8); }
+        .card-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .card h3 { font-size: 1.8rem; margin-bottom: 1rem; font-weight: 700; }
+        .card p { color: #bfd9ff; line-height: 1.5; font-size: 0.95rem; }
+        .card-save .card-icon { color: #4cd964; text-shadow: 0 0 10px #4cd96480; }
+        .card-budget .card-icon { color: #ffb340; text-shadow: 0 0 10px #ffb34080; }
+        .card-invest .card-icon { color: #3e8eff; text-shadow: 0 0 10px #3e8eff80; }
+        .trust { padding: 2rem 5% 3rem; text-align: center; background: rgba(0,0,0,0.3); font-size: 0.85rem; color: #7e9ed5; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; border-top: 1px solid rgba(79,172,254,0.2); }
+        .trust i { margin-right: 6px; color: #4FACFE; }
+        .footer { text-align: center; padding: 2rem; background: rgba(1, 4, 12, 0.9); font-size: 0.85rem; color: #8bb3e0; border-top: 1px solid rgba(72,187,255,0.2); }
+        @media (max-width: 768px) { .hero h1 { font-size: 2.2rem; } .navbar { padding: 1rem 5%; } .nav-links { gap: 1rem; } .nav-links a { font-size: 0.8rem; } .hero-content { padding: 1.5rem; } .card { width: 260px; } .section-title { font-size: 2rem; } }
+        @media (max-width: 480px) { .nav-links { display: none; } .navbar { justify-content: center; } }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div class="content">
+        <nav class="navbar">
+            <div class="logo">RILSTACK<span>.xyz</span></div>
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Features</a>
+                <a href="#">Pricing</a>
+                <a href="#">Insights</a>
+                <button class="btn-outline" id="appBtn">Launch App</button>
+            </div>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+            <title>Rilstack.xyz | AI Fintech — Save, Budget, Invest</title>
+            <meta name="description" content="Rilstack unifies intelligent saving, real-time budgeting, and smart investing. Experience the future of personal finance with a stunning 3D interface.">
+            <!-- Fonts & Icons -->
+            <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Inter', sans-serif; background-color: #050a14; color: #ffffff; overflow-x: hidden; scroll-behavior: smooth; }
+                ::-webkit-scrollbar { width: 6px; }
+                ::-webkit-scrollbar-track { background: #0a1220; }
+                ::-webkit-scrollbar-thumb { background: #2c6e9e; border-radius: 10px; }
+                #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; outline: none; }
+                .content { position: relative; z-index: 10; }
+                .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 5%; background: rgba(5, 10, 20, 0.65); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(79, 172, 254, 0.25); position: sticky; top: 0; z-index: 100; transition: all 0.3s ease; }
+                .navbar.scrolled { background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(20px); border-bottom-color: rgba(79, 172, 254, 0.5); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+                .logo { font-size: 1.9rem; font-weight: 800; background: linear-gradient(135deg, #FFFFFF, #7BC9FF, #2B9AFF); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.5px; text-decoration: none; }
+                .logo span { font-size: 0.9rem; font-weight: 500; background: none; -webkit-background-clip: unset; color: #6c8eff; }
+                .nav-links { display: flex; gap: 2.5rem; align-items: center; }
+                .nav-links a { color: #eef5ff; text-decoration: none; font-weight: 500; font-size: 0.95rem; transition: 0.2s; position: relative; }
+                .nav-links a::after { content: ''; position: absolute; bottom: -6px; left: 0; width: 0%; height: 2px; background: linear-gradient(90deg, #4FACFE, #00E0FF); transition: width 0.25s ease; }
+                .nav-links a:hover::after { width: 100%; }
+                .nav-links a:hover { color: #A5F0FF; }
+                .btn-outline { background: transparent; border: 1.5px solid rgba(79, 172, 254, 0.8); padding: 0.5rem 1.4rem; border-radius: 40px; font-weight: 600; color: #4FACFE; transition: 0.25s; cursor: pointer; font-size: 0.9rem; }
+                .btn-outline:hover { background: rgba(79, 172, 254, 0.2); border-color: #4FACFE; box-shadow: 0 0 14px rgba(79,172,254,0.4); transform: translateY(-2px); }
+                .hero { min-height: 92vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem 1rem; }
+                .hero-content { max-width: 1000px; background: radial-gradient(ellipse at center, rgba(10, 25, 55, 0.65), rgba(2, 6, 18, 0.8)); backdrop-filter: blur(12px); border-radius: 64px; padding: 3rem 2rem; border: 1px solid rgba(79, 172, 254, 0.4); box-shadow: 0 30px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,172,254,0.1) inset; animation: fadeInUp 0.8s ease-out; }
+                @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+                .hero h1 { font-size: 3.9rem; font-weight: 800; background: linear-gradient(135deg, #FFF, #A5F0FF, #3E8EFF); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1.2; margin-bottom: 1.2rem; }
+                .hero p { font-size: 1.2rem; color: #d1e6ff; margin-bottom: 2rem; max-width: 720px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+                .cta-buttons { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; }
+                .btn-primary { background: linear-gradient(105deg, #2b6ef0, #1645b0); border: none; padding: 0.9rem 2.2rem; border-radius: 60px; font-weight: 700; font-size: 1rem; color: white; cursor: pointer; transition: all 0.25s; box-shadow: 0 8px 20px rgba(27,78,200,0.4); display: inline-flex; align-items: center; gap: 8px; }
+                .btn-primary:hover { transform: translateY(-3px); background: linear-gradient(105deg, #3a7ef5, #1f51cf); box-shadow: 0 15px 30px rgba(27,78,200,0.6); }
+                .btn-secondary { background: rgba(255,255,255,0.05); backdrop-filter: blur(8px); border: 1px solid rgba(79,172,254,0.7); padding: 0.9rem 2.2rem; border-radius: 60px; font-weight: 600; color: #e0f0ff; transition: 0.25s; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+                .btn-secondary:hover { background: rgba(79,172,254,0.2); border-color: #4FACFE; transform: translateY(-2px); }
+                .scroll-indicator { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.75rem; color: #8ab3ff; z-index: 15; animation: bounce 2s infinite; }
+                @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+                .features { padding: 6rem 5%; text-align: center; background: linear-gradient(180deg, rgba(3, 10, 25, 0.8) 0%, rgba(1, 5, 12, 0.95) 100%); }
+                .section-title { font-size: 2.8rem; font-weight: 700; margin-bottom: 1rem; background: linear-gradient(125deg, #FFFFFF, #98D0FF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+                .section-sub { color: #aac8ff; margin-bottom: 3rem; font-size: 1.15rem; max-width: 600px; margin-left: auto; margin-right: auto; }
+                .card-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; max-width: 1300px; margin: 0 auto; }
+                .card { background: rgba(15, 28, 50, 0.6); backdrop-filter: blur(14px); border-radius: 36px; padding: 2.2rem 1.8rem; width: 320px; transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1); border: 1px solid rgba(79, 172, 254, 0.25); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+                .card:hover { transform: translateY(-12px); border-color: rgba(79, 172, 254, 0.7); background: rgba(25, 42, 75, 0.8); box-shadow: 0 25px 45px rgba(0,0,0,0.4); }
+                .card-icon { font-size: 3.2rem; margin-bottom: 1.2rem; }
+                .card h3 { font-size: 1.9rem; margin-bottom: 1rem; font-weight: 700; }
+                .card p { color: #cde2ff; line-height: 1.5; font-size: 0.95rem; }
+                .card-save .card-icon { color: #4cd964; filter: drop-shadow(0 0 8px #4cd96480); }
+                .card-budget .card-icon { color: #ffb347; filter: drop-shadow(0 0 8px #ffb34780); }
+                .card-invest .card-icon { color: #3e8eff; filter: drop-shadow(0 0 8px #3e8eff80); }
+                .stats-row { display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; padding: 3rem 5% 2rem; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(79,172,254,0.2); border-bottom: 1px solid rgba(79,172,254,0.2); }
+                .stat-item { text-align: center; }
+                .stat-number { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #FFF, #7BC9FF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+                .stat-label { font-size: 0.85rem; color: #9ab9f0; letter-spacing: 1px; }
+                .footer { text-align: center; padding: 2.2rem; background: rgba(1, 4, 12, 0.9); font-size: 0.85rem; color: #8bb3e0; border-top: 1px solid rgba(72,187,255,0.2); }
+                @media (max-width: 768px) { .hero h1 { font-size: 2.4rem; } .navbar { padding: 1rem 5%; } .nav-links { gap: 1.2rem; } .nav-links a { font-size: 0.8rem; } .hero-content { padding: 1.8rem; } .card { width: 280px; } .section-title { font-size: 2.2rem; } .stats-row { gap: 1.5rem; } }
+                @media (max-width: 550px) { .nav-links { display: none; } .navbar { justify-content: center; } .btn-primary, .btn-secondary { padding: 0.7rem 1.5rem; font-size: 0.9rem; } }
+            </style>
+        </head>
+        <body>
+            <div id="canvas-container"></div>
+            <div class="content">
+                <nav class="navbar" id="navbar">
+                    <div class="logo">RILSTACK<span>.xyz</span></div>
+                    <div class="nav-links">
+                        <a href="#">Home</a>
+                        <a href="#">Platform</a>
+                        <a href="#">Pricing</a>
+                        <a href="#">Insights</a>
+                        <button class="btn-outline" id="appBtn">Launch App</button>
+                    </div>
+                </nav>
+                <section class="hero">
+                    <div class="hero-content">
+                        <h1>Save. Budget. Invest.<br>Your wealth, intelligently.</h1>
+                        <p>Rilstack.xyz fuses AI-powered savings, real-time budgeting, and seamless investing — all inside a stunning 3D ecosystem.</p>
+                        <div class="cta-buttons">
+                            <button class="btn-primary" id="getStartedBtn"><i class="fas fa-bolt"></i> Start Free</button>
+                            <button class="btn-secondary" id="exploreBtn"><i class="fas fa-chart-line"></i> Discover Plans</button>
+                        </div>
+                    </div>
+                    <div class="scroll-indicator">
+                        <i class="fas fa-chevron-down"></i>
+                        <span>Explore</span>
+                    </div>
+                </section>
+                <div class="stats-row">
+                    <div class="stat-item"><div class="stat-number">$14B+</div><div class="stat-label">Transactions secured</div></div>
+                    <div class="stat-item"><div class="stat-number">250k+</div><div class="stat-label">Active investors</div></div>
+                    <div class="stat-item"><div class="stat-number">99.99%</div><div class="stat-label">Uptime SLA</div></div>
+                </div>
+                <section class="features">
+                    <h2 class="section-title">Stack your financial pillars</h2>
+                    <p class="section-sub">Designed for modern wealth — intelligent automation, real insights, complete control.</p>
+                    <div class="card-grid">
+                        <div class="card card-save">
+                            <div class="card-icon"><i class="fas fa-piggy-bank"></i></div>
+                            <h3>Save</h3>
+                            <p>Automated vaults, round-up spare change, high-yield goals — grow your safety net effortlessly.</p>
+                        </div>
+                        <div class="card card-budget">
+                            <div class="card-icon"><i class="fas fa-chart-pie"></i></div>
+                            <h3>Budget</h3>
+                            <p>Real-time tracking, AI-driven budgets & alerts — stay aligned with your financial lifestyle.</p>
+                        </div>
+                        <div class="card card-invest">
+                            <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                            <h3>Invest</h3>
+                            <p>Fractional investing, personalized portfolios, market intelligence — start with any amount.</p>
+                        </div>
+                    </div>
+                </section>
+                <footer class="footer">
+                    <p>© 2025 Rilstack.xyz — Next‑gen fintech | Security & transparency first</p>
+                </footer>
+            </div>
+            <!-- Three.js + Advanced 3D Scene -->
+            <script type="importmap">
+                {
+                    "imports": {
+                        "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+                    }
+                }
+            </script>
+            <script type="module">
+                import * as THREE from 'three';
+                const container = document.getElementById('canvas-container');
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x050a14);
+                scene.fog = new THREE.FogExp2(0x050a14, 0.006);
+                const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(0, 1.0, 7.5);
+                camera.lookAt(0, 0.2, 0);
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.shadowMap.enabled = true;
+                container.appendChild(renderer.domElement);
+                renderer.domElement.style.pointerEvents = 'none';
+                const ambient = new THREE.AmbientLight(0x1a2a4a, 0.65);
+                scene.add(ambient);
+                const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+                mainLight.position.set(2.5, 3.2, 2);
+                mainLight.castShadow = true;
+                mainLight.shadow.mapSize.width = 1024;
+                scene.add(mainLight);
+                const backRim = new THREE.PointLight(0x3a7ec5, 0.7);
+                backRim.position.set(-1.2, 1.5, -3.2);
+                scene.add(backRim);
+                const blueFill = new THREE.PointLight(0x2c7da0, 0.6);
+                blueFill.position.set(1.2, 1.2, 2.2);
+                scene.add(blueFill);
+                const goldFill = new THREE.PointLight(0xffaa55, 0.5);
+                goldFill.position.set(-1.4, 0.5, 1.9);
+                scene.add(goldFill);
+                const fillBottom = new THREE.PointLight(0x4f9fff, 0.35);
+                fillBottom.position.set(0, -2, 0.5);
+                scene.add(fillBottom);
+                const coreMat = new THREE.MeshStandardMaterial({ color: 0xffcc66, emissive: 0xcc7722, emissiveIntensity: 0.75, metalness: 0.9, roughness: 0.2 });
+                const coreSphere = new THREE.Mesh(new THREE.SphereGeometry(0.48, 80, 80), coreMat);
+                coreSphere.castShadow = true;
+                scene.add(coreSphere);
+                const geoSmall = new THREE.TorusGeometry(1.38, 0.09, 140, 220);
+                const geoMed = new THREE.TorusGeometry(1.6, 0.095, 140, 220);
+                const geoLarge = new THREE.TorusGeometry(1.82, 0.1, 140, 220);
+                const ringSave = new THREE.Mesh(geoSmall, new THREE.MeshStandardMaterial({ color: 0x4cd964, emissive: 0x1f8a4c, emissiveIntensity: 0.55, metalness: 0.7, roughness: 0.3 }));
+                ringSave.position.y = -0.72;
+                ringSave.rotation.x = Math.PI / 2.3;
+                scene.add(ringSave);
+                const ringBudget = new THREE.Mesh(geoMed, new THREE.MeshStandardMaterial({ color: 0xffb347, emissive: 0xaa6f20, emissiveIntensity: 0.6, metalness: 0.75, roughness: 0.28 }));
+                ringBudget.position.y = 0.02;
+                ringBudget.rotation.x = Math.PI / 2.7;
+                scene.add(ringBudget);
+                const ringInvest = new THREE.Mesh(geoLarge, new THREE.MeshStandardMaterial({ color: 0x3e8eff, emissive: 0x1a4cbc, emissiveIntensity: 0.65, metalness: 0.8, roughness: 0.25 }));
+                ringInvest.position.y = 0.76;
+                ringInvest.rotation.x = Math.PI / 2.1;
+                scene.add(ringInvest);
+                const accentRing = new THREE.Mesh(new THREE.TorusGeometry(1.12, 0.05, 100, 180), new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x2266aa, emissiveIntensity: 0.45, metalness: 0.65, transparent: true, opacity: 0.8 }));
+                accentRing.position.y = -0.15;
+                accentRing.rotation.x = 1.25;
+                scene.add(accentRing);
+                const glowRing = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.028, 48, 120), new THREE.MeshStandardMaterial({ color: 0xffaa77, emissive: 0xff6633, emissiveIntensity: 0.85 }));
+                glowRing.rotation.x = Math.PI / 2;
+                scene.add(glowRing);
+                const particleCount = 2800;
+                const positions = new Float32Array(particleCount * 3);
+                for (let i = 0; i < particleCount; i++) {
+                    const radius = 2.4 + Math.random() * 3.5;
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    positions[i*3] = radius * Math.sin(phi) * Math.cos(theta);
+                    positions[i*3+1] = radius * Math.sin(phi) * Math.sin(theta) * 0.75;
+                    positions[i*3+2] = radius * Math.cos(phi);
+                }
+                const particleGeo = new THREE.BufferGeometry();
+                particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                const particleMat = new THREE.PointsMaterial({ color: 0x9fcbff, size: 0.045, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+                const particleSys = new THREE.Points(particleGeo, particleMat);
+                scene.add(particleSys);
+                const starCount = 1800;
+                const starPos = [];
+                for (let i = 0; i < starCount; i++) {
+                    starPos.push((Math.random() - 0.5) * 16);
+                    starPos.push((Math.random() - 0.5) * 9);
+                    starPos.push((Math.random() - 0.5) * 14 - 5);
+                }
+                const starFieldGeo = new THREE.BufferGeometry();
+                starFieldGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPos), 3));
+                const starMat = new THREE.PointsMaterial({ color: 0xffeebb, size: 0.032, transparent: true, blending: THREE.AdditiveBlending });
+                const starField = new THREE.Points(starFieldGeo, starMat);
+                scene.add(starField);
+                const orbGroup = [];
+                for (let i = 0; i < 16; i++) {
+                    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 20), new THREE.MeshStandardMaterial({ color: [0x4cd964, 0xffb347, 0x3e8eff][i%3], emissiveIntensity: 0.35, metalness: 0.5 }));
+                    scene.add(orb);
+                    orbGroup.push(orb);
+                }
+                let time = 0;
+                function animate() {
+                    requestAnimationFrame(animate);
+                    time += 0.012;
+                    ringSave.rotation.y += 0.006;
+                    ringSave.rotation.x = Math.PI / 2.3 + Math.sin(time * 0.5) * 0.09;
+                    ringBudget.rotation.y -= 0.008;
+                    ringBudget.rotation.x = Math.PI / 2.7 + Math.cos(time * 0.6) * 0.08;
+                    ringInvest.rotation.y += 0.01;
+                    ringInvest.rotation.x = Math.PI / 2.1 + Math.sin(time * 0.7) * 0.1;
+                    accentRing.rotation.y += 0.005;
+                    accentRing.rotation.x += 0.006;
+                    glowRing.rotation.z += 0.012;
+                    glowRing.rotation.y += 0.008;
+                    const scaleCore = 1 + Math.sin(time * 4.5) * 0.025;
+                    coreSphere.scale.set(scaleCore, scaleCore, scaleCore);
+                    particleSys.rotation.y += 0.0006;
+                    particleSys.rotation.x = Math.sin(time * 0.15) * 0.05;
+                    starField.rotation.x -= 0.0003;
+                    starField.rotation.y += 0.0004;
+                    orbGroup.forEach((orb, idx) => {
+                        const angle = time * 0.9 + idx * 0.6;
+                        const rad = 2.45;
+                        orb.position.x = Math.cos(angle) * rad;
+                        orb.position.z = Math.sin(angle) * rad;
+                        orb.position.y = Math.sin(time * 1.4 + idx) * 0.65;
+                    });
+                    camera.position.x += (0 - camera.position.x) * 0.02;
+                    camera.position.y += (1.0 + Math.sin(time * 0.2) * 0.045 - camera.position.y) * 0.02;
+                    camera.lookAt(0, 0.2, 0);
+                    renderer.render(scene, camera);
+                }
+                animate();
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+                document.addEventListener('mousemove', (e) => {
+                    const mx = (e.clientX / window.innerWidth) * 2 - 1;
+                    const my = (e.clientY / window.innerHeight) * 2 - 1;
+                    blueFill.intensity = 0.6 + mx * 0.25;
+                    goldFill.intensity = 0.5 + my * 0.2;
+                    mainLight.position.x = 2.5 + mx * 0.9;
+                    mainLight.position.y = 3.2 - my * 0.6;
+                });
+                const navbar = document.getElementById('navbar');
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 50) {
+                        navbar.classList.add('scrolled');
+                    } else {
+                        navbar.classList.remove('scrolled');
+                    }
+                });
+                document.getElementById('getStartedBtn').addEventListener('click', () => {
+                    alert("🚀 Rilstack.xyz — Start your journey: smart savings, AI budgets, & seamless investing.");
+                });
+                document.getElementById('exploreBtn').addEventListener('click', () => {
+                    alert("📈 Explore Rilstack's investment plans + real-time budgeting tools. Early access beta opening soon.");
+                });
+                document.getElementById('appBtn').addEventListener('click', () => {
+                    alert("🔐 Rilstack App — Unified dashboard with predictive analytics and portfolio tracking.");
+                });
+                console.log("Rilstack.xyz — Ultimate 3D fintech experience loaded");
+            </script>
+        </body>
+        </html>

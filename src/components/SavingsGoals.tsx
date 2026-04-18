@@ -73,11 +73,19 @@ export default function SavingsGoals() {
   if (view === 'menu') {
     return (
       <div className="mx-auto max-w-2xl space-y-6 py-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Savings Goals</h2>
-          <p className="mt-2 text-sm text-slate-500">Set targets, track progress, and save with purpose</p>
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => window.history.length > 1 ? window.history.back() : null}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+            aria-label="Back"
+          >
+            ←
+          </button>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Savings Goals</h2>
+            <p className="mt-2 text-sm text-slate-500">Set targets, track progress, and save with purpose</p>
+          </div>
         </div>
-
         <div className="grid gap-4 sm:grid-cols-2">
           <button
             onClick={() => setView('create')}
@@ -87,7 +95,6 @@ export default function SavingsGoals() {
             <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">Create New Savings Goal</h3>
             <p className="mt-1 text-sm text-slate-500">Choose a category, set a target amount and deadline.</p>
           </button>
-
           <button
             onClick={() => setView('manage')}
             className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-[#2c3e5f] hover:shadow-md"
@@ -227,6 +234,7 @@ export default function SavingsGoals() {
           <button
             onClick={() => setView('menu')}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+            aria-label="Back"
           >
             ←
           </button>

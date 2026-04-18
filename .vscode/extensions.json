@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "dbaeumer.vscode-eslint",
-        "formulahendry.auto-close-tag"
+        "formulahendry.auto-close-tag",
+        "github.copilot-chat"
     ]
 }

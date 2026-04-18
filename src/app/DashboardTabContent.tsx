@@ -39,10 +39,10 @@ export default function DashboardTabContent() {
       {tab === 0 && (
         <>
           <div className="mb-8">
-            <SavingsInvestmentsCarousel />
+            <MovingWidget type="savings-investments" />
           </div>
           <div className="mb-8 block sm:hidden">
-            <MetricCardsCarousel cards={summaryCards} />
+            <MovingWidget type="metrics" />
           </div>
           <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             {summaryCards.map((card, i) => (

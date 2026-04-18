@@ -43,7 +43,18 @@ export default function CreateGoalModal({ open, onClose, onCreate, aiSuggestions
       <div className="bg-white rounded-2xl shadow-2xl p-0 w-full max-w-md flex flex-col items-center relative">
         <button className="absolute top-4 right-4 text-[#2c3e5f] text-2xl font-bold" onClick={onClose}>&times;</button>
         <div className="p-8 w-full">
-          <h2 className="text-xl font-bold mb-4 text-[#2c3e5f]">Create Savings Goal</h2>
+          <div className="flex items-center gap-3 mb-4">
+            {step > 0 && (
+              <button
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+                onClick={() => setStep(step - 1)}
+                aria-label="Back"
+              >
+                ←
+              </button>
+            )}
+            <h2 className="text-xl font-bold text-[#2c3e5f]">Create Savings Goal</h2>
+          </div>
           {step === 0 && (
             <>
               <div className="mb-4">
