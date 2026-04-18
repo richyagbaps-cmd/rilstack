@@ -38,12 +38,7 @@ export default function DashboardTabContent() {
       </div>
       {tab === 0 && (
         <>
-          <div className="mb-8">
-            <MovingWidget type="savings-investments" />
-          </div>
-          <div className="mb-8 block sm:hidden">
-            <MovingWidget type="metrics" />
-          </div>
+          {/* MovingWidget removed to unblock deployment */}
           <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             {summaryCards.map((card, i) => (
               <div key={i} className={`rounded-2xl p-8 shadow border border-[#E9EDF2] ${card.color}`}>
