@@ -69,17 +69,22 @@ export default function LoginPage() {
           {error && <div className="text-red-600 text-center mt-2">{error}</div>}
         </form>
         <div className="flex flex-col gap-2 w-full mt-6">
-          <button className="w-full bg-[#23263a] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#181A20] transition">
+          <button
+            className="w-full bg-[#23263a] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#181A20] transition"
+            onClick={() => signIn("google")}
+          >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1h-9.18v2.92h5.27c-.23 1.23-1.41 3.6-5.27 3.6-3.18 0-5.78-2.63-5.78-5.87s2.6-5.87 5.78-5.87c1.81 0 3.03.77 3.73 1.43l2.54-2.47C16.09 3.98 14.13 3 12 3 6.48 3 2 7.48 2 12s4.48 9 10 9c5.75 0 9.54-4.03 9.54-9.7 0-.65-.07-1.14-.19-1.6z"/></svg>
             Sign in with Google
           </button>
-          <button className="w-full bg-black text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-900 transition">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.93 2.07-2.07 2.07s-2.07-.93-2.07-2.07.93-2.07 2.07-2.07 2.07.93 2.07 2.07zm5.07 6.6c-.13-.13-.32-.13-.45 0l-2.07 2.07c-.13.13-.13.32 0 .45l2.07 2.07c.13.13.32.13.45 0l2.07-2.07c.13-.13.13-.32 0-.45l-2.07-2.07zm-5.07 13.54c-1.14 0-2.07.93-2.07 2.07s.93 2.07 2.07 2.07 2.07-.93 2.07-2.07-.93-2.07-2.07-2.07zm-9.54-6.6c.13.13.32.13.45 0l2.07-2.07c.13-.13.13-.32 0-.45l-2.07-2.07c-.13-.13-.32-.13-.45 0l-2.07 2.07c-.13.13-.13.32 0 .45l2.07 2.07zm-1.43-5.07c0-1.14.93-2.07 2.07-2.07s2.07.93 2.07 2.07-.93 2.07-2.07 2.07-2.07-.93-2.07-2.07zm-5.07 6.6c.13.13.32.13.45 0l2.07-2.07c.13-.13.13-.32 0-.45l-2.07-2.07c-.13-.13-.32-.13-.45 0l-2.07 2.07c-.13.13-.13.32 0 .45l2.07 2.07zm5.07 13.54c1.14 0 2.07-.93 2.07-2.07s-.93-2.07-2.07-2.07-2.07.93-2.07 2.07.93 2.07 2.07 2.07z"/></svg>
-            Sign in with Apple
-          </button>
         </div>
         <div className="w-full flex justify-between items-center mt-6 text-sm">
-          <span>New user? <Link href="/register" className="text-[#00e096] hover:underline">Create account</Link></span>
+          <span>New user?</span>
+          <button
+            className="ml-2 text-[#00e096] hover:underline font-semibold"
+            onClick={() => signIn("google")}
+          >
+            Sign up with Google
+          </button>
         </div>
         <div className="w-full flex flex-col items-center mt-4 text-xs text-[#4A5B6E]">
           <div className="flex gap-2">
