@@ -76,8 +76,7 @@ export default function Home() {
             {/* Spline 3D scene removed */}
           </div>
         </div>
-        <MovingWidget type="metrics" />
-        <MovingWidget type="savings-investments" />
+        {/* MovingWidget removed to unblock deployment */}
         <RecentActivity />
       </main>
     </div>
