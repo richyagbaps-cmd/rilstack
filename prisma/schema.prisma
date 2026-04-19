@@ -1,6 +1,3 @@
-datasource db {
-generator client {
-datasource db {
 generator client {
   provider = "prisma-client-js"
 }
@@ -53,7 +50,7 @@ model Budget {
 
 model BudgetTransaction {
   id             String   @id @default(uuid())
-  budget         Budget   @relation(fields: [budgetId], references: [id])
+  budget         Budget   @relation(fields: [budgetId], references: [id])       
   budgetId       String
   categoryName   String
   amount         Int
@@ -82,7 +79,7 @@ model SavingsGoal {
 
 model SavingsTransaction {
   id           String   @id @default(uuid())
-  goal         SavingsGoal @relation(fields: [goalId], references: [id])
+  goal         SavingsGoal @relation(fields: [goalId], references: [id])        
   goalId       String
   userId       String
   type         String
@@ -111,7 +108,7 @@ model InvestmentProduct {
 
 model UserInvestment {
   id                String   @id @default(uuid())
-  user              User     @relation(fields: [userId], references: [id])
+  user              User     @relation(fields: [userId], references: [id])      
   userId            String
   product           InvestmentProduct @relation(fields: [productId], references: [id])
   productId         String
