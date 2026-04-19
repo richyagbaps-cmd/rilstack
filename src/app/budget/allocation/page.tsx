@@ -40,8 +40,8 @@ const getInitialCategories = (
       amount: Math.round((percent / 100) * income),
     }));
   }
-  const cats = defaultCategories[type] || [];
-  return cats.map((c) => ({
+  const cats = (defaultCategories as any)[type] || [];
+  return cats.map((c: any) => ({
     ...c,
     amount: Math.round((c.percent / 100) * income),
   }));
