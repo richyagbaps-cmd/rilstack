@@ -1,5 +1,5 @@
-// Prisma schema for concurrency-safe investment reservation
-
+datasource db {
+generator client {
 datasource db {
 generator client {
   provider = "prisma-client-js"
@@ -166,5 +166,4 @@ model Challenge {
   progress      Int
   completedAt   DateTime?
   rewardAmount  Int
-}
 }
