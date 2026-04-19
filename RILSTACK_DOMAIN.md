@@ -29,27 +29,32 @@ RILSTACK is a professional financial management platform. The name represents a 
 ## Features Under RILSTACK Brand
 
 ### Payment Processing
+
 - Real Paystack integration
 - Deposits, withdrawals, transfers
 - Transaction verification
 
 ### Identity Management
+
 - NIN validation (Dojah, Identitypass, Interswitch)
 - Auto-profile population
 - KYC compliance ready
 
 ### Budget Management
+
 - STRICT MODE: Time-locked budgets
 - RELAXED MODE: Flexible withdrawals with 2% penalty
 - Real-time tracking
 
 ### Dashboard
+
 - Professional, sophisticated UI
 - Real-time financial analytics
 - Portfolio tracking
 - Goal progress monitoring
 
 ### AI Assistant
+
 - 24/7 financial guidance
 - Smart recommendations
 - Investment advice

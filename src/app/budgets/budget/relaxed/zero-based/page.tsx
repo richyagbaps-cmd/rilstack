@@ -26,14 +26,23 @@ export default function RelaxedZeroBasedPage() {
     setPockets(newPockets);
   };
   const handleAddPocket = () => {
-    setPockets([...pockets, { key: `custom${Date.now()}`, label: `Expense ${pockets.length}`, amount: 0 }]);
+    setPockets([
+      ...pockets,
+      {
+        key: `custom${Date.now()}`,
+        label: `Expense ${pockets.length}`,
+        amount: 0,
+      },
+    ]);
   };
   const handleDeletePocket = (idx: number) => {
     if (pockets.length <= 2 || idx === 0) return;
     setPockets(pockets.filter((_, i) => i !== idx));
   };
 
-  const totalExpenses = pockets.slice(1).reduce((sum, p) => sum + (p.amount || 0), 0);
+  const totalExpenses = pockets
+    .slice(1)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
   const income = pockets[0].amount || 0;
   const isBalanced = income === totalExpenses;
 
@@ -47,22 +56,44 @@ export default function RelaxedZeroBasedPage() {
       >
         <h1 className="text-3xl font-extrabold mb-4 text-[#00e096] flex items-center gap-2">
           Zero-Based Budget
-          <span className="tooltip ml-2" title="Every naira is assigned a job. Income minus expenses should be zero."><FaInfoCircle className="text-[#00e096] text-lg" /></span>
+          <span
+            className="tooltip ml-2"
+            title="Every naira is assigned a job. Income minus expenses should be zero."
+          >
+            <FaInfoCircle className="text-[#00e096] text-lg" />
+          </span>
         </h1>
-        <p className="mb-6 text-[#4A5B6E] text-center text-lg">Assign every naira a job. Your income minus expenses should equal zero.</p>
+        <p className="mb-6 text-[#4A5B6E] text-center text-lg">
+          Assign every naira a job. Your income minus expenses should equal
+          zero.
+        </p>
         {/* Summary Card */}
-        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="w-full mb-6">
+        <motion.div
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
+          className="w-full mb-6"
+        >
           <div className="flex justify-between items-center bg-[#f3f4fa] rounded-xl px-4 py-3 mb-2">
             <span className="text-[#00e096] font-semibold">Income</span>
-            <span className="text-[#2c3e5f] font-bold text-lg">₦{income.toLocaleString()}</span>
+            <span className="text-[#2c3e5f] font-bold text-lg">
+              ₦{income.toLocaleString()}
+            </span>
           </div>
           <div className="flex justify-between items-center bg-[#f3f4fa] rounded-xl px-4 py-3 mb-2">
             <span className="text-[#00e096] font-semibold">Total Expenses</span>
-            <span className="text-[#2c3e5f] font-bold text-lg">₦{totalExpenses.toLocaleString()}</span>
+            <span className="text-[#2c3e5f] font-bold text-lg">
+              ₦{totalExpenses.toLocaleString()}
+            </span>
           </div>
-          <div className={`flex justify-between items-center rounded-xl px-4 py-3 ${isBalanced ? 'bg-green-50' : 'bg-red-50'}`}> 
+          <div
+            className={`flex justify-between items-center rounded-xl px-4 py-3 ${isBalanced ? "bg-green-50" : "bg-red-50"}`}
+          >
             <span className="font-semibold">Status</span>
-            <span className={`font-bold ${isBalanced ? 'text-green-600' : 'text-red-500'}`}>{isBalanced ? 'Balanced' : 'Not Balanced'}</span>
+            <span
+              className={`font-bold ${isBalanced ? "text-green-600" : "text-red-500"}`}
+            >
+              {isBalanced ? "Balanced" : "Not Balanced"}
+            </span>
           </div>
         </motion.div>
         <div className="flex flex-col gap-6 w-full mb-8">
@@ -82,7 +113,7 @@ export default function RelaxedZeroBasedPage() {
                   type="text"
                   className="text-lg font-bold text-[#2c3e5f] mb-2 text-center bg-white border border-[#cbd5e1] rounded-lg px-2 py-1 w-40 focus:outline-none focus:ring-2 focus:ring-[#00e096]/30 transition-all duration-200 group-hover:shadow-lg"
                   value={pocket.label}
-                  onChange={e => handleNameChange(idx, e.target.value)}
+                  onChange={(e) => handleNameChange(idx, e.target.value)}
                   disabled={enabled || idx === 0}
                   aria-label={`Label for pocket ${idx + 1}`}
                 />
@@ -91,7 +122,7 @@ export default function RelaxedZeroBasedPage() {
                   min="0"
                   className="text-2xl font-extrabold text-[#2c3e5f] mb-2 text-center bg-white border border-[#cbd5e1] rounded-lg px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-[#00e096]/30 transition-all duration-200 group-hover:shadow-lg"
                   value={pocket.amount}
-                  onChange={e => handleAmountChange(idx, e.target.value)}
+                  onChange={(e) => handleAmountChange(idx, e.target.value)}
                   placeholder="₦0"
                   disabled={enabled && idx !== 0}
                   aria-label={`Amount for ${pocket.label}`}
@@ -102,7 +133,9 @@ export default function RelaxedZeroBasedPage() {
                     onClick={() => handleDeletePocket(idx)}
                     title="Delete pocket"
                     aria-label={`Delete pocket ${pocket.label}`}
-                  >✕</button>
+                  >
+                    ✕
+                  </button>
                 )}
               </motion.div>
             ))}
@@ -116,13 +149,23 @@ export default function RelaxedZeroBasedPage() {
               exit={{ opacity: 0, y: 20 }}
               className="mb-4 px-4 py-2 bg-[#00e096] text-white rounded-lg font-semibold hover:bg-[#00c080] transition"
               onClick={handleAddPocket}
-            >+ Add Expense</motion.button>
+            >
+              + Add Expense
+            </motion.button>
           )}
         </AnimatePresence>
         <div className="w-full text-center mb-4">
-          <span className="text-[#2c3e5f] font-bold">Income:</span> ₦{income.toLocaleString()}<br />
-          <span className="text-[#2c3e5f] font-bold">Total Expenses:</span> ₦{totalExpenses.toLocaleString()}<br />
-          <span className={`font-bold ${isBalanced ? 'text-green-600' : 'text-red-500'}`}>Budget {isBalanced ? 'Balanced' : 'Not Balanced'}</span>
+          <span className="text-[#2c3e5f] font-bold">Income:</span> ₦
+          {income.toLocaleString()}
+          <br />
+          <span className="text-[#2c3e5f] font-bold">Total Expenses:</span> ₦
+          {totalExpenses.toLocaleString()}
+          <br />
+          <span
+            className={`font-bold ${isBalanced ? "text-green-600" : "text-red-500"}`}
+          >
+            Budget {isBalanced ? "Balanced" : "Not Balanced"}
+          </span>
         </div>
         <AnimatePresence>
           {!enabled && (
@@ -136,11 +179,27 @@ export default function RelaxedZeroBasedPage() {
                 <input
                   type="checkbox"
                   checked={agreed}
-                  onChange={e => setAgreed(e.target.checked)}
+                  onChange={(e) => setAgreed(e.target.checked)}
                   className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-[#00e096] cursor-pointer"
                   aria-label="Agree to terms"
                 />
-                I agree to the <a href="/terms" target="_blank" className="text-[#00e096] underline ml-1">Terms & Conditions</a> and <a href="/privacy" target="_blank" className="text-[#00e096] underline ml-1">Privacy Policy</a> before enabling my budget.
+                I agree to the{" "}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  className="text-[#00e096] underline ml-1"
+                >
+                  Terms & Conditions
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  className="text-[#00e096] underline ml-1"
+                >
+                  Privacy Policy
+                </a>{" "}
+                before enabling my budget.
               </label>
               <motion.button
                 whileHover={{ scale: 1.04 }}
@@ -149,7 +208,9 @@ export default function RelaxedZeroBasedPage() {
                 disabled={!agreed || !isBalanced || income === 0}
                 onClick={() => setShowPinModal(true)}
                 aria-disabled={!agreed || !isBalanced || income === 0}
-              >Enable Budget</motion.button>
+              >
+                Enable Budget
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -162,7 +223,10 @@ export default function RelaxedZeroBasedPage() {
               className="w-full flex flex-col items-center justify-center mt-4"
             >
               <FaCheckCircle className="text-green-500 text-4xl mb-2 animate-bounce" />
-              <div className="w-full text-green-600 text-center font-semibold mb-2">Budget is now enabled. You can withdraw from any pocket (3.5% fee applies).</div>
+              <div className="w-full text-green-600 text-center font-semibold mb-2">
+                Budget is now enabled. You can withdraw from any pocket (3.5%
+                fee applies).
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -170,7 +234,10 @@ export default function RelaxedZeroBasedPage() {
       <PinConfirmModal
         title="Confirm Enable"
         description="Enter your 4-digit PIN to enable your budget."
-        onConfirm={() => { setEnabled(true); setShowPinModal(false); }}
+        onConfirm={() => {
+          setEnabled(true);
+          setShowPinModal(false);
+        }}
         onCancel={() => setShowPinModal(false)}
         open={showPinModal}
       />

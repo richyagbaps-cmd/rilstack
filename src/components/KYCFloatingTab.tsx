@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import UltraComprehensiveKYCForm from "@/components/UltraComprehensiveKYCForm";
 
-export default function KYCFloatingTab({ prefill, onComplete }: { prefill: any, onComplete: () => void }) {
+export default function KYCFloatingTab({
+  prefill,
+  onComplete,
+}: {
+  prefill: any;
+  onComplete: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -13,27 +19,35 @@ export default function KYCFloatingTab({ prefill, onComplete }: { prefill: any, 
         <div className="bg-white rounded-2xl shadow-xl p-4 flex items-center gap-3 border border-[#E9EDF2]">
           <span className="text-2xl">🛡️</span>
           <div className="flex-1">
-            <div className="font-bold text-[#2c3e5f] text-base">Complete your KYC</div>
-            <div className="text-xs text-[#4A5B6E]">Verify your identity to unlock all features.</div>
+            <div className="font-bold text-[#2c3e5f] text-base">
+              Complete your KYC
+            </div>
+            <div className="text-xs text-[#4A5B6E]">
+              Verify your identity to unlock all features.
+            </div>
           </div>
           <button
             className="ml-2 px-3 py-1 bg-[#00e096] text-white rounded-lg font-semibold text-xs hover:bg-[#00c080] transition"
             onClick={() => setOpen(true)}
-          >Start</button>
+          >
+            Start
+          </button>
           <button
             className="ml-1 text-[#7a869a] hover:text-[#ef4444] text-lg"
             aria-label="Dismiss"
             onClick={() => setDismissed(true)}
-          >&times;</button>
+          >
+            &times;
+          </button>
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-2xl p-4 border border-[#E9EDF2]">
           <UltraComprehensiveKYCForm
             prefill={prefill}
             onSubmit={async (data: any) => {
-              await fetch('/api/kyc/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+              await fetch("/api/kyc/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
               });
               setOpen(false);
@@ -44,7 +58,9 @@ export default function KYCFloatingTab({ prefill, onComplete }: { prefill: any, 
           <button
             className="mt-4 w-full bg-gray-200 text-[#2c3e5f] font-bold py-2 rounded-lg shadow hover:bg-gray-300 transition text-sm"
             onClick={() => setOpen(false)}
-          >Cancel</button>
+          >
+            Cancel
+          </button>
         </div>
       )}
     </div>

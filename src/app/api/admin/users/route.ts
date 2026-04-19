@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { Redis } from '@upstash/redis';
+import { NextRequest, NextResponse } from "next/server";
+import { promises as fs } from "fs";
+import path from "path";
+import { Redis } from "@upstash/redis";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'eleko44';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "eleko44";
 
 // Redis for permanent storage
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
@@ -15,13 +15,13 @@ if (useRedis) {
   redis = new Redis({ url: REDIS_URL!, token: REDIS_TOKEN! });
 }
 
-const REDIS_KEY = 'rilstack:users';
+const REDIS_KEY = "rilstack:users";
 
 // File fallback (use /tmp on Vercel since /var/task is read-only)
 const dataDirectory = process.env.VERCEL
-  ? path.join('/tmp', 'data')
-  : path.join(process.cwd(), 'data');
-const dataFilePath = path.join(dataDirectory, 'users.json');
+  ? path.join("/tmp", "data")
+  : path.join(process.cwd(), "data");
+const dataFilePath = path.join(dataDirectory, "users.json");
 
 async function getUsers() {
   // Try Redis first
@@ -36,7 +36,7 @@ async function getUsers() {
 
   // File fallback
   try {
-    const raw = await fs.readFile(dataFilePath, 'utf-8');
+    const raw = await fs.readFile(dataFilePath, "utf-8");
     return JSON.parse(raw);
   } catch {
     return [];
@@ -56,10 +56,10 @@ export async function POST(req: NextRequest) {
     const { password } = body;
 
     if (password !== ADMIN_PASSWORD) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+      return NextResponse.json({ error: "Invalid password" }, { status: 401 });
     }
   } catch {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
   const users = await getUsers();
@@ -68,15 +68,15 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     count: sanitized.length,
     users: sanitized,
-    storage: useRedis ? 'redis' : 'file',
+    storage: useRedis ? "redis" : "file",
   });
 }
 
 export async function GET(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get('secret');
+  const secret = req.nextUrl.searchParams.get("secret");
 
   if (secret !== ADMIN_PASSWORD) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const users = await getUsers();
@@ -85,6 +85,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     count: sanitized.length,
     users: sanitized,
-    storage: useRedis ? 'redis' : 'file',
+    storage: useRedis ? "redis" : "file",
   });
 }

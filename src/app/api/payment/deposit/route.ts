@@ -1,11 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ensurePaystackWalletForEmail, mapDepositMethodToChannel, paystackRequest } from '@/lib/paystack';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  ensurePaystackWalletForEmail,
+  mapDepositMethodToChannel,
+  paystackRequest,
+} from "@/lib/paystack";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface DepositRequest {
   amount: number;
-  method: 'card' | 'transfer' | 'ussd';
+  method: "card" | "transfer" | "ussd";
   description?: string;
   userEmail?: string;
   callbackUrl?: string;
@@ -17,15 +21,24 @@ export async function POST(request: NextRequest) {
     const { amount, method, description, userEmail, callbackUrl } = body;
 
     if (!amount || amount < 100) {
-      return NextResponse.json({ error: 'Minimum deposit amount is N100.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Minimum deposit amount is N100." },
+        { status: 400 },
+      );
     }
 
-    if (!['card', 'transfer', 'ussd'].includes(method)) {
-      return NextResponse.json({ error: 'Invalid payment method.' }, { status: 400 });
+    if (!["card", "transfer", "ussd"].includes(method)) {
+      return NextResponse.json(
+        { error: "Invalid payment method." },
+        { status: 400 },
+      );
     }
 
     if (!userEmail) {
-      return NextResponse.json({ error: 'User email is required.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "User email is required." },
+        { status: 400 },
+      );
     }
 
     const wallet = await ensurePaystackWalletForEmail(userEmail);
@@ -34,19 +47,19 @@ export async function POST(request: NextRequest) {
       reference: string;
       authorization_url: string;
       access_code: string;
-    }>('/transaction/initialize', {
-      method: 'POST',
+    }>("/transaction/initialize", {
+      method: "POST",
       body: JSON.stringify({
         email: userEmail,
         amount: amount * 100,
-        currency: 'NGN',
+        currency: "NGN",
         reference,
         callback_url: callbackUrl,
         channels: [mapDepositMethodToChannel(method)],
         metadata: {
-          description: description || 'RILSTACK Deposit',
-          type: 'deposit',
-          platform: 'rilstack',
+          description: description || "RILSTACK Deposit",
+          type: "deposit",
+          platform: "rilstack",
           userEmail,
           depositMethod: method,
           walletAccountNumber: wallet.accountNumber,
@@ -61,17 +74,17 @@ export async function POST(request: NextRequest) {
       reference: response.data.reference,
       amount,
       method,
-      description: description || 'Paystack deposit',
-      status: 'pending',
+      description: description || "Paystack deposit",
+      status: "pending",
       paymentUrl: response.data.authorization_url,
       accessCode: response.data.access_code,
       wallet,
-      message: 'Payment link generated. Complete the flow on Paystack.',
+      message: "Payment link generated. Complete the flow on Paystack.",
     });
   } catch (error: any) {
-    console.error('Payment processing error:', error);
+    console.error("Payment processing error:", error);
     return NextResponse.json(
-      { error: error.message || 'Payment processing failed.' },
+      { error: error.message || "Payment processing failed." },
       { status: 500 },
     );
   }

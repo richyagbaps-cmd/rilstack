@@ -3,7 +3,7 @@ import {
   mapPaystackChannelToMethod,
   paystackRequest,
   type PaystackWalletDetails,
-} from '@/lib/paystack';
+} from "@/lib/paystack";
 
 interface PaystackTransaction {
   id: number;
@@ -43,9 +43,9 @@ interface PaystackTransfer {
 export interface LedgerTransaction {
   id: string;
   reference: string;
-  type: 'deposit' | 'withdrawal';
+  type: "deposit" | "withdrawal";
   amount: number;
-  method: 'card' | 'transfer' | 'ussd';
+  method: "card" | "transfer" | "ussd";
   date: string;
   status: string;
   description: string;
@@ -63,11 +63,11 @@ export interface AccountLedger {
   };
   accounts: Array<{
     id: string;
-    type: 'checking' | 'savings' | 'investment';
+    type: "checking" | "savings" | "investment";
     name: string;
     balance: number;
     availableBalance: number;
-    currency: 'NGN';
+    currency: "NGN";
     walletId?: string;
     accountNumber?: string;
     accountName?: string;
@@ -82,49 +82,61 @@ export async function getPaystackLedgerForEmail(
 ): Promise<AccountLedger> {
   const normalizedEmail = email.trim().toLowerCase();
   const [transactionResponse, transferResponse] = await Promise.all([
-    paystackRequest<PaystackTransaction[]>('/transaction?perPage=100&page=1'),
-    paystackRequest<PaystackTransfer[]>('/transfer?perPage=100&page=1'),
+    paystackRequest<PaystackTransaction[]>("/transaction?perPage=100&page=1"),
+    paystackRequest<PaystackTransfer[]>("/transfer?perPage=100&page=1"),
   ]);
 
   const deposits: LedgerTransaction[] = transactionResponse.data
     .filter(
       (transaction) =>
         transaction.customer?.email?.trim().toLowerCase() === normalizedEmail &&
-        transaction.metadata?.platform === 'rilstack' &&
-        transaction.metadata?.type === 'deposit',
+        transaction.metadata?.platform === "rilstack" &&
+        transaction.metadata?.type === "deposit",
     )
     .map((transaction) => ({
       id: String(transaction.id),
       reference: transaction.reference,
-      type: 'deposit',
+      type: "deposit",
       amount: transaction.amount / 100,
       method: mapPaystackChannelToMethod(transaction.channel),
-      date: transaction.paid_at || transaction.created_at || '',
+      date: transaction.paid_at || transaction.created_at || "",
       status: transaction.status,
-      description: transaction.metadata?.description || 'Paystack deposit',
+      description: transaction.metadata?.description || "Paystack deposit",
     }));
 
   const withdrawals: LedgerTransaction[] = transferResponse.data
-    .filter((transfer) => isReferenceForEmail(transfer.reference, normalizedEmail))
+    .filter((transfer) =>
+      isReferenceForEmail(transfer.reference, normalizedEmail),
+    )
     .map((transfer) => ({
       id: String(transfer.id),
       reference: transfer.reference,
-      type: 'withdrawal',
+      type: "withdrawal",
       amount: transfer.amount / 100,
-      method: 'transfer',
-      date: transfer.createdAt || transfer.created_at || '',
+      method: "transfer",
+      date: transfer.createdAt || transfer.created_at || "",
       status: transfer.status,
-      description: transfer.reason || 'Paystack withdrawal',
-      recipientName: transfer.recipient?.name || '',
-      accountNumber: transfer.recipient?.details?.account_number || '',
-      bankName: transfer.recipient?.details?.bank_name || '',
+      description: transfer.reason || "Paystack withdrawal",
+      recipientName: transfer.recipient?.name || "",
+      accountNumber: transfer.recipient?.details?.account_number || "",
+      bankName: transfer.recipient?.details?.bank_name || "",
     }));
 
-  const successfulDeposits = deposits.filter((transaction) => transaction.status === 'success');
-  const successfulWithdrawals = withdrawals.filter((transaction) => transaction.status === 'success');
+  const successfulDeposits = deposits.filter(
+    (transaction) => transaction.status === "success",
+  );
+  const successfulWithdrawals = withdrawals.filter(
+    (transaction) => transaction.status === "success",
+  );
 
-  const depositedTotal = successfulDeposits.reduce((sum, transaction) => sum + transaction.amount, 0);
-  const withdrawnTotal = successfulWithdrawals.reduce((sum, transaction) => sum + transaction.amount, 0);
+  const depositedTotal = successfulDeposits.reduce(
+    (sum, transaction) => sum + transaction.amount,
+    0,
+  );
+  const withdrawnTotal = successfulWithdrawals.reduce(
+    (sum, transaction) => sum + transaction.amount,
+    0,
+  );
   const totalBalance = Math.max(0, depositedTotal - withdrawnTotal);
   const generatedAt = new Date().toISOString();
 
@@ -141,32 +153,32 @@ export async function getPaystackLedgerForEmail(
     },
     accounts: [
       {
-        id: '1',
-        type: 'checking',
-        name: 'Primary Wallet',
+        id: "1",
+        type: "checking",
+        name: "Primary Wallet",
         balance: totalBalance,
         availableBalance: totalBalance,
-        currency: 'NGN',
+        currency: "NGN",
         walletId: options?.wallet?.walletId,
         accountNumber: options?.wallet?.accountNumber,
         accountName: options?.wallet?.accountName,
         bankName: options?.wallet?.bankName,
       },
       {
-        id: '2',
-        type: 'savings',
-        name: 'Savings Balance',
+        id: "2",
+        type: "savings",
+        name: "Savings Balance",
         balance: 0,
         availableBalance: 0,
-        currency: 'NGN',
+        currency: "NGN",
       },
       {
-        id: '3',
-        type: 'investment',
-        name: 'Investment Balance',
+        id: "3",
+        type: "investment",
+        name: "Investment Balance",
         balance: 0,
         availableBalance: 0,
-        currency: 'NGN',
+        currency: "NGN",
       },
     ],
     transactions,

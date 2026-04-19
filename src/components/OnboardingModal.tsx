@@ -3,27 +3,38 @@ import React, { useState } from "react";
 const steps = [
   {
     title: "Welcome to Rilstack!",
-    description: "Budget, save, and invest—all in one free app. Let’s take a quick tour!",
+    description:
+      "Budget, save, and invest—all in one free app. Let’s take a quick tour!",
   },
   {
     title: "Budget Smarter",
-    description: "Track your spending, set budgets, and get insights to improve your financial habits.",
+    description:
+      "Track your spending, set budgets, and get insights to improve your financial habits.",
   },
   {
     title: "Save with Safelock",
-    description: "Lock away funds for your goals and earn better returns with our secure savings options.",
+    description:
+      "Lock away funds for your goals and earn better returns with our secure savings options.",
   },
   {
     title: "Invest Easily",
-    description: "Grow your wealth with curated investment options tailored for you.",
+    description:
+      "Grow your wealth with curated investment options tailored for you.",
   },
   {
     title: "Get Started!",
-    description: "You’re all set. Explore the dashboard and take control of your finances!",
+    description:
+      "You’re all set. Explore the dashboard and take control of your finances!",
   },
 ];
 
-export default function OnboardingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function OnboardingModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const [step, setStep] = useState(0);
 
   if (!open) return null;

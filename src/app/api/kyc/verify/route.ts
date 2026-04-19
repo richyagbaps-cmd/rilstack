@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { findStoredUserByEmail, updateUserKyc } from '@/lib/user-store';
-import crypto from 'crypto';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
+import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession();
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await findStoredUserByEmail(session.user.email);
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     };
 
     switch (step) {
-      case 'send-otp': {
+      case "send-otp": {
         // Generate 6-digit OTP
         const otp = crypto.randomInt(100000, 999999).toString();
         const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
@@ -46,13 +46,14 @@ export async function POST(request: NextRequest) {
         // Try to send via email if configured
         if (process.env.RESEND_API_KEY) {
           try {
-            const { Resend } = await import('resend');
+            const { Resend } = await import("resend");
             const resendClient = new Resend(process.env.RESEND_API_KEY);
-            const fromEmail = process.env.EMAIL_FROM || 'rickinvestmentslimited@gmail.com';
+            const fromEmail =
+              process.env.EMAIL_FROM || "rickinvestmentslimited@gmail.com";
             await resendClient.emails.send({
               from: fromEmail,
               to: session.user.email,
-              subject: 'Rilstack Verification Code',
+              subject: "Rilstack Verification Code",
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
                   <h2 style="color: #2c5f2d;">Rilstack Verification</h2>
@@ -74,28 +75,40 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: true,
           message: emailSent
-            ? 'Verification code sent to your email.'
-            : 'Email service not configured. Use the code shown below.',
+            ? "Verification code sent to your email."
+            : "Email service not configured. Use the code shown below.",
           ...(!emailSent ? { fallbackOtp: otp } : {}),
         });
       }
 
-      case 'verify-otp': {
+      case "verify-otp": {
         const { otp } = body;
         if (!otp || otp.length !== 6) {
-          return NextResponse.json({ error: 'Invalid OTP format.' }, { status: 400 });
+          return NextResponse.json(
+            { error: "Invalid OTP format." },
+            { status: 400 },
+          );
         }
 
         if (!kycData.emailOtp || !kycData.emailOtpExpiry) {
-          return NextResponse.json({ error: 'No OTP was sent. Please request a new one.' }, { status: 400 });
+          return NextResponse.json(
+            { error: "No OTP was sent. Please request a new one." },
+            { status: 400 },
+          );
         }
 
         if (new Date() > new Date(kycData.emailOtpExpiry)) {
-          return NextResponse.json({ error: 'OTP has expired. Please request a new one.' }, { status: 400 });
+          return NextResponse.json(
+            { error: "OTP has expired. Please request a new one." },
+            { status: 400 },
+          );
         }
 
         if (kycData.emailOtp !== otp) {
-          return NextResponse.json({ error: 'Invalid OTP. Please try again.' }, { status: 400 });
+          return NextResponse.json(
+            { error: "Invalid OTP. Please try again." },
+            { status: 400 },
+          );
         }
 
         const newKycData = {
@@ -113,15 +126,18 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          message: 'Email verified successfully.',
+          message: "Email verified successfully.",
           kycLevel: newLevel,
         });
       }
 
-      case 'verify-bvn': {
+      case "verify-bvn": {
         const { bvn } = body;
         if (!bvn || !/^\d{11}$/.test(bvn)) {
-          return NextResponse.json({ error: 'BVN must be exactly 11 digits.' }, { status: 400 });
+          return NextResponse.json(
+            { error: "BVN must be exactly 11 digits." },
+            { status: 400 },
+          );
         }
 
         // In production, verify BVN via Dojah/Paystack/etc API
@@ -137,15 +153,18 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          message: 'BVN verified successfully.',
+          message: "BVN verified successfully.",
           kycLevel: newLevel,
         });
       }
 
-      case 'verify-nin': {
+      case "verify-nin": {
         const { nin } = body;
         if (!nin || !/^\d{11}$/.test(nin)) {
-          return NextResponse.json({ error: 'NIN must be exactly 11 digits.' }, { status: 400 });
+          return NextResponse.json(
+            { error: "NIN must be exactly 11 digits." },
+            { status: 400 },
+          );
         }
 
         const newKycData = { ...kycData, ninVerified: true };
@@ -159,18 +178,18 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          message: 'NIN verified successfully.',
+          message: "NIN verified successfully.",
           kycLevel: newLevel,
         });
       }
 
-      case 'verify-identity': {
+      case "verify-identity": {
         const { dojahReferenceId } = body;
 
         const newKycData = {
           ...kycData,
           identityVerified: true,
-          dojahReferenceId: dojahReferenceId || 'manual-review',
+          dojahReferenceId: dojahReferenceId || "manual-review",
         };
         const newLevel = calculateKycLevel(newKycData);
 
@@ -181,21 +200,27 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          message: 'Identity verified successfully.',
+          message: "Identity verified successfully.",
           kycLevel: newLevel,
         });
       }
 
-      case 'complete-details': {
+      case "complete-details": {
         const { dateOfBirth, gender, stateOfOrigin, address } = body;
 
         if (!dateOfBirth || !gender || !stateOfOrigin || !address) {
-          return NextResponse.json({ error: 'All personal details are required.' }, { status: 400 });
+          return NextResponse.json(
+            { error: "All personal details are required." },
+            { status: 400 },
+          );
         }
 
-        const validGenders = ['M', 'F', 'other'];
+        const validGenders = ["M", "F", "other"];
         if (!validGenders.includes(gender)) {
-          return NextResponse.json({ error: 'Invalid gender value.' }, { status: 400 });
+          return NextResponse.json(
+            { error: "Invalid gender value." },
+            { status: 400 },
+          );
         }
 
         const newKycData = { ...kycData, detailsComplete: true };
@@ -212,19 +237,24 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          message: 'Profile completed successfully.',
+          message: "Profile completed successfully.",
           kycLevel: newLevel,
         });
       }
 
       default:
         // Handle skip steps
-        if (step === 'skip-email' || step === 'skip-bvn' || step === 'skip-nin' || step === 'skip-identity') {
+        if (
+          step === "skip-email" ||
+          step === "skip-bvn" ||
+          step === "skip-nin" ||
+          step === "skip-identity"
+        ) {
           const skipMap: Record<string, Partial<typeof kycData>> = {
-            'skip-email': { emailVerified: true },
-            'skip-bvn': { bvnVerified: true },
-            'skip-nin': { ninVerified: true },
-            'skip-identity': { identityVerified: true },
+            "skip-email": { emailVerified: true },
+            "skip-bvn": { bvnVerified: true },
+            "skip-nin": { ninVerified: true },
+            "skip-identity": { identityVerified: true },
           };
           const skipped = skipMap[step] || {};
           const newKycData = { ...kycData, ...skipped };
@@ -237,15 +267,21 @@ export async function POST(request: NextRequest) {
 
           return NextResponse.json({
             success: true,
-            message: 'Step skipped. You can complete it later from Settings.',
+            message: "Step skipped. You can complete it later from Settings.",
             kycLevel: newLevel,
           });
         }
 
-        return NextResponse.json({ error: 'Invalid verification step.' }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid verification step." },
+          { status: 400 },
+        );
     }
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Verification failed.' }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Verification failed." },
+      { status: 500 },
+    );
   }
 }
 

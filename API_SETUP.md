@@ -5,29 +5,35 @@
 To enable real payment processing, you need to set up API keys from a Nigerian payment gateway.
 
 ### Option 1: Paystack (Recommended)
+
 1. Create account at https://dashboard.paystack.co
 2. Go to Settings → API Keys
 3. Copy your Secret Key
 4. Add to .env.local:
+
 ```
 NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_test_xxxxx
 PAYSTACK_SECRET_KEY=sk_test_xxxxx
 ```
 
 ### Option 2: Flutterwave
+
 1. Create account at https://dashboard.flutterwave.co
 2. Go to API → API Keys
 3. Copy your Secret Key
 4. Add to .env.local:
+
 ```
 NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY=FLWPUBK_TEST_xxxxx
 FLUTTERWAVE_SECRET_KEY=FLWSECK_TEST_xxxxx
 ```
 
 ### Option 3: Interswitch
+
 1. Create account at https://www.interswitchng.com
 2. Request API credentials
 3. Add to .env.local:
+
 ```
 INTERSWITCH_CLIENT_ID=xxxxx
 INTERSWITCH_CLIENT_SECRET=xxxxx
@@ -36,9 +42,11 @@ INTERSWITCH_CLIENT_SECRET=xxxxx
 ## NIN Validation (Optional - NIMC API)
 
 To enable real NIN validation:
+
 1. Register with NIMC at https://nimc.gov.ng
 2. Request API access credentials
 3. Add to .env.local:
+
 ```
 NIMC_API_KEY=xxxxx
 NIMC_API_BASE_URL=https://api.nimc.gov.ng
@@ -69,8 +77,9 @@ NIMC_API_BASE_URL=https://api.nimc.gov.ng
 ## Testing Demo NINs (Mock Database)
 
 These NINs work in development mode:
+
 - `12345678901` (Chioma Okafor, Lagos)
-- `98765432101` (Emeka Eze, Enugu)  
+- `98765432101` (Emeka Eze, Enugu)
 - `55555555555` (Aisha Mohammed, Kano)
 
 ## Deposit Methods Supported
@@ -83,6 +92,6 @@ These NINs work in development mode:
 
 - Never commit `.env.local` to version control
 - Always use Secret Keys server-side only
-- Public Keys are safe to include in client code (prefixed with NEXT_PUBLIC_)
+- Public Keys are safe to include in client code (prefixed with NEXT*PUBLIC*)
 - Validate all inputs on server-side
 - Use HTTPS in production

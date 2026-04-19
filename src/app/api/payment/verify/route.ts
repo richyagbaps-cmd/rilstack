@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { paystackRequest } from '@/lib/paystack';
+import { NextRequest, NextResponse } from "next/server";
+import { paystackRequest } from "@/lib/paystack";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface VerificationRequest {
   reference: string;
@@ -13,22 +13,31 @@ export async function POST(request: NextRequest) {
     const { reference } = body;
 
     if (!reference) {
-      return NextResponse.json({ error: 'Transaction reference required.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Transaction reference required." },
+        { status: 400 },
+      );
     }
 
-    const data = await paystackRequest<any>(`/transaction/verify/${reference}`, { method: 'GET' });
+    const data = await paystackRequest<any>(
+      `/transaction/verify/${reference}`,
+      { method: "GET" },
+    );
 
     if (!data.data) {
-      return NextResponse.json({ error: 'Invalid transaction reference.' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Invalid transaction reference." },
+        { status: 404 },
+      );
     }
 
     const transaction = data.data;
 
-    if (transaction.status !== 'success') {
+    if (transaction.status !== "success") {
       return NextResponse.json({
         success: false,
         status: transaction.status,
-        message: 'Payment was not completed.',
+        message: "Payment was not completed.",
       });
     }
 
@@ -43,12 +52,12 @@ export async function POST(request: NextRequest) {
         phone: transaction.customer?.phone,
       },
       paidAt: transaction.paid_at,
-      message: 'Payment verified successfully.',
+      message: "Payment verified successfully.",
     });
   } catch (error: any) {
-    console.error('Verification error:', error);
+    console.error("Verification error:", error);
     return NextResponse.json(
-      { error: error.message || 'Payment verification failed.' },
+      { error: error.message || "Payment verification failed." },
       { status: 500 },
     );
   }

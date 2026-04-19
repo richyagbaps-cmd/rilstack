@@ -1,6 +1,12 @@
 import React from "react";
 
-export default function StepIndicator({ step, total }: { step: number; total: number }) {
+export default function StepIndicator({
+  step,
+  total,
+}: {
+  step: number;
+  total: number;
+}) {
   return (
     <div className="flex justify-center gap-2 mb-6">
       {[...Array(total)].map((_, i) => (

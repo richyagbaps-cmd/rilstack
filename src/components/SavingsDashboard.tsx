@@ -26,7 +26,7 @@ const AI_GOAL_SUGGESTIONS = [
   "Vacation to Dubai",
   "New laptop",
   "Children’s education",
-  "Custom goal"
+  "Custom goal",
 ];
 
 function getInterestToday(balance: number, rate = 0.08) {
@@ -47,7 +47,10 @@ export default function SavingsDashboard() {
 
   useEffect(() => {
     setInterestToday(getInterestToday(balance));
-    const interval = setInterval(() => setInterestToday(getInterestToday(balance)), 5000);
+    const interval = setInterval(
+      () => setInterestToday(getInterestToday(balance)),
+      5000,
+    );
     return () => clearInterval(interval);
   }, [balance]);
 
@@ -57,10 +60,10 @@ export default function SavingsDashboard() {
     const res = await fetch("/api/savings-goals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(goal)
+      body: JSON.stringify(goal),
     });
     const data = await res.json();
-    setGoals(goals => [
+    setGoals((goals) => [
       {
         id: data.id || Math.random().toString(36).slice(2),
         name: goal.name,
@@ -69,56 +72,91 @@ export default function SavingsDashboard() {
         deadline: goal.deadline,
         team: goal.team,
         fundingSource: goal.fundingSource,
-        projectedCompletion: goal.deadline // Placeholder
+        projectedCompletion: goal.deadline, // Placeholder
       },
-      ...goals
+      ...goals,
     ]);
   };
   const handleCreateLock = async (lock: any) => {
     // POST to backend if endpoint exists (pseudo-code, adjust as needed)
     // await fetch("/api/safe-locks", { method: "POST", ... })
-    setSafeLocks(locks => [
+    setSafeLocks((locks) => [
       {
         id: Math.random().toString(36).slice(2),
         amount: lock.amount,
         releaseDate: lock.releaseDate,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       },
-      ...locks
+      ...locks,
     ]);
-    setBalance(bal => bal - lock.amount);
+    setBalance((bal) => bal - lock.amount);
   };
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
       <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col items-center mb-8">
-        <div className="text-xs uppercase tracking-widest text-[#4A5B6E] mb-2">Total Savings Balance</div>
-        <div className="text-4xl font-extrabold text-[#2c3e5f] mb-2">₦{balance.toLocaleString()}</div>
+        <div className="text-xs uppercase tracking-widest text-[#4A5B6E] mb-2">
+          Total Savings Balance
+        </div>
+        <div className="text-4xl font-extrabold text-[#2c3e5f] mb-2">
+          ₦{balance.toLocaleString()}
+        </div>
         <div className="flex items-center gap-2 text-[#00e096] font-semibold animate-pulse">
           +₦{interestToday.toLocaleString()} today
-          <button className="ml-2 text-xs underline" title="View interest chart">View chart</button>
+          <button
+            className="ml-2 text-xs underline"
+            title="View interest chart"
+          >
+            View chart
+          </button>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Savings Goals Section */}
         <div className="bg-[#f8f9fc] rounded-2xl p-6 shadow">
           <div className="flex justify-between items-center mb-4">
-            <div className="text-lg font-bold text-[#2c3e5f]">Savings Goals</div>
-            <button className="bg-[#00e096] text-white px-3 py-1 rounded" onClick={() => setShowGoalModal(true)}>Create savings goal</button>
+            <div className="text-lg font-bold text-[#2c3e5f]">
+              Savings Goals
+            </div>
+            <button
+              className="bg-[#00e096] text-white px-3 py-1 rounded"
+              onClick={() => setShowGoalModal(true)}
+            >
+              Create savings goal
+            </button>
           </div>
           <div className="flex flex-col gap-4">
-            {goals.length === 0 && <div className="text-[#4A5B6E]">No goals yet.</div>}
-            {goals.map(goal => (
-              <div key={goal.id} className="bg-white rounded-lg p-4 shadow flex flex-col gap-2">
+            {goals.length === 0 && (
+              <div className="text-[#4A5B6E]">No goals yet.</div>
+            )}
+            {goals.map((goal) => (
+              <div
+                key={goal.id}
+                className="bg-white rounded-lg p-4 shadow flex flex-col gap-2"
+              >
                 <div className="flex justify-between items-center">
-                  <div className="font-semibold text-[#2c3e5f]">{goal.name}</div>
+                  <div className="font-semibold text-[#2c3e5f]">
+                    {goal.name}
+                  </div>
                   <div className="flex items-center gap-2">
-                    <div className="text-xs text-[#4A5B6E]">Target: ₦{goal.target.toLocaleString()}</div>
-                    <button className="ml-2 text-xs underline text-[#00e096]" onClick={() => setShowAutoInvest(goal.id)}>Auto-invest</button>
+                    <div className="text-xs text-[#4A5B6E]">
+                      Target: ₦{goal.target.toLocaleString()}
+                    </div>
+                    <button
+                      className="ml-2 text-xs underline text-[#00e096]"
+                      onClick={() => setShowAutoInvest(goal.id)}
+                    >
+                      Auto-invest
+                    </button>
                   </div>
                 </div>
                 <div className="w-full bg-[#e6f7e6] rounded-full h-3 mt-1 mb-1">
-                  <div className="bg-[#00e096] h-3 rounded-full" style={{ width: `${Math.min(100, (goal.saved / goal.target) * 100)}%` }}></div>
+                  <div
+                    className="bg-[#00e096] h-3 rounded-full"
+                    style={{
+                      width: `${Math.min(100, (goal.saved / goal.target) * 100)}%`,
+                    }}
+                  ></div>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span>Saved: ₦{goal.saved.toLocaleString()}</span>
@@ -126,7 +164,9 @@ export default function SavingsDashboard() {
                   <span>Projected: {goal.projectedCompletion}</span>
                 </div>
                 {goal.team && goal.team.length > 0 && (
-                  <div className="text-xs text-[#2c3e5f] mt-1">Team: {goal.team.join(", ")}</div>
+                  <div className="text-xs text-[#2c3e5f] mt-1">
+                    Team: {goal.team.join(", ")}
+                  </div>
                 )}
               </div>
             ))}
@@ -136,17 +176,33 @@ export default function SavingsDashboard() {
         <div className="bg-[#f8f9fc] rounded-2xl p-6 shadow">
           <div className="flex justify-between items-center mb-4">
             <div className="text-lg font-bold text-[#2c3e5f]">Safe Locks</div>
-            <button className="bg-[#2c3e5f] text-white px-3 py-1 rounded" onClick={() => setShowLockModal(true)}>Create safe lock</button>
+            <button
+              className="bg-[#2c3e5f] text-white px-3 py-1 rounded"
+              onClick={() => setShowLockModal(true)}
+            >
+              Create safe lock
+            </button>
           </div>
           <div className="flex flex-col gap-4">
-            {safeLocks.length === 0 && <div className="text-[#4A5B6E]">No safe locks yet.</div>}
-            {safeLocks.map(lock => (
-              <div key={lock.id} className="bg-white rounded-lg p-4 shadow flex flex-col gap-2">
+            {safeLocks.length === 0 && (
+              <div className="text-[#4A5B6E]">No safe locks yet.</div>
+            )}
+            {safeLocks.map((lock) => (
+              <div
+                key={lock.id}
+                className="bg-white rounded-lg p-4 shadow flex flex-col gap-2"
+              >
                 <div className="flex justify-between items-center">
-                  <div className="font-semibold text-[#2c3e5f]">₦{lock.amount.toLocaleString()}</div>
-                  <div className="text-xs text-[#4A5B6E]">Unlocks: {lock.releaseDate}</div>
+                  <div className="font-semibold text-[#2c3e5f]">
+                    ₦{lock.amount.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-[#4A5B6E]">
+                    Unlocks: {lock.releaseDate}
+                  </div>
                 </div>
-                <div className="text-xs text-[#00e096]">Earning daily interest</div>
+                <div className="text-xs text-[#00e096]">
+                  Earning daily interest
+                </div>
               </div>
             ))}
           </div>
@@ -156,10 +212,10 @@ export default function SavingsDashboard() {
       <AutoInvestModal
         open={!!showAutoInvest}
         onClose={() => setShowAutoInvest(null)}
-        onCreate={async rule => {
+        onCreate={async (rule) => {
           // POST to backend (pseudo-code, adjust as needed)
           // await fetch("/api/auto-invest", { method: "POST", ... })
-          setAutoInvestRules(rules => [...rules, rule]);
+          setAutoInvestRules((rules) => [...rules, rule]);
         }}
         goalId={showAutoInvest || ""}
       />

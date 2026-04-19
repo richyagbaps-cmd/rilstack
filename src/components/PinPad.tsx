@@ -4,10 +4,18 @@ const NUMPAD = [
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9],
-  ["biometric", 0, "del"]
+  ["biometric", 0, "del"],
 ];
 
-export default function PinPad({ value, onChange, onBiometric }: { value: string; onChange: (v: string) => void; onBiometric?: () => void }) {
+export default function PinPad({
+  value,
+  onChange,
+  onBiometric,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onBiometric?: () => void;
+}) {
   const handlePress = (key: number | string) => {
     if (typeof key === "number") {
       if (value.length < 6) onChange(value + key);
@@ -28,7 +36,15 @@ export default function PinPad({ value, onChange, onBiometric }: { value: string
               onClick={() => handlePress(key)}
               aria-label={typeof key === "number" ? key.toString() : key}
             >
-              {key === "biometric" ? <span role="img" aria-label="biometric">🔒</span> : key === "del" ? <span>&larr;</span> : key}
+              {key === "biometric" ? (
+                <span role="img" aria-label="biometric">
+                  🔒
+                </span>
+              ) : key === "del" ? (
+                <span>&larr;</span>
+              ) : (
+                key
+              )}
             </button>
           ))}
         </div>

@@ -6,7 +6,15 @@ const cards = [
     value: "₦0.00",
     gradient: "from-[#4A8B6E] to-[#2c3e5f]",
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#fff" opacity="0.2"/><path d="M10 16h12M16 10v12" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="16" fill="#fff" opacity="0.2" />
+        <path
+          d="M10 16h12M16 10v12"
+          stroke="#fff"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
     ),
   },
   {
@@ -14,7 +22,23 @@ const cards = [
     value: "₦0.00",
     gradient: "from-[#FFD700] to-[#FFA500]",
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><rect x="6" y="10" width="20" height="12" rx="4" fill="#fff" opacity="0.2"/><path d="M10 16h12" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
+        <rect
+          x="6"
+          y="10"
+          width="20"
+          height="12"
+          rx="4"
+          fill="#fff"
+          opacity="0.2"
+        />
+        <path
+          d="M10 16h12"
+          stroke="#fff"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
     ),
   },
   {
@@ -22,7 +46,15 @@ const cards = [
     value: "₦0.00",
     gradient: "from-[#6BAF8D] to-[#4A8B6E]",
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#fff" opacity="0.2"/><path d="M16 10v12" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="16" fill="#fff" opacity="0.2" />
+        <path
+          d="M16 10v12"
+          stroke="#fff"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
     ),
   },
   {
@@ -30,7 +62,23 @@ const cards = [
     value: "₦0.00",
     gradient: "from-[#2c3e5f] to-[#FFD700]",
     icon: (
-      <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><rect x="6" y="10" width="20" height="12" rx="4" fill="#fff" opacity="0.2"/><path d="M16 10v12" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+      <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
+        <rect
+          x="6"
+          y="10"
+          width="20"
+          height="12"
+          rx="4"
+          fill="#fff"
+          opacity="0.2"
+        />
+        <path
+          d="M16 10v12"
+          stroke="#fff"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
     ),
   },
 ];

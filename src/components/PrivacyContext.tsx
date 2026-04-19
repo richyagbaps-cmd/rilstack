@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface PrivacyContextType {
   privacyMode: boolean;
@@ -9,7 +9,7 @@ const PrivacyContext = createContext<PrivacyContextType | undefined>(undefined);
 
 export function usePrivacy() {
   const ctx = useContext(PrivacyContext);
-  if (!ctx) throw new Error('usePrivacy must be used within PrivacyProvider');
+  if (!ctx) throw new Error("usePrivacy must be used within PrivacyProvider");
   return ctx;
 }
 

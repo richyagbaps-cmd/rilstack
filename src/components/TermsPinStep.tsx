@@ -32,14 +32,25 @@ export default function TermsPinStep({ mode, onConfirm }: TermsPinStepProps) {
 
   return (
     <div className="w-full max-w-md mx-auto mt-4">
-      <div className="mb-4 text-lg font-semibold text-[#2c3e5f]">Terms & PIN Confirmation</div>
+      <div className="mb-4 text-lg font-semibold text-[#2c3e5f]">
+        Terms & PIN Confirmation
+      </div>
       <div className="bg-[#f3f4fa] rounded-lg p-4 mb-4 max-h-48 overflow-y-auto whitespace-pre-line text-sm text-[#2c3e5f]">
         {TERMS[mode]}
       </div>
       <div className="flex items-center gap-2 mb-4">
-        <input type="checkbox" id="agree" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
-        <label htmlFor="agree" className="text-[#2c3e5f] text-sm cursor-pointer">
-          I agree to the terms and understand the {mode === "relaxed" ? "penalty for early withdrawal" : "lock rules"}.
+        <input
+          type="checkbox"
+          id="agree"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+        />
+        <label
+          htmlFor="agree"
+          className="text-[#2c3e5f] text-sm cursor-pointer"
+        >
+          I agree to the terms and understand the{" "}
+          {mode === "relaxed" ? "penalty for early withdrawal" : "lock rules"}.
         </label>
       </div>
       <input
@@ -50,10 +61,13 @@ export default function TermsPinStep({ mode, onConfirm }: TermsPinStepProps) {
         className="w-full px-3 py-2 rounded border border-[#d1d5db] mb-2 text-center tracking-widest text-lg"
         placeholder="Enter 6-digit PIN"
         value={pin}
-        onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
       />
       {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
-      <button className="w-full bg-[#00e096] text-white px-4 py-2 rounded font-semibold mt-2" onClick={handleConfirm}>
+      <button
+        className="w-full bg-[#00e096] text-white px-4 py-2 rounded font-semibold mt-2"
+        onClick={handleConfirm}
+      >
         Confirm & Create Budget
       </button>
     </div>

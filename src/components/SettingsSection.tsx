@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useForm } from 'react-hook-form';
-import Image from 'next/image';
-import ReviewsWidget from './ReviewsWidget';
+"use client";
+import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import Image from "next/image";
+import ReviewsWidget from "./ReviewsWidget";
 
 // Withdrawal Bank Section
 function WithdrawalBankSection() {
@@ -30,7 +31,10 @@ function WithdrawalBankSection() {
       setError("All fields are required.");
       return;
     }
-    localStorage.setItem("rilstack_bank", JSON.stringify({ bankName, accountNumber, accountName }));
+    localStorage.setItem(
+      "rilstack_bank",
+      JSON.stringify({ bankName, accountNumber, accountName }),
+    );
     setSuccess("Bank details updated.");
     setError("");
     setTimeout(() => setSuccess(""), 2000);
@@ -39,30 +43,38 @@ function WithdrawalBankSection() {
   return (
     <form onSubmit={handleSave} className="space-y-3">
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-1">Bank Name</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">
+          Bank Name
+        </label>
         <input
           className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
           value={bankName}
-          onChange={e => setBankName(e.target.value)}
+          onChange={(e) => setBankName(e.target.value)}
           placeholder="e.g. Access Bank"
         />
       </div>
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-1">Account Number</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">
+          Account Number
+        </label>
         <input
           className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
           value={accountNumber}
-          onChange={e => setAccountNumber(e.target.value.replace(/[^0-9]/g, ""))}
+          onChange={(e) =>
+            setAccountNumber(e.target.value.replace(/[^0-9]/g, ""))
+          }
           maxLength={10}
           placeholder="e.g. 0123456789"
         />
       </div>
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-1">Account Name</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">
+          Account Name
+        </label>
         <input
           className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
           value={accountName}
-          onChange={e => setAccountName(e.target.value)}
+          onChange={(e) => setAccountName(e.target.value)}
           placeholder="e.g. John Doe"
         />
       </div>
@@ -71,7 +83,9 @@ function WithdrawalBankSection() {
       <button
         type="submit"
         className="rounded-xl bg-[#2c3e5f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1e2d46]"
-      >Save Bank Details</button>
+      >
+        Save Bank Details
+      </button>
     </form>
   );
 }
@@ -81,10 +95,10 @@ interface SettingsFormData {
   phone: string;
   email: string;
   dateOfBirth: string;
-  gender: 'M' | 'F' | 'other';
+  gender: "M" | "F" | "other";
   stateOfOrigin: string;
   address: string;
-  idType: 'nin' | 'bvn' | 'passport' | 'drivers-license' | 'voters-card';
+  idType: "nin" | "bvn" | "passport" | "drivers-license" | "voters-card";
   idNumber: string;
 }
 
@@ -96,29 +110,29 @@ export default function SettingsSection() {
 
   const { register, handleSubmit, reset } = useForm<SettingsFormData>({
     defaultValues: {
-      fullName: session?.user?.name || '',
-      phone: '',
-      email: session?.user?.email || '',
-      dateOfBirth: '',
-      gender: 'M',
-      stateOfOrigin: '',
-      address: '',
-      idType: 'nin',
-      idNumber: '',
+      fullName: session?.user?.name || "",
+      phone: "",
+      email: session?.user?.email || "",
+      dateOfBirth: "",
+      gender: "M",
+      stateOfOrigin: "",
+      address: "",
+      idType: "nin",
+      idNumber: "",
     },
   });
 
   useEffect(() => {
     reset({
-      fullName: session?.user?.name || '',
-      phone: '',
-      email: session?.user?.email || '',
-      dateOfBirth: '',
-      gender: 'M',
-      stateOfOrigin: '',
-      address: '',
-      idType: 'nin',
-      idNumber: '',
+      fullName: session?.user?.name || "",
+      phone: "",
+      email: session?.user?.email || "",
+      dateOfBirth: "",
+      gender: "M",
+      stateOfOrigin: "",
+      address: "",
+      idType: "nin",
+      idNumber: "",
     });
   }, [reset, session?.user?.email, session?.user?.name]);
 
@@ -128,24 +142,25 @@ export default function SettingsSection() {
     if (profilePhotoUrl) {
       URL.revokeObjectURL(profilePhotoUrl);
     }
-    import PrivacyToggle from './PrivacyToggle';
     setProfilePhotoUrl(URL.createObjectURL(file));
-    setSaveSuccess('Profile photo updated. Remember to save your settings.');
+    setSaveSuccess("Profile photo updated. Remember to save your settings.");
   };
 
   const onSubmit = (data: SettingsFormData) => {
     setSaveError(null);
     if (!data.dateOfBirth) {
-      setSaveError('Date of birth is required.');
+      setSaveError("Date of birth is required.");
       return;
     }
-    setSaveSuccess('Settings saved successfully.');
+    setSaveSuccess("Settings saved successfully.");
   };
 
   return (
     <div className="space-y-6">
       <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <h3 className="text-lg font-bold text-slate-900 md:text-xl">Profile Photo</h3>
+        <h3 className="text-lg font-bold text-slate-900 md:text-xl">
+          Profile Photo
+        </h3>
         <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
           <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100">
             {profilePhotoUrl ? (
@@ -158,56 +173,75 @@ export default function SettingsSection() {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <span className="text-xs font-semibold text-slate-500">No Photo</span>
+              <span className="text-xs font-semibold text-slate-500">
+                No Photo
+              </span>
             )}
           </div>
           <label className="cursor-pointer rounded-xl bg-[#2c3e5f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1e2d46]">
-            {profilePhotoUrl ? 'Change Photo' : 'Add Photo'}
-            <input type="file" accept="image/*" onChange={onProfilePhotoChange} className="hidden" />
+            {profilePhotoUrl ? "Change Photo" : "Add Photo"}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onProfilePhotoChange}
+              className="hidden"
+            />
           </label>
         </div>
       </section>
 
       <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <h3 className="text-lg font-bold text-slate-900 md:text-xl">Profile and KYC</h3>
+        <h3 className="text-lg font-bold text-slate-900 md:text-xl">
+          Profile and KYC
+        </h3>
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Full Name</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Full Name
+              </label>
               <input
                 type="text"
-                {...register('fullName', { required: true })}
+                {...register("fullName", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Email</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Email
+              </label>
               <input
                 type="email"
-                {...register('email', { required: true })}
+                {...register("email", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Phone Number</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Phone Number
+              </label>
               <input
                 type="tel"
-                {...register('phone', { required: true })}
+                {...register("phone", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Date of Birth</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Date of Birth
+              </label>
               <input
                 type="date"
-                {...register('dateOfBirth', { required: true })}
+                {...register("dateOfBirth", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Gender</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Gender
+              </label>
               <select
-                {...register('gender', { required: true })}
+                {...register("gender", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               >
                 <option value="M">Male</option>
@@ -216,25 +250,31 @@ export default function SettingsSection() {
               </select>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">State of Origin</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                State of Origin
+              </label>
               <input
                 type="text"
-                {...register('stateOfOrigin', { required: true })}
+                {...register("stateOfOrigin", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Residential Address</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Residential Address
+              </label>
               <input
                 type="text"
-                {...register('address', { required: true })}
+                {...register("address", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">KYC ID Type</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                KYC ID Type
+              </label>
               <select
-                {...register('idType', { required: true })}
+                {...register("idType", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               >
                 <option value="nin">NIN</option>
@@ -245,17 +285,27 @@ export default function SettingsSection() {
               </select>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">ID Number</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                ID Number
+              </label>
               <input
                 type="text"
-                {...register('idNumber', { required: true })}
+                {...register("idNumber", { required: true })}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
-          {saveError && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{saveError}</div>}
-          {saveSuccess && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{saveSuccess}</div>}
+          {saveError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {saveError}
+            </div>
+          )}
+          {saveSuccess && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {saveSuccess}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -266,11 +316,10 @@ export default function SettingsSection() {
         </form>
       </section>
 
-
-
-
       <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <h3 className="text-lg font-bold text-slate-900 md:text-xl mb-2">Withdrawal Bank</h3>
+        <h3 className="text-lg font-bold text-slate-900 md:text-xl mb-2">
+          Withdrawal Bank
+        </h3>
         <a
           href="/settings/bank"
           className="block w-full rounded-xl bg-[#2c3e5f] px-5 py-3 text-sm font-semibold text-white text-center hover:bg-[#1e2d46] transition"
@@ -279,22 +328,24 @@ export default function SettingsSection() {
         </a>
       </section>
 
-
-
       <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <h3 className="text-lg font-bold text-slate-900 md:text-xl">Write a Review</h3>
-        <p className="mt-2 text-sm text-slate-600">Share your experience with Rilstack. Your feedback helps us improve!</p>
+        <h3 className="text-lg font-bold text-slate-900 md:text-xl">
+          Write a Review
+        </h3>
+        <p className="mt-2 text-sm text-slate-600">
+          Share your experience with Rilstack. Your feedback helps us improve!
+        </p>
         <div className="mt-4">
           {/* ReviewsWidget allows users to write and view reviews */}
           <ReviewsWidget />
         </div>
       </section>
 
-
-
       <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
         <h3 className="text-lg font-bold text-slate-900 md:text-xl">Support</h3>
-        <p className="mt-2 text-sm text-slate-600">Need help with your account or KYC setup? Reach us directly.</p>
+        <p className="mt-2 text-sm text-slate-600">
+          Need help with your account or KYC setup? Reach us directly.
+        </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <a
             href="tel:08116883025"
@@ -302,7 +353,9 @@ export default function SettingsSection() {
           >
             Contact Us
           </a>
-          <span className="text-sm font-medium text-slate-700">08116883025</span>
+          <span className="text-sm font-medium text-slate-700">
+            08116883025
+          </span>
         </div>
       </section>
     </div>

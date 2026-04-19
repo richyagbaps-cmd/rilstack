@@ -23,15 +23,21 @@ export interface BudgetSuggestion {
 export function suggestBudgetAllocation(
   demographics: Demographics,
   type: BudgetType,
-  totalIncome: number
+  totalIncome: number,
 ): BudgetSuggestion {
   if (type === "502030") {
     // Adjust based on demographics (example: students save less, high earners save more)
-    let needs = 0.5, wants = 0.3, savings = 0.2;
+    let needs = 0.5,
+      wants = 0.3,
+      savings = 0.2;
     if (demographics.occupation === "Student") {
-      savings = 0.1; wants = 0.4; needs = 0.5;
+      savings = 0.1;
+      wants = 0.4;
+      needs = 0.5;
     } else if (demographics.income === "Above ₦1,000,000") {
-      savings = 0.3; wants = 0.2; needs = 0.5;
+      savings = 0.3;
+      wants = 0.2;
+      needs = 0.5;
     }
     return {
       needs: Math.round(totalIncome * needs),

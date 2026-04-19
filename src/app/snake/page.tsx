@@ -9,7 +9,8 @@ export default function SnakePage() {
         <SnakeMoneyGame />
       </div>
       <p className="mt-4 text-center text-gray-600 dark:text-gray-300 text-sm max-w-xs">
-        Use arrow keys or on-screen controls to play. Eat the money, grow the snack, and beat your high score!
+        Use arrow keys or on-screen controls to play. Eat the money, grow the
+        snack, and beat your high score!
       </p>
     </main>
   );

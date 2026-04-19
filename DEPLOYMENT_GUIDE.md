@@ -80,13 +80,14 @@ Then open: **http://localhost:3000**
 
 1. Go to https://dashboard.paystack.com
 2. Navigate to **Settings → API Keys**
-3. Copy **Secret Key** (sk_test_...)
+3. Copy **Secret Key** (sk*test*...)
 4. Add to `.env.local`:
    ```
    PAYSTACK_SECRET_KEY=sk_test_your_key_here
    ```
 
 **Test Cards:**
+
 - Card: 4111 1111 1111 1111
 - CVV: Any 3 digits
 - Expiry: Any future date
@@ -106,6 +107,7 @@ Then open: **http://localhost:3000**
    ```
 
 **Test NINs (if no API configured):**
+
 - 12345678901
 - 98765432101
 - 55555555555
@@ -137,6 +139,7 @@ Then open: **http://localhost:3000**
    ```
 
 **Endpoints Used:**
+
 - Token: `https://qa.interswitchng.com/passport/oauth/token`
 - Verify: `https://qa.interswitchng.com/passport/api/v2/kyc/nin/verify`
 
@@ -145,6 +148,7 @@ Then open: **http://localhost:3000**
 ## 📊 Features
 
 ### Dashboard
+
 - 💰 Premium balance overview cards
 - 📈 Income & expenses trend visualization
 - 🎯 Investment portfolio distribution
@@ -152,30 +156,35 @@ Then open: **http://localhost:3000**
 - 💳 50/30/20 budget allocation rules
 
 ### Budget Management
+
 - 🏷️ Budget category management
 - 📊 Real-time budget tracking
 - 🎯 Savings milestones
 - 📋 Budget vs. actual comparison
 
 ### Locked Savings
+
 - 🔒 Time-locked savings accounts
 - ⏱️ Automatic unlock date tracking
 - 💰 Interest rate calculation
 - 📱 Multiple lock period options (hourly, daily, monthly, yearly)
 
 ### Investment Portfolio
+
 - 📊 Multiple investment types
 - 🏦 T-Bills, Bonds, Mutual Funds
 - 📈 Performance tracking
 - 💹 Portfolio rebalancing
 
 ### Real Payment Processing
+
 - 💳 Paystack payment integration
 - 🏦 Bank transfer withdrawals
 - ✅ Payment verification
 - 📝 Transaction history
 
 ### NIN Validation
+
 - 🆔 Real NIMC verification (Dojah, Identitypass, Interswitch)
 - 📋 Auto-fill user data
 - ✅ KYC compliance
@@ -197,25 +206,30 @@ npm run lint       # Run linter checks
 ## 🚨 Troubleshooting
 
 ### "npm command not found"
+
 → Node.js not installed. Run: `node --version`
 → Install from https://nodejs.org
 → Restart PowerShell after installation
 
 ### "Cannot find module '@/components/...'"
+
 → Dependencies not installed
 → Run: `npm install`
 
 ### "Port 3000 already in use"
+
 → Another process using port 3000
 → Kill the process: `Get-Process -Name node | Stop-Process`
 → Or use different port: `npm run dev -- -p 3001`
 
 ### "PAYSTACK_SECRET_KEY is missing"
+
 → API key not configured in `.env.local`
 → Without it, payment features will fail
 → Get key from https://dashboard.paystack.com
 
 ### "NIN validation not working"
+
 → Check `.env.local` for API keys
 → If no API key, falls back to mock database
 → Test with: 12345678901, 98765432101, 55555555555

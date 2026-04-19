@@ -9,6 +9,7 @@ Open **PowerShell as Administrator** in the project folder and run:
 ```
 
 This will:
+
 1. ✅ Install Node.js (if needed)
 2. ✅ Install dependencies (`npm install`)
 3. ✅ Build the project (`npm run build`)
@@ -52,11 +53,11 @@ NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_test_9bc24615385085f798e5a9358440e8330e36a868
 
 Once running, test with these **mock NINs** (until you configure a real API):
 
-| NIN | Name | Gender | State |
-|-----|------|--------|-------|
-| 12345678901 | Chioma Okafor | F | Lagos |
-| 98765432101 | Emeka Eze | M | Enugu |
-| 55555555555 | Aisha Mohammed | F | Kano |
+| NIN         | Name           | Gender | State |
+| ----------- | -------------- | ------ | ----- |
+| 12345678901 | Chioma Okafor  | F      | Lagos |
+| 98765432101 | Emeka Eze      | M      | Enugu |
+| 55555555555 | Aisha Mohammed | F      | Kano  |
 
 ---
 
@@ -68,19 +69,19 @@ Once running, test with these **mock NINs** (until you configure a real API):
 ✅ **Investment Portfolio** - Real portfolio tracking  
 ✅ **Real Paystack Integration** - Deposits/withdrawals  
 ✅ **NIN Validation** - (Dojah/Identitypass/Interswitch)  
-✅ **AI Assistant** - 24/7 financial guidance  
+✅ **AI Assistant** - 24/7 financial guidance
 
 ---
 
 ## TROUBLESHOOTING
 
-| Problem | Solution |
-|---------|----------|
-| `npm` command not found | Install Node.js from https://nodejs.org |
-| Port 3000 in use | Run on different port: `npm run dev -- -p 3001` |
-| Import errors after npm install | Clear cache: `rm -r .next` then restart |
-| Payment features not working | Add `PAYSTACK_SECRET_KEY` to `.env.local` |
-| NIN validation fails | Use test NINs above or configure API key |
+| Problem                         | Solution                                        |
+| ------------------------------- | ----------------------------------------------- |
+| `npm` command not found         | Install Node.js from https://nodejs.org         |
+| Port 3000 in use                | Run on different port: `npm run dev -- -p 3001` |
+| Import errors after npm install | Clear cache: `rm -r .next` then restart         |
+| Payment features not working    | Add `PAYSTACK_SECRET_KEY` to `.env.local`       |
+| NIN validation fails            | Use test NINs above or configure API key        |
 
 ---
 

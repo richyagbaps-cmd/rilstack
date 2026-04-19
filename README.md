@@ -5,11 +5,13 @@ A sophisticated, full-featured Nigerian financial application built with **Next.
 ## 🚀 QUICK START (2 Minutes)
 
 ### Automated Deployment
+
 ```powershell
 .\deploy.ps1
 ```
 
 ### Manual Setup
+
 ```powershell
 npm install
 npm run dev
@@ -23,6 +25,7 @@ npm run dev
 # Features
 
 ### 📊 Dashboard
+
 - Quick balance overview with total, available, and locked funds
 - Monthly budget allocation visualization with 50/30/20 breakdown
 - Spending across strict and flexible categories
@@ -32,6 +35,7 @@ npm run dev
 - Income vs. Expense trends with budget model breakdown
 
 ### 🏦 Account & Balance Management
+
 - **Total Balance Display**: See all funds across accounts at a glance
 - **Available Balance**: Amount ready for immediate withdrawal
 - **Locked Funds**: Amount in active investments
@@ -44,6 +48,7 @@ npm run dev
 - **Transaction History**: Track all deposits, withdrawals, and transfers with status
 
 ### 👤 User Profile & Account Information
+
 - **User ID**: Unique identifier for each user
 - **Personal Information**: Name, email, phone number, age
 - **National ID (NIN)**: National identification number for compliance
@@ -53,6 +58,7 @@ npm run dev
 ### 💰 Budget Management
 
 **Two Budget Models:**
+
 1. **50/30/20 Budget Model**
    - 50% Needs (Housing, Utilities, Insurance, Transportation, Food)
    - 30% Wants (Entertainment, Dining Out, Shopping, Travel)
@@ -63,6 +69,7 @@ npm run dev
    - Full control over budget distribution
 
 **Category Types:**
+
 - **Strict Categories** (Essential Expenses)
   - Housing, Utilities, Transportation, Insurance, Debt Payments
   - Fixed, non-negotiable expenses
@@ -72,6 +79,7 @@ npm run dev
   - Discretionary spending with room for adjustment
 
 Features:
+
 - Create and track budgets by category
 - Monitor spending against budget limits
 - Visual progress indicators with color-coded warnings
@@ -79,15 +87,18 @@ Features:
 - Category-based budget recommendations
 
 ### 🎯 Savings Goals
+
 - Set multiple savings goals with target dates
 - Track progress toward each goal
 - Categorize goals (Emergency Fund, Vacation, etc.)
 - Timeline visualization
 
 ### 🔒 Locked Savings
+
 A unique feature to enforce disciplined saving by locking funds until specified dates:
 
 **Four Lock Period Options:**
+
 1. **Hourly** ⏰
    - Lock for 1 hour
    - 0.5% APY interest
@@ -109,6 +120,7 @@ A unique feature to enforce disciplined saving by locking funds until specified 
    - Long-term savings strategy
 
 **Features:**
+
 - Create locked savings with different time periods
 - Funds are completely inaccessible until unlock date
 - Earn interest on locked funds based on lock period
@@ -121,6 +133,7 @@ A unique feature to enforce disciplined saving by locking funds until specified 
 ### 📈 Investment Portfolio
 
 **Supported Investment Types:**
+
 1. **T-Bills (Treasury Bills)**
    - Short-term government securities
    - Low-risk, guaranteed returns
@@ -140,6 +153,7 @@ A unique feature to enforce disciplined saving by locking funds until specified 
    - Typical Interest Rate: 7-10% APY (varies by fund)
 
 **Features:**
+
 - Track individual investments with principal and interest rates
 - Monitor investment performance and gains/losses
 - Manage sale cycles for close-ended funds
@@ -152,6 +166,7 @@ A unique feature to enforce disciplined saving by locking funds until specified 
 ## Payment Methods Integration
 
 ### Deposit Options
+
 Users can add funds to their account using three methods:
 
 1. **Card Deposits** 💳
@@ -170,6 +185,7 @@ Users can add funds to their account using three methods:
    - Works offline
 
 ### Withdrawal Management
+
 - **Withdrawal Requests**: Submit withdrawal requests for available funds
 - **Multiple Methods**: Withdraw to card, bank account, or USSD
 - **Pending Status**: Track withdrawal status (Pending, Processing, Completed)
@@ -179,6 +195,7 @@ Users can add funds to their account using three methods:
 ## User Profile Requirements
 
 ### Data Collection
+
 The application collects the following user information:
 
 1. **Name**: Full legal name
@@ -192,25 +209,31 @@ The application collects the following user information:
    - Withdrawal processing
 
 ### User ID Management
+
 - **Auto-generated User ID**: Format `USR-YYYY-XXXXXX`
 - **Unique Identifier**: Used for all transactions and account management
 - **Display**: Shown prominently in user profile
 - **Tracking**: Reference ID for support and inquiries
 
 ### Profile Features
+
 - **View Profile**: See all collected user information
 - **Edit Profile**: Update name, email, phone, age
 - **Profile Access**: Click "👤 Profile" button in navigation
 - **Data Persistence**: All information saved securely
 
 ### 50/30/20 Budget Strategy
+
 The popular budgeting method that allocates your income into three categories:
+
 - **50% Needs** - Essential expenses (housing, utilities, insurance, transportation, groceries)
 - **30% Wants** - Discretionary spending (entertainment, dining out, shopping, travel)
 - **20% Savings** - Financial goals (emergency fund, investments, debt repayment)
 
 ### Zero-Based Budgeting
+
 Every dollar of income is assigned a specific purpose. This method:
+
 - Requires intentional allocation of all funds
 - Helps identify spending patterns
 - Ensures consistent savings and investing
@@ -219,6 +242,7 @@ Every dollar of income is assigned a specific purpose. This method:
 ### Strict vs. Flexible Categories
 
 **Strict Categories** are essential, non-negotiable expenses:
+
 - Housing (rent/mortgage)
 - Utilities (electricity, water, internet)
 - Insurance (health, auto, home)
@@ -226,6 +250,7 @@ Every dollar of income is assigned a specific purpose. This method:
 - Debt Payments
 
 **Lax (Flexible) Categories** are discretionary spending:
+
 - Groceries and food
 - Dining out and takeout
 - Entertainment and subscriptions
@@ -272,11 +297,13 @@ src/
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -293,13 +320,17 @@ npm run dev
 ## Using the Application
 
 ### 1. View Your Profile
+
 Click the **"👤 Profile"** button in the navigation bar to:
+
 - View your User ID
 - See your personal information (Name, Age, Email, Phone, NIN)
 - Edit your profile details
 
 ### 2. Check Account Balance
+
 Navigate to **"🏦 Account"** section to:
+
 - View total balance across all accounts
 - See available funds ready for withdrawal
 - Check locked funds in investments
@@ -308,7 +339,9 @@ Navigate to **"🏦 Account"** section to:
 - View transaction history
 
 ### 3. Manage Budget
+
 Go to **"💰 Budget"** to:
+
 - Choose between 50/30/20 or Zero-Based budget models
 - Enter your monthly income
 - Create budgets for different categories
@@ -316,14 +349,18 @@ Go to **"💰 Budget"** to:
 - Monitor strict vs. flexible categories
 
 ### 4. Track Savings Goals
+
 Visit **"🎯 Savings Goals"** to:
+
 - Create new savings goals with target dates
 - Track progress toward each goal
 - See days remaining until target
 - Categorize goals (Emergency Fund, Vacation, Housing, etc.)
 
 ### 5. Manage Investments
+
 Click **"📈 Investments"** to:
+
 - Add T-Bills, Bonds, or Mutual Funds
 - Input principal amount and interest rate
 - Create sale cycles for close-ended funds
@@ -336,10 +373,10 @@ Click **"📈 Investments"** to:
 The app is structured to connect with a backend API. You can extend the components with API calls using:
 
 ```typescript
-import axios from 'axios';
+import axios from "axios";
 
 const fetchData = async () => {
-  const response = await axios.get('/api/endpoint');
+  const response = await axios.get("/api/endpoint");
   return response.data;
 };
 ```
@@ -376,6 +413,7 @@ npm start
 ## Contributing
 
 Contributions are welcome! Please follow these guidelines:
+
 - Use TypeScript for type safety
 - Follow the existing code style
 - Add tests for new features

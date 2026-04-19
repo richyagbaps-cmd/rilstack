@@ -1,15 +1,15 @@
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'rickinvestmentslimited@gmail.com';
+const FROM_EMAIL = process.env.EMAIL_FROM || "rickinvestmentslimited@gmail.com";
 
 export async function sendWelcomeEmail(email: string, name: string) {
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: 'Welcome to RILSTACK! 🎉',
+      subject: "Welcome to RILSTACK! 🎉",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #1e293b;">Welcome to RILSTACK, ${name}! 🎉</h1>
@@ -41,13 +41,13 @@ export async function sendWelcomeEmail(email: string, name: string) {
     });
 
     if (error) {
-      console.error('Resend error:', error);
+      console.error("Resend error:", error);
       return { success: false, error };
     }
 
     return { success: true, data };
   } catch (error) {
-    console.error('Failed to send welcome email:', error);
+    console.error("Failed to send welcome email:", error);
     return { success: false, error };
   }
 }
@@ -55,24 +55,24 @@ export async function sendWelcomeEmail(email: string, name: string) {
 export async function sendTransactionEmail(
   email: string,
   name: string,
-  type: 'deposit' | 'withdrawal',
+  type: "deposit" | "withdrawal",
   amount: number,
-  status: string
+  status: string,
 ) {
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: `Transaction Alert: ${type === 'deposit' ? 'Deposit' : 'Withdrawal'} of ₦${amount.toLocaleString()}`,
+      subject: `Transaction Alert: ${type === "deposit" ? "Deposit" : "Withdrawal"} of ₦${amount.toLocaleString()}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #1e293b;">Transaction Alert</h1>
-          <div style="background: ${type === 'deposit' ? '#dcfce7' : '#fee2e2'}; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="font-size: 24px; font-weight: bold; color: ${type === 'deposit' ? '#166534' : '#991b1b'};">
-              ${type === 'deposit' ? '+' : '-'} ₦${amount.toLocaleString()}
+          <div style="background: ${type === "deposit" ? "#dcfce7" : "#fee2e2"}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="font-size: 24px; font-weight: bold; color: ${type === "deposit" ? "#166534" : "#991b1b"};">
+              ${type === "deposit" ? "+" : "-"} ₦${amount.toLocaleString()}
             </p>
-            <p style="color: ${type === 'deposit' ? '#166534' : '#991b1b'};">
-              ${type === 'deposit' ? 'Deposit' : 'Withdrawal'} - ${status}
+            <p style="color: ${type === "deposit" ? "#166534" : "#991b1b"};">
+              ${type === "deposit" ? "Deposit" : "Withdrawal"} - ${status}
             </p>
           </div>
           <p style="color: #475569;">
@@ -86,13 +86,13 @@ export async function sendTransactionEmail(
     });
 
     if (error) {
-      console.error('Resend error:', error);
+      console.error("Resend error:", error);
       return { success: false, error };
     }
 
     return { success: true, data };
   } catch (error) {
-    console.error('Failed to send transaction email:', error);
+    console.error("Failed to send transaction email:", error);
     return { success: false, error };
   }
 }

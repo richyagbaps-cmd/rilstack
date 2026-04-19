@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getPaystackLedgerForEmail } from '@/lib/account-ledger';
+import { NextRequest, NextResponse } from "next/server";
+import { getPaystackLedgerForEmail } from "@/lib/account-ledger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface StatementRequest {
   userEmail: string;
@@ -19,13 +19,13 @@ function buildStatementCsv(
   ledger: Awaited<ReturnType<typeof getPaystackLedgerForEmail>>,
 ) {
   const lines = [
-    'RILSTACK Account Statement',
+    "RILSTACK Account Statement",
     `Account Holder,${escapeCsv(accountName)}`,
     `Statement Email,${escapeCsv(deliveryEmail)}`,
     `Generated At,${escapeCsv(new Date(ledger.summary.generatedAt).toLocaleString())}`,
     `Current Balance At Generation,${escapeCsv(formatCurrency(ledger.summary.totalBalance))}`,
-    '',
-    'Type,Reference,Amount,Status,Date and Time,Method,Description',
+    "",
+    "Type,Reference,Amount,Status,Date and Time,Method,Description",
   ];
 
   ledger.transactions.forEach((transaction) => {
@@ -37,12 +37,12 @@ function buildStatementCsv(
         escapeCsv(transaction.status),
         escapeCsv(new Date(transaction.date).toLocaleString()),
         escapeCsv(transaction.method),
-        escapeCsv(transaction.description || ''),
-      ].join(','),
+        escapeCsv(transaction.description || ""),
+      ].join(","),
     );
   });
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 function buildStatementHtml(
@@ -60,11 +60,11 @@ function buildStatementHtml(
           <td style="padding:8px;border:1px solid #dbe2ea;">${transaction.status}</td>
           <td style="padding:8px;border:1px solid #dbe2ea;">${new Date(transaction.date).toLocaleString()}</td>
           <td style="padding:8px;border:1px solid #dbe2ea;">${transaction.method}</td>
-          <td style="padding:8px;border:1px solid #dbe2ea;">${transaction.description || ''}</td>
+          <td style="padding:8px;border:1px solid #dbe2ea;">${transaction.description || ""}</td>
         </tr>
       `,
     )
-    .join('');
+    .join("");
 
   return `
     <div style="font-family:Arial,sans-serif;color:#0f172a;">
@@ -100,7 +100,10 @@ export async function POST(request: NextRequest) {
     const { userEmail, deliveryEmail, accountName } = body;
 
     if (!userEmail || !deliveryEmail) {
-      return NextResponse.json({ error: 'User email and delivery email are required.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "User email and delivery email are required." },
+        { status: 400 },
+      );
     }
 
     const resendApiKey = process.env.RESEND_API_KEY;
@@ -108,7 +111,10 @@ export async function POST(request: NextRequest) {
 
     if (!resendApiKey || !statementFromEmail) {
       return NextResponse.json(
-        { error: 'Statement email is not configured. Add RESEND_API_KEY and STATEMENT_FROM_EMAIL.' },
+        {
+          error:
+            "Statement email is not configured. Add RESEND_API_KEY and STATEMENT_FROM_EMAIL.",
+        },
         { status: 503 },
       );
     }
@@ -119,11 +125,11 @@ export async function POST(request: NextRequest) {
     const html = buildStatementHtml(recipientName, deliveryEmail, ledger);
     const fileName = `rilstack-statement-${new Date(ledger.summary.generatedAt).toISOString().slice(0, 10)}.csv`;
 
-    const emailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
+    const emailResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         from: statementFromEmail,
@@ -133,17 +139,19 @@ export async function POST(request: NextRequest) {
         attachments: [
           {
             filename: fileName,
-            content: Buffer.from(csv, 'utf8').toString('base64'),
+            content: Buffer.from(csv, "utf8").toString("base64"),
           },
         ],
       }),
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     const emailResult = await emailResponse.json();
 
     if (!emailResponse.ok) {
-      throw new Error(emailResult.message || 'Failed to send account statement email.');
+      throw new Error(
+        emailResult.message || "Failed to send account statement email.",
+      );
     }
 
     return NextResponse.json({
@@ -151,12 +159,12 @@ export async function POST(request: NextRequest) {
       generatedAt: ledger.summary.generatedAt,
       currentBalance: ledger.summary.totalBalance,
       deliveryEmail,
-      message: 'Account statement sent successfully.',
+      message: "Account statement sent successfully.",
     });
   } catch (error: any) {
-    console.error('Statement email error:', error);
+    console.error("Statement email error:", error);
     return NextResponse.json(
-      { error: error.message || 'Failed to send account statement.' },
+      { error: error.message || "Failed to send account statement." },
       { status: 500 },
     );
   }

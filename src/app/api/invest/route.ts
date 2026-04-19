@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -12,13 +12,13 @@ export async function POST(request: Request) {
         // lock: { mode: 'ForUpdate' }, // Uncomment for PostgreSQL/MySQL
       });
       if (!product || !product.active) {
-        throw new Error('Product not found or inactive');
+        throw new Error("Product not found or inactive");
       }
       if (amount < product.min_investment) {
         throw new Error(`Minimum investment is ₦${product.min_investment}`);
       }
       if (amount > product.available_for_purchase) {
-        throw new Error('INSUFFICIENT_SUPPLY');
+        throw new Error("INSUFFICIENT_SUPPLY");
       }
 
       // Lock user row for update (works in PostgreSQL/MySQL)
@@ -27,10 +27,10 @@ export async function POST(request: Request) {
         // lock: { mode: 'ForUpdate' },
       });
       if (!user || !user.kyc_verified || !user.active) {
-        throw new Error('User not KYC verified or inactive');
+        throw new Error("User not KYC verified or inactive");
       }
       if (amount > user.wallet_balance) {
-        throw new Error('Insufficient wallet balance');
+        throw new Error("Insufficient wallet balance");
       }
 
       // Deduct available supply and soft debit wallet
@@ -49,15 +49,21 @@ export async function POST(request: Request) {
           userId: user_id,
           productId: product_id,
           amount,
-          status: 'pending_execution',
+          status: "pending_execution",
         },
       });
 
       return order;
     });
 
-    return NextResponse.json({ message: 'Order reserved', order: result }, { status: 201 });
+    return NextResponse.json(
+      { message: "Order reserved", order: result },
+      { status: 201 },
+    );
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Reservation failed' }, { status: 400 });
+    return NextResponse.json(
+      { error: error.message || "Reservation failed" },
+      { status: 400 },
+    );
   }
 }

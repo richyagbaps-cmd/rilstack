@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-const PIN_STORAGE_KEY = 'rilstack-user-pin';
+const PIN_STORAGE_KEY = "rilstack-user-pin";
 
 function hashPin(digits: string[]) {
-  const raw = digits.join('');
+  const raw = digits.join("");
   let hash = 0;
   for (let i = 0; i < raw.length; i++) {
     const char = raw.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash |= 0;
   }
-  return 'ph_' + Math.abs(hash).toString(36);
+  return "ph_" + Math.abs(hash).toString(36);
 }
 
 export function hasPin(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   return !!localStorage.getItem(PIN_STORAGE_KEY);
 }
 
@@ -39,22 +39,22 @@ interface PinConfirmModalProps {
 }
 
 export default function PinConfirmModal({
-  title = 'Confirm Action',
-  description = 'Enter your 4-digit PIN to continue',
+  title = "Confirm Action",
+  description = "Enter your 4-digit PIN to continue",
   onConfirm,
   onCancel,
   open = true,
 }: PinConfirmModalProps) {
   if (!open) return null;
-  const [step, setStep] = useState<'enter' | 'create' | 'confirm'>(() =>
-    hasPin() ? 'enter' : 'create'
+  const [step, setStep] = useState<"enter" | "create" | "confirm">(() =>
+    hasPin() ? "enter" : "create",
   );
-  const [digits, setDigits] = useState(['', '', '', '']);
-  const [confirmDigits, setConfirmDigits] = useState(['', '', '', '']);
-  const [error, setError] = useState('');
+  const [digits, setDigits] = useState(["", "", "", ""]);
+  const [confirmDigits, setConfirmDigits] = useState(["", "", "", ""]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    setTimeout(() => document.getElementById('gpin-0')?.focus(), 50);
+    setTimeout(() => document.getElementById("gpin-0")?.focus(), 50);
   }, [step]);
 
   const handleInput = (
@@ -79,10 +79,10 @@ export default function PinConfirmModal({
     idx: number,
     e: React.KeyboardEvent,
   ) => {
-    if (e.key === 'Backspace' && !values[idx] && idx > 0) {
+    if (e.key === "Backspace" && !values[idx] && idx > 0) {
       setter((prev) => {
         const next = [...prev];
-        next[idx - 1] = '';
+        next[idx - 1] = "";
         return next;
       });
       document.getElementById(`gpin-${idx - 1}`)?.focus();
@@ -111,19 +111,25 @@ export default function PinConfirmModal({
   );
 
   const submit = () => {
-    if (step === 'create') {
-      if (digits.some((d) => !d)) { setError('Enter all 4 digits'); return; }
-      setError('');
-      setConfirmDigits(['', '', '', '']);
-      setStep('confirm');
+    if (step === "create") {
+      if (digits.some((d) => !d)) {
+        setError("Enter all 4 digits");
+        return;
+      }
+      setError("");
+      setConfirmDigits(["", "", "", ""]);
+      setStep("confirm");
       return;
     }
 
-    if (step === 'confirm') {
-      if (confirmDigits.some((d) => !d)) { setError('Enter all 4 digits'); return; }
-      if (digits.join('') !== confirmDigits.join('')) {
-        setError('PINs do not match. Try again.');
-        setConfirmDigits(['', '', '', '']);
+    if (step === "confirm") {
+      if (confirmDigits.some((d) => !d)) {
+        setError("Enter all 4 digits");
+        return;
+      }
+      if (digits.join("") !== confirmDigits.join("")) {
+        setError("PINs do not match. Try again.");
+        setConfirmDigits(["", "", "", ""]);
         return;
       }
       savePinHash(digits);
@@ -132,29 +138,48 @@ export default function PinConfirmModal({
     }
 
     // step === 'enter'
-    if (digits.some((d) => !d)) { setError('Enter all 4 digits'); return; }
+    if (digits.some((d) => !d)) {
+      setError("Enter all 4 digits");
+      return;
+    }
     if (!verifyPin(digits)) {
-      setError('Incorrect PIN');
-      setDigits(['', '', '', '']);
+      setError("Incorrect PIN");
+      setDigits(["", "", "", ""]);
       return;
     }
     onConfirm();
   };
 
-  const stepTitle = step === 'create' ? 'Create Your PIN' : step === 'confirm' ? 'Confirm PIN' : title;
-  const stepDesc = step === 'create'
-    ? 'Set a 4-digit PIN to secure all your actions'
-    : step === 'confirm'
-      ? 'Re-enter your PIN to confirm'
-      : description;
+  const stepTitle =
+    step === "create"
+      ? "Create Your PIN"
+      : step === "confirm"
+        ? "Confirm PIN"
+        : title;
+  const stepDesc =
+    step === "create"
+      ? "Set a 4-digit PIN to secure all your actions"
+      : step === "confirm"
+        ? "Re-enter your PIN to confirm"
+        : description;
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl">
         <div className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-cyan-100">
-            <svg className="h-7 w-7 text-cyan-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            <svg
+              className="h-7 w-7 text-cyan-700"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
             </svg>
           </div>
           <h3 className="text-xl font-bold text-slate-900">{stepTitle}</h3>
@@ -162,11 +187,13 @@ export default function PinConfirmModal({
         </div>
 
         {renderInputs(
-          step === 'confirm' ? confirmDigits : digits,
-          step === 'confirm' ? setConfirmDigits : setDigits,
+          step === "confirm" ? confirmDigits : digits,
+          step === "confirm" ? setConfirmDigits : setDigits,
         )}
 
-        {error && <p className="mt-3 text-center text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="mt-3 text-center text-sm text-red-600">{error}</p>
+        )}
 
         <div className="mt-6 flex gap-3">
           <button
@@ -179,7 +206,11 @@ export default function PinConfirmModal({
             onClick={submit}
             className="flex-1 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-700 py-3 text-sm font-semibold text-white hover:opacity-95 transition-colors"
           >
-            {step === 'create' ? 'Next' : step === 'confirm' ? 'Set PIN' : 'Confirm'}
+            {step === "create"
+              ? "Next"
+              : step === "confirm"
+                ? "Set PIN"
+                : "Confirm"}
           </button>
         </div>
       </div>

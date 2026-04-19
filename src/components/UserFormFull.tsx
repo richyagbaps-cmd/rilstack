@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { saveUserData } from '@/lib/saveUserData';
-import { logUserAction } from '@/lib/logUserAction';
+import React, { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { saveUserData } from "@/lib/saveUserData";
+import { logUserAction } from "@/lib/logUserAction";
 
 export default function UserForm() {
-  const [form, setForm] = useState({ name: '', email: '' });
+  const [form, setForm] = useState({ name: "", email: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,10 +22,10 @@ export default function UserForm() {
       // Save user data
       const savedUser = await saveUserData(form);
       // Log user action (exclude sensitive fields)
-      await logUserAction('submit_form', { ...form });
+      await logUserAction("submit_form", { ...form });
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to save user');
+      setError(err.message || "Failed to save user");
     } finally {
       setLoading(false);
     }
@@ -33,11 +33,27 @@ export default function UserForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <input name="name" value={form.name} onChange={handleChange} placeholder="Name" required />
-      <input name="email" value={form.email} onChange={handleChange} placeholder="Email" required />
-      <button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
-      {success && <div style={{ color: 'green' }}>User saved successfully!</div>}
-      {error && <div style={{ color: 'red' }}>{error}</div>}
+      <input
+        name="name"
+        value={form.name}
+        onChange={handleChange}
+        placeholder="Name"
+        required
+      />
+      <input
+        name="email"
+        value={form.email}
+        onChange={handleChange}
+        placeholder="Email"
+        required
+      />
+      <button type="submit" disabled={loading}>
+        {loading ? "Saving..." : "Save"}
+      </button>
+      {success && (
+        <div style={{ color: "green" }}>User saved successfully!</div>
+      )}
+      {error && <div style={{ color: "red" }}>{error}</div>}
     </form>
   );
 }

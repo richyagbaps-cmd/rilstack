@@ -1,34 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 // Mock database for demonstration
 // In production, this would call the actual NIMC API or a service provider's API
 const mockNINDatabase: Record<string, any> = {
-  '12345678901': {
-    nin: '12345678901',
-    firstName: 'Chioma',
-    lastName: 'Okafor',
-    middleName: 'Blessing',
-    dateOfBirth: '1990-05-15',
-    gender: 'F',
-    stateOfOrigin: 'Lagos',
+  "12345678901": {
+    nin: "12345678901",
+    firstName: "Chioma",
+    lastName: "Okafor",
+    middleName: "Blessing",
+    dateOfBirth: "1990-05-15",
+    gender: "F",
+    stateOfOrigin: "Lagos",
   },
-  '98765432101': {
-    nin: '98765432101',
-    firstName: 'Emeka',
-    lastName: 'Eze',
-    middleName: 'Chukwu',
-    dateOfBirth: '1988-03-20',
-    gender: 'M',
-    stateOfOrigin: 'Enugu',
+  "98765432101": {
+    nin: "98765432101",
+    firstName: "Emeka",
+    lastName: "Eze",
+    middleName: "Chukwu",
+    dateOfBirth: "1988-03-20",
+    gender: "M",
+    stateOfOrigin: "Enugu",
   },
-  '55555555555': {
-    nin: '55555555555',
-    firstName: 'Aisha',
-    lastName: 'Mohammed',
-    middleName: 'Fatima',
-    dateOfBirth: '1992-11-08',
-    gender: 'F',
-    stateOfOrigin: 'Kano',
+  "55555555555": {
+    nin: "55555555555",
+    firstName: "Aisha",
+    lastName: "Mohammed",
+    middleName: "Fatima",
+    dateOfBirth: "1992-11-08",
+    gender: "F",
+    stateOfOrigin: "Kano",
   },
 };
 
@@ -42,19 +42,24 @@ async function getInterswitchToken(): Promise<string | null> {
       return null;
     }
 
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
+      "base64",
+    );
 
-    const tokenResponse = await fetch('https://qa.interswitchng.com/passport/oauth/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${credentials}`,
+    const tokenResponse = await fetch(
+      "https://qa.interswitchng.com/passport/oauth/token",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Basic ${credentials}`,
+        },
+        body: new URLSearchParams({
+          scope: "profile",
+          grant_type: "client_credentials",
+        }).toString(),
       },
-      body: new URLSearchParams({
-        'scope': 'profile',
-        'grant_type': 'client_credentials',
-      }).toString(),
-    });
+    );
 
     if (tokenResponse.ok) {
       const tokenData = await tokenResponse.json();
@@ -63,22 +68,28 @@ async function getInterswitchToken(): Promise<string | null> {
 
     return null;
   } catch (error) {
-    console.error('Interswitch token error:', error);
+    console.error("Interswitch token error:", error);
     return null;
   }
 }
 
 // Helper function to verify NIN with Interswitch
-async function verifyWithInterswitch(nin: string, token: string): Promise<any | null> {
+async function verifyWithInterswitch(
+  nin: string,
+  token: string,
+): Promise<any | null> {
   try {
-    const response = await fetch('https://qa.interswitchng.com/passport/api/v2/kyc/nin/verify', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      "https://qa.interswitchng.com/passport/api/v2/kyc/nin/verify",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ nin }),
       },
-      body: JSON.stringify({ nin }),
-    });
+    );
 
     if (response.ok) {
       const data = await response.json();
@@ -87,7 +98,7 @@ async function verifyWithInterswitch(nin: string, token: string): Promise<any | 
 
     return null;
   } catch (error) {
-    console.error('Interswitch NIN verification error:', error);
+    console.error("Interswitch NIN verification error:", error);
     return null;
   }
 }
@@ -100,8 +111,8 @@ export async function POST(request: NextRequest) {
     // Validate NIN format
     if (!nin || !/^\d{11}$/.test(nin)) {
       return NextResponse.json(
-        { error: 'Invalid NIN format. NIN must be 11 digits.' },
-        { status: 400 }
+        { error: "Invalid NIN format. NIN must be 11 digits." },
+        { status: 400 },
       );
     }
 
@@ -111,73 +122,79 @@ export async function POST(request: NextRequest) {
     // 2. Identitypass (https://identitypass.com)
     // 3. Interswitch (https://interswitchng.com) - Requires OAuth
     // 4. Mock database (for testing)
-    
+
     const dojahApiKey = process.env.DOJAH_API_KEY;
     const identitypassApiKey = process.env.IDENTITYPASS_API_KEY;
 
     // Try Dojah first (most affordable option)
     if (dojahApiKey) {
       try {
-        const dojahResponse = await fetch('https://api.dojah.io/api/v1/kyc/nin', {
-          method: 'POST',
-          headers: {
-            'Authorization': dojahApiKey,
-            'Content-Type': 'application/json',
+        const dojahResponse = await fetch(
+          "https://api.dojah.io/api/v1/kyc/nin",
+          {
+            method: "POST",
+            headers: {
+              Authorization: dojahApiKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ nin }),
           },
-          body: JSON.stringify({ nin }),
-        });
+        );
 
         if (dojahResponse.ok) {
           const dojahData = await dojahResponse.json();
           const verifiedData = {
             nin,
-            firstName: dojahData.data?.first_name || '',
-            lastName: dojahData.data?.last_name || '',
-            middleName: dojahData.data?.middle_name || '',
-            dateOfBirth: dojahData.data?.dob || '',
-            gender: dojahData.data?.gender || 'M',
-            stateOfOrigin: dojahData.data?.state_of_residence || '',
+            firstName: dojahData.data?.first_name || "",
+            lastName: dojahData.data?.last_name || "",
+            middleName: dojahData.data?.middle_name || "",
+            dateOfBirth: dojahData.data?.dob || "",
+            gender: dojahData.data?.gender || "M",
+            stateOfOrigin: dojahData.data?.state_of_residence || "",
             verified: true,
             verificationDate: new Date().toISOString(),
-            verificationMethod: 'DOJAH_API',
+            verificationMethod: "DOJAH_API",
           };
           return NextResponse.json(verifiedData, { status: 200 });
         }
       } catch (dojahError) {
-        console.log('Dojah API failed, trying fallback...');
+        console.log("Dojah API failed, trying fallback...");
       }
     }
 
     // Try Identitypass as backup
     if (identitypassApiKey) {
       try {
-        const identitypassResponse = await fetch('https://api.identitypass.com/api/v2/kyc/nin', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${identitypassApiKey}`,
-            'Content-Type': 'application/json',
+        const identitypassResponse = await fetch(
+          "https://api.identitypass.com/api/v2/kyc/nin",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${identitypassApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ nin }),
           },
-          body: JSON.stringify({ nin }),
-        });
+        );
 
         if (identitypassResponse.ok) {
           const identitypassData = await identitypassResponse.json();
           const verifiedData = {
             nin,
-            firstName: identitypassData.data?.firstName || '',
-            lastName: identitypassData.data?.lastName || '',
-            middleName: identitypassData.data?.middleName || '',
-            dateOfBirth: identitypassData.data?.dateOfBirth || '',
-            gender: identitypassData.data?.gender || 'M',
-            stateOfOrigin: identitypassData.data?.stateOfOrigin || '',
+            firstName: identitypassData.data?.firstName || "",
+            lastName: identitypassData.data?.lastName || "",
+            middleName: identitypassData.data?.middleName || "",
+            dateOfBirth: identitypassData.data?.dateOfBirth || "",
+            gender: identitypassData.data?.gender || "M",
+            stateOfOrigin: identitypassData.data?.stateOfOrigin || "",
             verified: true,
             verificationDate: new Date().toISOString(),
-            verificationMethod: 'IDENTITYPASS_API',
+            verificationMethod: "IDENTITYPASS_API",
           };
           return NextResponse.json(verifiedData, { status: 200 });
         }
       } catch (identitypassError) {
-        console.log('Identitypass API failed, trying fallback...');
+        console.log("Identitypass API failed, trying fallback...");
       }
     }
 
@@ -185,26 +202,29 @@ export async function POST(request: NextRequest) {
     try {
       const interswitchToken = await getInterswitchToken();
       if (interswitchToken) {
-        const interswitchData = await verifyWithInterswitch(nin, interswitchToken);
-        
+        const interswitchData = await verifyWithInterswitch(
+          nin,
+          interswitchToken,
+        );
+
         if (interswitchData && interswitchData.data) {
           const verifiedData = {
             nin,
-            firstName: interswitchData.data?.firstName || '',
-            lastName: interswitchData.data?.lastName || '',
-            middleName: interswitchData.data?.middleName || '',
-            dateOfBirth: interswitchData.data?.dateOfBirth || '',
-            gender: interswitchData.data?.gender || 'M',
-            stateOfOrigin: interswitchData.data?.stateOfOrigin || '',
+            firstName: interswitchData.data?.firstName || "",
+            lastName: interswitchData.data?.lastName || "",
+            middleName: interswitchData.data?.middleName || "",
+            dateOfBirth: interswitchData.data?.dateOfBirth || "",
+            gender: interswitchData.data?.gender || "M",
+            stateOfOrigin: interswitchData.data?.stateOfOrigin || "",
             verified: true,
             verificationDate: new Date().toISOString(),
-            verificationMethod: 'INTERSWITCH_API',
+            verificationMethod: "INTERSWITCH_API",
           };
           return NextResponse.json(verifiedData, { status: 200 });
         }
       }
     } catch (interswitchError) {
-      console.log('Interswitch API failed, using mock database...');
+      console.log("Interswitch API failed, using mock database...");
     }
 
     // Fallback to mock database for testing
@@ -212,11 +232,11 @@ export async function POST(request: NextRequest) {
 
     if (!foundData) {
       return NextResponse.json(
-        { 
-          error: 'NIN not found in database. Please check the NIN number.',
-          code: 'NIN_NOT_FOUND'
+        {
+          error: "NIN not found in database. Please check the NIN number.",
+          code: "NIN_NOT_FOUND",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -225,15 +245,15 @@ export async function POST(request: NextRequest) {
       ...foundData,
       verified: true,
       verificationDate: new Date().toISOString(),
-      verificationMethod: 'API',
+      verificationMethod: "API",
     };
 
     return NextResponse.json(verifiedData, { status: 200 });
   } catch (error: any) {
-    console.error('NIN validation error:', error);
+    console.error("NIN validation error:", error);
     return NextResponse.json(
-      { error: error.message || 'An error occurred during NIN validation.' },
-      { status: 500 }
+      { error: error.message || "An error occurred during NIN validation." },
+      { status: 500 },
     );
   }
 }

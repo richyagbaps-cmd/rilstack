@@ -18,7 +18,11 @@ interface AIAllocationEditorProps {
     state?: string;
     country?: string;
   };
-  onChange?: (pockets: Pocket[], totalAllocated: number, unallocated: number) => void;
+  onChange?: (
+    pockets: Pocket[],
+    totalAllocated: number,
+    unallocated: number,
+  ) => void;
 }
 
 // Example AI allocation logic (replace with real AI call)
@@ -47,9 +51,18 @@ function getInitialPockets(budgetType: string, income: number): Pocket[] {
   return [];
 }
 
-const AIAllocationEditor: React.FC<AIAllocationEditorProps> = ({ income, budgetType, profile, onChange }) => {
+const AIAllocationEditor: React.FC<AIAllocationEditorProps> = ({
+  income,
+  budgetType,
+  profile,
+  onChange,
+}) => {
   const [pockets, setPockets] = useState<Pocket[]>([]);
-  const [customPocket, setCustomPocket] = useState({ name: "", amount: 0, frequency: "monthly" as const });
+  const [customPocket, setCustomPocket] = useState({
+    name: "",
+    amount: 0,
+    frequency: "monthly" as const,
+  });
   const INVEST_PRODUCTS = [
     { key: "tbill", label: "T-bill" },
     { key: "bond", label: "Bond" },
@@ -69,11 +82,15 @@ const AIAllocationEditor: React.FC<AIAllocationEditorProps> = ({ income, budgetT
 
   // Add or edit a pocket
   const handlePocketChange = (idx: number, field: keyof Pocket, value: any) => {
-    setPockets(pockets => pockets.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+    setPockets((pockets) =>
+      pockets.map((p, i) => (i === idx ? { ...p, [field]: value } : p)),
+    );
   };
   // Set investment product for Savings pocket and trigger backend investment
   const handleInvestProduct = async (idx: number, value: string) => {
-    setPockets(pockets => pockets.map((p, i) => i === idx ? { ...p, investProduct: value } : p));
+    setPockets((pockets) =>
+      pockets.map((p, i) => (i === idx ? { ...p, investProduct: value } : p)),
+    );
     // If user selects an investment product, POST to /api/invest
     const pocket = pockets[idx];
     if (pocket && pocket.amount > 0 && value) {
@@ -83,15 +100,15 @@ const AIAllocationEditor: React.FC<AIAllocationEditorProps> = ({ income, budgetT
         body: JSON.stringify({
           user_id: "me", // Replace with real user id
           product_id: value,
-          amount: pocket.amount
-        })
+          amount: pocket.amount,
+        }),
       });
     }
   };
 
   // Remove a pocket
   const handleRemove = (idx: number) => {
-    setPockets(pockets => pockets.filter((_, i) => i !== idx));
+    setPockets((pockets) => pockets.filter((_, i) => i !== idx));
   };
 
   // Add custom pocket
@@ -104,20 +121,35 @@ const AIAllocationEditor: React.FC<AIAllocationEditorProps> = ({ income, budgetT
   // Always show General Savings for unallocated
   const displayPockets = [
     ...pockets,
-    ...(unallocated > 0 ? [{ name: "General Savings", amount: unallocated, frequency: "monthly", editable: false, investProduct: undefined }] : [])
+    ...(unallocated > 0
+      ? [
+          {
+            name: "General Savings",
+            amount: unallocated,
+            frequency: "monthly",
+            editable: false,
+            investProduct: undefined,
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-4">
-      <div className="mb-4 text-lg font-semibold text-[#2c3e5f]">AI-Generated Spending Pockets</div>
+      <div className="mb-4 text-lg font-semibold text-[#2c3e5f]">
+        AI-Generated Spending Pockets
+      </div>
       <div className="flex flex-wrap gap-2 mb-4">
         {displayPockets.map((p, idx) => (
-          <div key={idx} className={`flex items-center gap-2 px-3 py-2 rounded-full shadow ${p.editable === false ? 'bg-[#e6f7e6] text-[#2c3e5f]' : 'bg-[#f3f4fa] text-[#2c3e5f]'}`}>
+          <div
+            key={idx}
+            className={`flex items-center gap-2 px-3 py-2 rounded-full shadow ${p.editable === false ? "bg-[#e6f7e6] text-[#2c3e5f]" : "bg-[#f3f4fa] text-[#2c3e5f]"}`}
+          >
             <input
               className="w-28 bg-transparent font-semibold outline-none"
               value={p.name}
               disabled={p.editable === false}
-              onChange={e => handlePocketChange(idx, "name", e.target.value)}
+              onChange={(e) => handlePocketChange(idx, "name", e.target.value)}
             />
             <input
               type="number"
@@ -125,34 +157,47 @@ const AIAllocationEditor: React.FC<AIAllocationEditorProps> = ({ income, budgetT
               value={p.amount}
               disabled={p.editable === false}
               min={0}
-              onChange={e => handlePocketChange(idx, "amount", Number(e.target.value))}
+              onChange={(e) =>
+                handlePocketChange(idx, "amount", Number(e.target.value))
+              }
             />
             <span className="text-xs">₦</span>
             <select
               className="bg-transparent outline-none text-xs"
               value={p.frequency}
               disabled={p.editable === false}
-              onChange={e => handlePocketChange(idx, "frequency", e.target.value)}
+              onChange={(e) =>
+                handlePocketChange(idx, "frequency", e.target.value)
+              }
             >
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
             </select>
             {/* Investment selector for Savings pocket in zero-based budget */}
-            {budgetType === "zero-based" && p.name.toLowerCase().includes("savings") && p.editable !== false && (
-              <select
-                className="ml-2 bg-transparent outline-none text-xs border border-[#d1d5db] rounded"
-                value={p.investProduct || ""}
-                onChange={e => handleInvestProduct(idx, e.target.value)}
-              >
-                <option value="">--Direct to--</option>
-                {INVEST_PRODUCTS.map(prod => (
-                  <option key={prod.key} value={prod.key}>{prod.label}</option>
-                ))}
-              </select>
-            )}
+            {budgetType === "zero-based" &&
+              p.name.toLowerCase().includes("savings") &&
+              p.editable !== false && (
+                <select
+                  className="ml-2 bg-transparent outline-none text-xs border border-[#d1d5db] rounded"
+                  value={p.investProduct || ""}
+                  onChange={(e) => handleInvestProduct(idx, e.target.value)}
+                >
+                  <option value="">--Direct to--</option>
+                  {INVEST_PRODUCTS.map((prod) => (
+                    <option key={prod.key} value={prod.key}>
+                      {prod.label}
+                    </option>
+                  ))}
+                </select>
+              )}
             {p.editable !== false && (
-              <button className="ml-1 text-red-500 hover:text-red-700" onClick={() => handleRemove(idx)}>&times;</button>
+              <button
+                className="ml-1 text-red-500 hover:text-red-700"
+                onClick={() => handleRemove(idx)}
+              >
+                &times;
+              </button>
             )}
           </div>
         ))}
@@ -162,7 +207,9 @@ const AIAllocationEditor: React.FC<AIAllocationEditorProps> = ({ income, budgetT
           className="px-2 py-1 rounded border border-[#d1d5db] w-32"
           placeholder="Add pocket"
           value={customPocket.name}
-          onChange={e => setCustomPocket({ ...customPocket, name: e.target.value })}
+          onChange={(e) =>
+            setCustomPocket({ ...customPocket, name: e.target.value })
+          }
         />
         <input
           type="number"
@@ -170,18 +217,30 @@ const AIAllocationEditor: React.FC<AIAllocationEditorProps> = ({ income, budgetT
           placeholder="Amount"
           value={customPocket.amount}
           min={0}
-          onChange={e => setCustomPocket({ ...customPocket, amount: Number(e.target.value) })}
+          onChange={(e) =>
+            setCustomPocket({ ...customPocket, amount: Number(e.target.value) })
+          }
         />
         <select
           className="px-2 py-1 rounded border border-[#d1d5db]"
           value={customPocket.frequency}
-          onChange={e => setCustomPocket({ ...customPocket, frequency: e.target.value as any })}
+          onChange={(e) =>
+            setCustomPocket({
+              ...customPocket,
+              frequency: e.target.value as any,
+            })
+          }
         >
           <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
           <option value="monthly">Monthly</option>
         </select>
-        <button className="bg-[#00e096] text-white px-3 py-1 rounded font-semibold" onClick={handleAddCustom}>Add</button>
+        <button
+          className="bg-[#00e096] text-white px-3 py-1 rounded font-semibold"
+          onClick={handleAddCustom}
+        >
+          Add
+        </button>
       </div>
       <div className="w-full flex justify-between items-center bg-[#f3f4fa] rounded-lg px-4 py-2 font-semibold">
         <span>Allocated: ₦{totalAllocated.toLocaleString()}</span>

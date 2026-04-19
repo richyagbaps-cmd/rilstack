@@ -14,17 +14,17 @@ export interface User {
 export interface Transaction {
   id: string;
   userId: string;
-  type: 'deposit' | 'withdrawal' | 'transfer';
+  type: "deposit" | "withdrawal" | "transfer";
   amount: number;
   category: string;
   description: string;
-  method: 'card' | 'transfer' | 'ussd'; // Payment method
+  method: "card" | "transfer" | "ussd"; // Payment method
   date: Date;
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
 }
 
-export type BudgetModel = '50-30-20' | 'zero-based';
-export type CategoryType = 'strict' | 'lax';
+export type BudgetModel = "50-30-20" | "zero-based";
+export type CategoryType = "strict" | "lax";
 
 export interface BudgetCategory {
   id: string;
@@ -59,14 +59,14 @@ export interface SavingsGoal {
   createdAt: Date;
 }
 
-export type InvestmentType = 'tbill' | 'bond' | 'mutual-fund';
+export type InvestmentType = "tbill" | "bond" | "mutual-fund";
 
 export interface SaleCycle {
   cycleNumber: number;
   cycleDate: Date;
   amountAvailable: number;
   amountSold: number;
-  status: 'open' | 'closed' | 'expired';
+  status: "open" | "closed" | "expired";
 }
 
 export interface Investment {
@@ -87,7 +87,7 @@ export interface Investment {
 export interface Account {
   id: string;
   userId: string;
-  type: 'checking' | 'savings' | 'investment' | 'credit';
+  type: "checking" | "savings" | "investment" | "credit";
   name: string;
   balance: number;
   availableBalance: number; // Ready for withdrawal
@@ -99,12 +99,12 @@ export interface Withdrawal {
   id: string;
   userId: string;
   amount: number;
-  status: 'pending' | 'processing' | 'completed' | 'rejected';
+  status: "pending" | "processing" | "completed" | "rejected";
   requestDate: Date;
   processDate?: Date;
 }
 
-export type LockPeriod = 'hourly' | 'daily' | 'monthly' | 'yearly';
+export type LockPeriod = "hourly" | "daily" | "monthly" | "yearly";
 
 export interface LockedSavings {
   id: string;
@@ -113,7 +113,7 @@ export interface LockedSavings {
   lockPeriod: LockPeriod;
   createdDate: Date;
   unlockDate: Date;
-  status: 'locked' | 'unlocked' | 'withdrawn';
+  status: "locked" | "unlocked" | "withdrawn";
   interestRate?: number;
   interestEarned?: number; // Interest calculated at end
   description: string;
@@ -125,14 +125,14 @@ export interface NINDetails {
   lastName: string;
   middleName?: string;
   dateOfBirth: string;
-  gender: 'M' | 'F';
+  gender: "M" | "F";
   stateOfOrigin: string;
   validated: boolean;
 }
 
 export interface ChatMessage {
   id: string;
-  type: 'user' | 'assistant';
+  type: "user" | "assistant";
   message: string;
   timestamp: Date;
 }

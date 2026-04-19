@@ -12,7 +12,9 @@ export default function EmptyStatePiggy({ message }: { message: string }) {
         <ellipse cx="40" cy="60" rx="6" ry="2" fill="#2c3e5f" />
         <rect x="36" y="38" width="8" height="4" rx="2" fill="#2c3e5f" />
       </svg>
-      <div className="mt-6 text-[#4A5B6E] text-lg font-semibold text-center">{message}</div>
+      <div className="mt-6 text-[#4A5B6E] text-lg font-semibold text-center">
+        {message}
+      </div>
     </div>
   );
 }

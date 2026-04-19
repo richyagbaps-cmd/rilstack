@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import PinConfirmModal from './PinConfirmModal';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import PinConfirmModal from "./PinConfirmModal";
 
 interface Investment {
   id: string;
-  type: 'tbill' | 'bond' | 'mutual-fund' | 'secondary-bond';
+  type: "tbill" | "bond" | "mutual-fund" | "secondary-bond";
   name: string;
   symbol: string;
   principal: number;
@@ -20,7 +20,7 @@ interface Investment {
     cycleNumber: number;
     amountAvailable: number;
     amountSold: number;
-    status: 'open' | 'closed' | 'expired';
+    status: "open" | "closed" | "expired";
   }[];
   sip?: {
     freq: string;
@@ -28,8 +28,8 @@ interface Investment {
   };
 }
 
-type InvestmentType = 'tbill' | 'bond' | 'mutual-fund' | 'secondary-bond';
-type View = 'menu' | 'manage' | 'choose-plan' | 'invest';
+type InvestmentType = "tbill" | "bond" | "mutual-fund" | "secondary-bond";
+type View = "menu" | "manage" | "choose-plan" | "invest";
 type Timeline = 3 | 6 | 9 | 12;
 
 interface BuyInvestmentFormData {
@@ -37,10 +37,10 @@ interface BuyInvestmentFormData {
 }
 
 const TIMELINE_OPTIONS: { months: Timeline; label: string }[] = [
-  { months: 3, label: '3 Months' },
-  { months: 6, label: '6 Months' },
-  { months: 9, label: '9 Months' },
-  { months: 12, label: '12 Months' },
+  { months: 3, label: "3 Months" },
+  { months: 6, label: "6 Months" },
+  { months: 9, label: "9 Months" },
+  { months: 12, label: "12 Months" },
 ];
 
 const INVESTMENT_PLANS: Array<{
@@ -56,71 +56,79 @@ const INVESTMENT_PLANS: Array<{
   icon: string;
 }> = [
   {
-    type: 'tbill',
-    label: 'Treasury Bills',
-    description: 'Short-term government securities with guaranteed returns and low risk. Ideal for capital preservation.',
+    type: "tbill",
+    label: "Treasury Bills",
+    description:
+      "Short-term government securities with guaranteed returns and low risk. Ideal for capital preservation.",
     baseRate: 5.2,
     rateByTimeline: { 3: 3.5, 6: 5.2, 9: 6.0, 12: 7.0 },
-    symbolPrefix: 'TBILL',
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    icon: '🏛️',
+    symbolPrefix: "TBILL",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    icon: "🏛️",
   },
   {
-    type: 'bond',
-    label: 'Bonds',
-    description: 'Fixed income securities with periodic interest payments until maturity. Great for steady income.',
+    type: "bond",
+    label: "Bonds",
+    description:
+      "Fixed income securities with periodic interest payments until maturity. Great for steady income.",
     baseRate: 4.8,
     rateByTimeline: { 3: 3.0, 6: 4.8, 9: 5.8, 12: 7.2 },
-    symbolPrefix: 'BOND',
-    color: 'text-purple-700',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
-    icon: '📈',
+    symbolPrefix: "BOND",
+    color: "text-purple-700",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200",
+    icon: "📈",
   },
   {
-    type: 'mutual-fund',
-    label: 'Mutual Funds',
-    description: 'Pooled investment funds managed by professionals. Higher potential returns over time.',
+    type: "mutual-fund",
+    label: "Mutual Funds",
+    description:
+      "Pooled investment funds managed by professionals. Higher potential returns over time.",
     baseRate: 8.5,
     rateByTimeline: { 3: 5.0, 6: 8.5, 9: 10.5, 12: 13.0 },
-    symbolPrefix: 'MF',
-    color: 'text-emerald-700',
-    bgColor: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
-    icon: '💰',
+    symbolPrefix: "MF",
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    icon: "💰",
   },
   {
-    type: 'secondary-bond',
-    label: 'Secondary Bonds',
-    description: 'Bonds issued by companies or governments, traded on secondary markets. Higher risk, higher return.',
+    type: "secondary-bond",
+    label: "Secondary Bonds",
+    description:
+      "Bonds issued by companies or governments, traded on secondary markets. Higher risk, higher return.",
     baseRate: 10.5,
     rateByTimeline: { 3: 5.0, 6: 8.5, 9: 10.5, 12: 13.0 },
-    symbolPrefix: 'SBOND',
-    color: 'text-red-700',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    icon: '🪙',
+    symbolPrefix: "SBOND",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200",
+    icon: "🪙",
   },
 ];
 
 export default function InvestmentPortfolio() {
-  const [view, setView] = useState<View>('menu');
+  const [view, setView] = useState<View>("menu");
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<InvestmentType | null>(null);
   const [selectedTimeline, setSelectedTimeline] = useState<Timeline>(6);
   const [justCreated, setJustCreated] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
-  const [pendingInvestment, setPendingInvestment] = useState<BuyInvestmentFormData | null>(null);
+  const [pendingInvestment, setPendingInvestment] =
+    useState<BuyInvestmentFormData | null>(null);
 
-  const { register, handleSubmit, reset, watch } = useForm<BuyInvestmentFormData>({
-    defaultValues: { amount: 0 },
-  });
+  const { register, handleSubmit, reset, watch } =
+    useForm<BuyInvestmentFormData>({
+      defaultValues: { amount: 0 },
+    });
 
-  const watchedAmount = watch('amount');
+  const watchedAmount = watch("amount");
   const activePlan = INVESTMENT_PLANS.find((p) => p.type === selectedPlan);
-  const activeRate = activePlan ? activePlan.rateByTimeline[selectedTimeline] : 0;
+  const activeRate = activePlan
+    ? activePlan.rateByTimeline[selectedTimeline]
+    : 0;
 
   const onSubmit = (data: BuyInvestmentFormData) => {
     if (!selectedPlan || !activePlan) return;
@@ -146,11 +154,18 @@ export default function InvestmentPortfolio() {
       principal: purchaseAmount,
       interestRate: activeRate,
       maturityMonths: selectedTimeline,
-      purchaseDate: today.toISOString().split('T')[0],
-      maturityDate: maturity.toISOString().split('T')[0],
+      purchaseDate: today.toISOString().split("T")[0],
+      maturityDate: maturity.toISOString().split("T")[0],
       currentValue: purchaseAmount,
       isClosed: false,
-      saleCycles: [{ cycleNumber: 1, amountAvailable: purchaseAmount, amountSold: 0, status: 'open' }],
+      saleCycles: [
+        {
+          cycleNumber: 1,
+          amountAvailable: purchaseAmount,
+          amountSold: 0,
+          status: "open",
+        },
+      ],
     };
 
     setInvestments([...investments, newInvestment]);
@@ -160,54 +175,84 @@ export default function InvestmentPortfolio() {
     setShowPinModal(false);
     reset();
     setJustCreated(true);
-    setView('manage');
+    setView("manage");
     setTimeout(() => setJustCreated(false), 4000);
   };
 
-  const totalPortfolioValue = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
-  const totalPrincipal = investments.reduce((sum, inv) => sum + inv.principal, 0);
+  const totalPortfolioValue = investments.reduce(
+    (sum, inv) => sum + inv.currentValue,
+    0,
+  );
+  const totalPrincipal = investments.reduce(
+    (sum, inv) => sum + inv.principal,
+    0,
+  );
   const totalGain = totalPortfolioValue - totalPrincipal;
-  const gainPercentage = totalPrincipal > 0 ? ((totalGain / totalPrincipal) * 100).toFixed(2) : '0.00';
+  const gainPercentage =
+    totalPrincipal > 0
+      ? ((totalGain / totalPrincipal) * 100).toFixed(2)
+      : "0.00";
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'tbill': return 'bg-blue-100 text-blue-800';
-      case 'bond': return 'bg-purple-100 text-purple-800';
-      case 'mutual-fund': return 'bg-emerald-100 text-emerald-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "tbill":
+        return "bg-blue-100 text-blue-800";
+      case "bond":
+        return "bg-purple-100 text-purple-800";
+      case "mutual-fund":
+        return "bg-emerald-100 text-emerald-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const estimatedReturn = activePlan && watchedAmount
-    ? (Number(watchedAmount) * activeRate * selectedTimeline) / (12 * 100)
-    : 0;
+  const estimatedReturn =
+    activePlan && watchedAmount
+      ? (Number(watchedAmount) * activeRate * selectedTimeline) / (12 * 100)
+      : 0;
 
   /* ── MENU VIEW ── */
-  if (view === 'menu') {
+  if (view === "menu") {
     return (
       <div className="mx-auto max-w-2xl space-y-6 py-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Investments</h2>
-          <p className="mt-2 text-sm text-slate-500">Grow your wealth with secure investment plans</p>
+          <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
+            Investments
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            Grow your wealth with secure investment plans
+          </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <button
-            onClick={() => setView('choose-plan')}
+            onClick={() => setView("choose-plan")}
             className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-[#2c3e5f] hover:shadow-md"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl">+</div>
-            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">Create New Investment</h3>
-            <p className="mt-1 text-sm text-slate-500">Choose a plan, set your amount, and start earning returns.</p>
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl">
+              +
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">
+              Create New Investment
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Choose a plan, set your amount, and start earning returns.
+            </p>
           </button>
 
           <button
-            onClick={() => setView('manage')}
+            onClick={() => setView("manage")}
             className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-[#2c3e5f] hover:shadow-md"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-2xl">📊</div>
-            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">Manage Existing</h3>
-            <p className="mt-1 text-sm text-slate-500">View balances, track returns, and manage your portfolio.</p>
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-2xl">
+              📊
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">
+              Manage Existing
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              View balances, track returns, and manage your portfolio.
+            </p>
             {investments.length > 0 && (
               <span className="mt-3 inline-block rounded-full bg-[#2c3e5f] px-3 py-1 text-xs font-semibold text-white">
                 {investments.length} active
@@ -220,19 +265,23 @@ export default function InvestmentPortfolio() {
   }
 
   /* ── CHOOSE PLAN VIEW ── */
-  if (view === 'choose-plan') {
+  if (view === "choose-plan") {
     return (
       <div className="mx-auto max-w-3xl space-y-6 py-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setView('menu')}
+            onClick={() => setView("menu")}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
           >
             ←
           </button>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Choose an Investment Plan</h2>
-            <p className="text-sm text-slate-500">Select the plan that fits your goals</p>
+            <h2 className="text-xl font-bold text-slate-900">
+              Choose an Investment Plan
+            </h2>
+            <p className="text-sm text-slate-500">
+              Select the plan that fits your goals
+            </p>
           </div>
         </div>
 
@@ -240,20 +289,34 @@ export default function InvestmentPortfolio() {
           {INVESTMENT_PLANS.map((plan) => (
             <button
               key={plan.type}
-              onClick={() => { setSelectedPlan(plan.type); setView('invest'); }}
+              onClick={() => {
+                setSelectedPlan(plan.type);
+                setView("invest");
+              }}
               className={`group rounded-[24px] border ${plan.borderColor} ${plan.bgColor} p-5 text-left transition hover:shadow-md`}
             >
               <div className="mb-3 text-3xl">{plan.icon}</div>
-              <h3 className={`text-lg font-bold ${plan.color}`}>{plan.label}</h3>
-              <p className="mt-1 text-xs text-slate-600 leading-relaxed">{plan.description}</p>
+              <h3 className={`text-lg font-bold ${plan.color}`}>
+                {plan.label}
+              </h3>
+              <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                {plan.description}
+              </p>
               <div className="mt-4 space-y-1 border-t border-slate-200 pt-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Interest Rate</span>
-                  <span className="font-bold text-[#2c3e5f]">{plan.rateByTimeline[3]}% – {plan.rateByTimeline[12]}% <span className="text-xs font-normal text-slate-400">p.a.</span></span>
+                  <span className="font-bold text-[#2c3e5f]">
+                    {plan.rateByTimeline[3]}% – {plan.rateByTimeline[12]}%{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      p.a.
+                    </span>
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Timeline</span>
-                  <span className="font-semibold text-slate-700">3 – 12 months</span>
+                  <span className="font-semibold text-slate-700">
+                    3 – 12 months
+                  </span>
                 </div>
               </div>
             </button>
@@ -264,33 +327,48 @@ export default function InvestmentPortfolio() {
   }
 
   /* ── INVEST (AMOUNT INPUT) VIEW ── */
-  if (view === 'invest' && activePlan) {
+  if (view === "invest" && activePlan) {
     return (
       <div className="mx-auto max-w-lg space-y-6 py-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setView('choose-plan'); setSelectedPlan(null); setSelectedTimeline(6); reset(); }}
+            onClick={() => {
+              setView("choose-plan");
+              setSelectedPlan(null);
+              setSelectedTimeline(6);
+              reset();
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
           >
             ←
           </button>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Invest in {activePlan.label}</h2>
-            <p className="text-sm text-slate-500">Select a timeline and enter your amount</p>
+            <h2 className="text-xl font-bold text-slate-900">
+              Invest in {activePlan.label}
+            </h2>
+            <p className="text-sm text-slate-500">
+              Select a timeline and enter your amount
+            </p>
           </div>
         </div>
 
-        <div className={`rounded-[24px] border ${activePlan.borderColor} ${activePlan.bgColor} p-5`}>
+        <div
+          className={`rounded-[24px] border ${activePlan.borderColor} ${activePlan.bgColor} p-5`}
+        >
           <div className="flex items-center gap-3 mb-4">
             <span className="text-3xl">{activePlan.icon}</span>
             <div>
-              <h3 className={`font-bold ${activePlan.color}`}>{activePlan.label}</h3>
+              <h3 className={`font-bold ${activePlan.color}`}>
+                {activePlan.label}
+              </h3>
               <p className="text-xs text-slate-500">{activePlan.description}</p>
             </div>
           </div>
 
           <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Investment Timeline</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+              Investment Timeline
+            </p>
             <div className="grid grid-cols-4 gap-2">
               {TIMELINE_OPTIONS.map((opt) => (
                 <button
@@ -299,8 +377,8 @@ export default function InvestmentPortfolio() {
                   onClick={() => setSelectedTimeline(opt.months)}
                   className={`rounded-xl py-2.5 text-center text-sm font-semibold transition-all ${
                     selectedTimeline === opt.months
-                      ? 'bg-[#2c3e5f] text-white shadow-md'
-                      : 'bg-white/80 text-slate-700 hover:bg-white'
+                      ? "bg-[#2c3e5f] text-white shadow-md"
+                      : "bg-white/80 text-slate-700 hover:bg-white"
                   }`}
                 >
                   {opt.label}
@@ -312,51 +390,85 @@ export default function InvestmentPortfolio() {
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-white/80 p-3 text-center">
               <p className="text-xs text-slate-500">Interest Rate</p>
-              <p className="text-lg font-bold text-[#2c3e5f]">{activeRate}% <span className="text-xs font-normal text-slate-400">p.a.</span></p>
+              <p className="text-lg font-bold text-[#2c3e5f]">
+                {activeRate}%{" "}
+                <span className="text-xs font-normal text-slate-400">p.a.</span>
+              </p>
             </div>
             <div className="rounded-xl bg-white/80 p-3 text-center">
               <p className="text-xs text-slate-500">Maturity Period</p>
-              <p className="text-lg font-bold text-slate-700">{selectedTimeline} months</p>
+              <p className="text-lg font-bold text-slate-700">
+                {selectedTimeline} months
+              </p>
             </div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Investment Amount (₦)</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Investment Amount (₦)
+            </label>
             <input
               type="number"
               step="1"
               placeholder="Minimum ₦5,000"
-              {...register('amount', { required: true, valueAsNumber: true, min: 5000 })}
+              {...register("amount", {
+                required: true,
+                valueAsNumber: true,
+                min: 5000,
+              })}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg font-semibold text-slate-900 focus:border-[#2c3e5f] focus:outline-none focus:ring-1 focus:ring-[#2c3e5f]"
             />
-            <p className="mt-1 text-xs text-slate-400">Minimum investment: ₦5,000</p>
+            <p className="mt-1 text-xs text-slate-400">
+              Minimum investment: ₦5,000
+            </p>
           </div>
 
           {Number(watchedAmount) >= 5000 && (
             <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5">
-              <h4 className="text-sm font-semibold text-emerald-800 mb-3">Projected Returns</h4>
+              <h4 className="text-sm font-semibold text-emerald-800 mb-3">
+                Projected Returns
+              </h4>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Amount Invested</span>
-                  <span className="font-semibold text-slate-900">₦{Number(watchedAmount).toLocaleString()}</span>
+                  <span className="font-semibold text-slate-900">
+                    ₦{Number(watchedAmount).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Interest Rate</span>
-                  <span className="font-semibold text-[#2c3e5f]">{activeRate}% p.a.</span>
+                  <span className="font-semibold text-[#2c3e5f]">
+                    {activeRate}% p.a.
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Duration</span>
-                  <span className="font-semibold text-slate-700">{selectedTimeline} months</span>
+                  <span className="font-semibold text-slate-700">
+                    {selectedTimeline} months
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Estimated Earnings</span>
-                  <span className="font-semibold text-emerald-700">₦{estimatedReturn.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                  <span className="font-semibold text-emerald-700">
+                    ₦
+                    {estimatedReturn.toLocaleString(undefined, {
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
                 </div>
                 <div className="border-t border-emerald-200 pt-2 flex justify-between text-sm">
-                  <span className="font-semibold text-slate-700">Total at Maturity</span>
-                  <span className="font-bold text-[#2c3e5f] text-base">₦{(Number(watchedAmount) + estimatedReturn).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                  <span className="font-semibold text-slate-700">
+                    Total at Maturity
+                  </span>
+                  <span className="font-bold text-[#2c3e5f] text-base">
+                    ₦
+                    {(Number(watchedAmount) + estimatedReturn).toLocaleString(
+                      undefined,
+                      { maximumFractionDigits: 2 },
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
@@ -372,7 +484,12 @@ export default function InvestmentPortfolio() {
             </button>
             <button
               type="button"
-              onClick={() => { setView('choose-plan'); setSelectedPlan(null); setSelectedTimeline(6); reset(); }}
+              onClick={() => {
+                setView("choose-plan");
+                setSelectedPlan(null);
+                setSelectedTimeline(6);
+                reset();
+              }}
               className="rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Back
@@ -389,18 +506,22 @@ export default function InvestmentPortfolio() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setView('menu')}
+            onClick={() => setView("menu")}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
           >
             ←
           </button>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Your Investments</h2>
-            <p className="text-sm text-slate-500">Track and manage your portfolio</p>
+            <h2 className="text-xl font-bold text-slate-900">
+              Your Investments
+            </h2>
+            <p className="text-sm text-slate-500">
+              Track and manage your portfolio
+            </p>
           </div>
         </div>
         <button
-          onClick={() => setView('choose-plan')}
+          onClick={() => setView("choose-plan")}
           className="rounded-xl bg-[#2c3e5f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#244d24]"
         >
           + New Investment
@@ -409,36 +530,59 @@ export default function InvestmentPortfolio() {
 
       {justCreated && (
         <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-          Investment created successfully! Your new plan has been added to your portfolio.
+          Investment created successfully! Your new plan has been added to your
+          portfolio.
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Portfolio Value</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">₦{totalPortfolioValue.toLocaleString()}</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide">
+            Portfolio Value
+          </p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">
+            ₦{totalPortfolioValue.toLocaleString()}
+          </p>
         </div>
         <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Principal Invested</p>
-          <p className="mt-1 text-2xl font-bold text-slate-700">₦{totalPrincipal.toLocaleString()}</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide">
+            Principal Invested
+          </p>
+          <p className="mt-1 text-2xl font-bold text-slate-700">
+            ₦{totalPrincipal.toLocaleString()}
+          </p>
         </div>
         <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Interest Earned</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-600">₦{totalGain.toLocaleString()}</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide">
+            Interest Earned
+          </p>
+          <p className="mt-1 text-2xl font-bold text-emerald-600">
+            ₦{totalGain.toLocaleString()}
+          </p>
         </div>
         <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Return Rate</p>
-          <p className={`mt-1 text-2xl font-bold ${totalGain >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{gainPercentage}%</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide">
+            Return Rate
+          </p>
+          <p
+            className={`mt-1 text-2xl font-bold ${totalGain >= 0 ? "text-emerald-600" : "text-red-600"}`}
+          >
+            {gainPercentage}%
+          </p>
         </div>
       </div>
 
       {investments.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-slate-300 bg-white p-12 text-center">
           <p className="text-4xl mb-3">📊</p>
-          <h3 className="text-lg font-semibold text-slate-700">No investments yet</h3>
-          <p className="mt-1 text-sm text-slate-500">Create your first investment plan to start growing your wealth.</p>
+          <h3 className="text-lg font-semibold text-slate-700">
+            No investments yet
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Create your first investment plan to start growing your wealth.
+          </p>
           <button
-            onClick={() => setView('choose-plan')}
+            onClick={() => setView("choose-plan")}
             className="mt-4 rounded-xl bg-[#2c3e5f] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#244d24]"
           >
             Create Investment
@@ -450,63 +594,95 @@ export default function InvestmentPortfolio() {
             const gain = inv.currentValue - inv.principal;
             const plan = INVESTMENT_PLANS.find((p) => p.type === inv.type);
             return (
-              <div key={inv.id} className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
+              <div
+                key={inv.id}
+                className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{plan?.icon}</span>
                     <div>
                       <h4 className="font-bold text-slate-900">{inv.name}</h4>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getTypeColor(inv.type)}`}>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getTypeColor(inv.type)}`}
+                        >
                           {inv.symbol}
                         </span>
-                        <span className="text-xs text-slate-400">Purchased {inv.purchaseDate}</span>
+                        <span className="text-xs text-slate-400">
+                          Purchased {inv.purchaseDate}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-slate-900">₦{inv.currentValue.toLocaleString()}</p>
-                    <p className={`text-xs font-semibold ${gain >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {gain >= 0 ? '+' : ''}₦{gain.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    <p className="text-lg font-bold text-slate-900">
+                      ₦{inv.currentValue.toLocaleString()}
+                    </p>
+                    <p
+                      className={`text-xs font-semibold ${gain >= 0 ? "text-emerald-600" : "text-red-600"}`}
+                    >
+                      {gain >= 0 ? "+" : ""}₦
+                      {gain.toLocaleString(undefined, {
+                        maximumFractionDigits: 2,
+                      })}
                     </p>
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-4 gap-3 border-t border-slate-100 pt-4">
                   <div>
                     <p className="text-xs text-slate-500">Principal</p>
-                    <p className="text-sm font-semibold text-slate-700">₦{inv.principal.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      ₦{inv.principal.toLocaleString()}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Rate</p>
-                    <p className="text-sm font-semibold text-[#2c3e5f]">{inv.interestRate}% p.a.</p>
+                    <p className="text-sm font-semibold text-[#2c3e5f]">
+                      {inv.interestRate}% p.a.
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Duration</p>
-                    <p className="text-sm font-semibold text-slate-700">{inv.maturityMonths} months</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {inv.maturityMonths} months
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Matures</p>
-                    <p className="text-sm font-semibold text-slate-700">{inv.maturityDate}</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {inv.maturityDate}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-slate-500">Face Value</p>
-                    <p className="text-sm font-semibold text-slate-700">₦{inv.principal.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      ₦{inv.principal.toLocaleString()}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Days to Maturity</p>
-                    <p className="text-sm font-semibold text-slate-700">{daysTo(inv.maturityDate)}</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {daysTo(inv.maturityDate)}
+                    </p>
                   </div>
-                  {inv.type === 'bond' && (
+                  {inv.type === "bond" && (
                     <React.Fragment>
                       <div>
-                        <p className="text-xs text-slate-500">Next Coupon Date</p>
-                        <p className="text-sm font-semibold text-slate-700">{formatDate(inv.maturityDate)}</p>
+                        <p className="text-xs text-slate-500">
+                          Next Coupon Date
+                        </p>
+                        <p className="text-sm font-semibold text-slate-700">
+                          {formatDate(inv.maturityDate)}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500">Current Yield</p>
-                        <p className="text-sm font-semibold text-slate-700">{inv.interestRate}%</p>
+                        <p className="text-sm font-semibold text-slate-700">
+                          {inv.interestRate}%
+                        </p>
                       </div>
                     </React.Fragment>
                   )}
@@ -522,7 +698,10 @@ export default function InvestmentPortfolio() {
           title="Confirm Investment"
           description="Enter your 4-digit PIN to proceed with this investment"
           onConfirm={executeInvestment}
-          onCancel={() => { setShowPinModal(false); setPendingInvestment(null); }}
+          onCancel={() => {
+            setShowPinModal(false);
+            setPendingInvestment(null);
+          }}
         />
       )}
     </div>
@@ -538,34 +717,68 @@ function formatDate(dateStr: string) {
 function daysTo(dateStr: string) {
   const d = new Date(dateStr);
   const now = new Date();
-  return Math.max(0, Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  return Math.max(
+    0,
+    Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+  );
 }
 
-function InvestmentActions({ inv, onReinvest, onRedeem, onSell }: { inv: any, onReinvest?: () => void, onRedeem?: () => void, onSell?: () => void }) {
-  if (inv.type === 'tbill' || inv.type === 'bond') {
+function InvestmentActions({
+  inv,
+  onReinvest,
+  onRedeem,
+  onSell,
+}: {
+  inv: any;
+  onReinvest?: () => void;
+  onRedeem?: () => void;
+  onSell?: () => void;
+}) {
+  if (inv.type === "tbill" || inv.type === "bond") {
     if (inv.isClosed || daysTo(inv.maturityDate) === 0) {
       return (
         <div className="flex gap-2 mt-2">
-          <button className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700" onClick={onReinvest}>Reinvest</button>
-          <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700" onClick={onRedeem}>Redeem to Wallet</button>
+          <button
+            className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700"
+            onClick={onReinvest}
+          >
+            Reinvest
+          </button>
+          <button
+            className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
+            onClick={onRedeem}
+          >
+            Redeem to Wallet
+          </button>
         </div>
       );
     }
     return null;
   }
-  if (inv.type === 'mutual-fund') {
+  if (inv.type === "mutual-fund") {
     return (
       <div className="flex gap-2 mt-2">
-        <button className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Additional Investment</button>
-        <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700">Redeem</button>
-        <button className="px-3 py-1 rounded bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700">Switch Fund</button>
+        <button className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
+          Additional Investment
+        </button>
+        <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700">
+          Redeem
+        </button>
+        <button className="px-3 py-1 rounded bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700">
+          Switch Fund
+        </button>
       </div>
     );
   }
-  if (inv.type === 'secondary-bond') {
+  if (inv.type === "secondary-bond") {
     return (
       <div className="flex gap-2 mt-2">
-        <button className="px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700" onClick={onSell}>Sell</button>
+        <button
+          className="px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700"
+          onClick={onSell}
+        >
+          Sell
+        </button>
       </div>
     );
   }

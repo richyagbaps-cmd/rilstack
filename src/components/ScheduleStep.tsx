@@ -9,7 +9,7 @@ interface ScheduleStepProps {
 function formatDuration(start: Date, end: Date) {
   const ms = end.getTime() - start.getTime();
   const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-  return `${days} day${days !== 1 ? 's' : ''}`;
+  return `${days} day${days !== 1 ? "s" : ""}`;
 }
 
 function formatCountdown(target: Date) {
@@ -27,7 +27,11 @@ function formatCountdown(target: Date) {
   return `${days}d ${hours}h ${minutes}m ${seconds}s left`;
 }
 
-export default function ScheduleStep({ startDate, endDate, onChange }: ScheduleStepProps) {
+export default function ScheduleStep({
+  startDate,
+  endDate,
+  onChange,
+}: ScheduleStepProps) {
   const [start, setStart] = useState<Date | null>(startDate);
   const [end, setEnd] = useState<Date | null>(endDate);
 
@@ -45,7 +49,9 @@ export default function ScheduleStep({ startDate, endDate, onChange }: ScheduleS
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-4">
-      <div className="mb-4 text-lg font-semibold text-[#2c3e5f]">Schedule Your Budget</div>
+      <div className="mb-4 text-lg font-semibold text-[#2c3e5f]">
+        Schedule Your Budget
+      </div>
       <div className="flex flex-col gap-4 mb-6">
         <label className="flex flex-col">
           Start Date & Time

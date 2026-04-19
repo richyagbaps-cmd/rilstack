@@ -24,7 +24,14 @@ export default function RelaxedCustomBudgetPage() {
     setPockets(newPockets);
   };
   const handleAddPocket = () => {
-    setPockets([...pockets, { key: `custom${Date.now()}`, label: `Custom Pocket ${pockets.length + 1}`, amount: 0 }]);
+    setPockets([
+      ...pockets,
+      {
+        key: `custom${Date.now()}`,
+        label: `Custom Pocket ${pockets.length + 1}`,
+        amount: 0,
+      },
+    ]);
   };
   const handleDeletePocket = (idx: number) => {
     if (pockets.length === 1) return;
@@ -43,14 +50,30 @@ export default function RelaxedCustomBudgetPage() {
       >
         <h1 className="text-3xl font-extrabold mb-4 text-[#FFD700] flex items-center gap-2">
           Custom Budget
-          <span className="tooltip ml-2" title="Create your own custom budget plan. Add, edit, or remove pockets as you wish."><FaInfoCircle className="text-[#FFD700] text-lg" /></span>
+          <span
+            className="tooltip ml-2"
+            title="Create your own custom budget plan. Add, edit, or remove pockets as you wish."
+          >
+            <FaInfoCircle className="text-[#FFD700] text-lg" />
+          </span>
         </h1>
-        <p className="mb-6 text-[#4A5B6E] text-center text-lg">Create your own custom budget plan. Add, edit, or remove pockets as you wish.</p>
+        <p className="mb-6 text-[#4A5B6E] text-center text-lg">
+          Create your own custom budget plan. Add, edit, or remove pockets as
+          you wish.
+        </p>
         {/* Summary Card */}
-        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="w-full mb-6">
+        <motion.div
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
+          className="w-full mb-6"
+        >
           <div className="flex justify-between items-center bg-[#f3f4fa] rounded-xl px-4 py-3 mb-2">
-            <span className="text-[#FFD700] font-semibold">Total Allocated</span>
-            <span className="text-[#2c3e5f] font-bold text-lg">₦{total.toLocaleString()}</span>
+            <span className="text-[#FFD700] font-semibold">
+              Total Allocated
+            </span>
+            <span className="text-[#2c3e5f] font-bold text-lg">
+              ₦{total.toLocaleString()}
+            </span>
           </div>
         </motion.div>
         <div className="flex flex-col gap-6 w-full mb-8">
@@ -70,7 +93,7 @@ export default function RelaxedCustomBudgetPage() {
                   type="text"
                   className="text-lg font-bold text-[#FFD700] mb-2 text-center bg-white border border-[#cbd5e1] rounded-lg px-2 py-1 w-40 focus:outline-none focus:ring-2 focus:ring-[#FFD700]/30 transition-all duration-200 group-hover:shadow-lg"
                   value={pocket.label}
-                  onChange={e => handleNameChange(idx, e.target.value)}
+                  onChange={(e) => handleNameChange(idx, e.target.value)}
                   disabled={enabled}
                   aria-label={`Label for pocket ${idx + 1}`}
                 />
@@ -79,7 +102,7 @@ export default function RelaxedCustomBudgetPage() {
                   min="0"
                   className="text-2xl font-extrabold text-[#2c3e5f] mb-2 text-center bg-white border border-[#cbd5e1] rounded-lg px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-[#FFD700]/30 transition-all duration-200 group-hover:shadow-lg"
                   value={pocket.amount}
-                  onChange={e => handleAmountChange(idx, e.target.value)}
+                  onChange={(e) => handleAmountChange(idx, e.target.value)}
                   placeholder="₦0"
                   disabled={enabled}
                   aria-label={`Amount for ${pocket.label}`}
@@ -90,7 +113,9 @@ export default function RelaxedCustomBudgetPage() {
                     onClick={() => handleDeletePocket(idx)}
                     title="Delete pocket"
                     aria-label={`Delete pocket ${pocket.label}`}
-                  >✕</button>
+                  >
+                    ✕
+                  </button>
                 )}
               </motion.div>
             ))}
@@ -104,7 +129,9 @@ export default function RelaxedCustomBudgetPage() {
               exit={{ opacity: 0, y: 20 }}
               className="mb-4 px-4 py-2 bg-[#FFD700] text-white rounded-lg font-semibold hover:bg-[#FFC300] transition"
               onClick={handleAddPocket}
-            >+ Add Pocket</motion.button>
+            >
+              + Add Pocket
+            </motion.button>
           )}
         </AnimatePresence>
         <AnimatePresence>
@@ -119,20 +146,38 @@ export default function RelaxedCustomBudgetPage() {
                 <input
                   type="checkbox"
                   checked={agreed}
-                  onChange={e => setAgreed(e.target.checked)}
+                  onChange={(e) => setAgreed(e.target.checked)}
                   className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-[#FFD700] cursor-pointer"
                   aria-label="Agree to terms"
                 />
-                I agree to the <a href="/terms" target="_blank" className="text-[#00e096] underline ml-1">Terms & Conditions</a> and <a href="/privacy" target="_blank" className="text-[#00e096] underline ml-1">Privacy Policy</a> before enabling my budget.
+                I agree to the{" "}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  className="text-[#00e096] underline ml-1"
+                >
+                  Terms & Conditions
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  className="text-[#00e096] underline ml-1"
+                >
+                  Privacy Policy
+                </a>{" "}
+                before enabling my budget.
               </label>
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full bg-[#FFD700] text-white font-bold py-2 rounded-lg shadow hover:bg-[#FFC300] transition text-base mt-2 disabled:opacity-50"
-                disabled={!agreed || pockets.every(p => !p.amount)}
+                disabled={!agreed || pockets.every((p) => !p.amount)}
                 onClick={() => setShowPinModal(true)}
-                aria-disabled={!agreed || pockets.every(p => !p.amount)}
-              >Enable Budget</motion.button>
+                aria-disabled={!agreed || pockets.every((p) => !p.amount)}
+              >
+                Enable Budget
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -145,7 +190,10 @@ export default function RelaxedCustomBudgetPage() {
               className="w-full flex flex-col items-center justify-center mt-4"
             >
               <FaCheckCircle className="text-green-500 text-4xl mb-2 animate-bounce" />
-              <div className="w-full text-green-600 text-center font-semibold mb-2">Budget is now enabled. You can withdraw from any pocket (3.5% fee applies).</div>
+              <div className="w-full text-green-600 text-center font-semibold mb-2">
+                Budget is now enabled. You can withdraw from any pocket (3.5%
+                fee applies).
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -153,7 +201,10 @@ export default function RelaxedCustomBudgetPage() {
       <PinConfirmModal
         title="Confirm Enable"
         description="Enter your 4-digit PIN to enable your budget."
-        onConfirm={() => { setEnabled(true); setShowPinModal(false); }}
+        onConfirm={() => {
+          setEnabled(true);
+          setShowPinModal(false);
+        }}
         onCancel={() => setShowPinModal(false)}
         open={showPinModal}
       />

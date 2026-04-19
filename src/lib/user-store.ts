@@ -1,7 +1,7 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import crypto from 'crypto';
-import { Redis } from '@upstash/redis';
+import { promises as fs } from "fs";
+import path from "path";
+import crypto from "crypto";
+import { Redis } from "@upstash/redis";
 
 export interface KycData {
   emailVerified: boolean;
@@ -25,7 +25,7 @@ export interface StoredUser {
   bvn?: string;
   address?: string;
   stateOfOrigin?: string;
-  gender?: 'M' | 'F' | 'other';
+  gender?: "M" | "F" | "other";
   kycLevel: number;
   kycData: KycData;
   createdAt: string;
@@ -42,7 +42,7 @@ export interface CreateStoredUserInput {
   bvn?: string;
   address?: string;
   stateOfOrigin?: string;
-  gender?: 'M' | 'F' | 'other';
+  gender?: "M" | "F" | "other";
 }
 
 // Redis for permanent storage (Upstash)
@@ -55,13 +55,13 @@ if (useRedis) {
   redis = new Redis({ url: REDIS_URL!, token: REDIS_TOKEN! });
 }
 
-const REDIS_KEY = 'rilstack:users';
+const REDIS_KEY = "rilstack:users";
 
 // File fallback (use /tmp on Vercel since /var/task is read-only)
 const dataDirectory = process.env.VERCEL
-  ? path.join('/tmp', 'data')
-  : path.join(process.cwd(), 'data');
-const dataFilePath = path.join(dataDirectory, 'users.json');
+  ? path.join("/tmp", "data")
+  : path.join(process.cwd(), "data");
+const dataFilePath = path.join(dataDirectory, "users.json");
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -72,7 +72,7 @@ async function ensureDataFile() {
   try {
     await fs.access(dataFilePath);
   } catch {
-    await fs.writeFile(dataFilePath, '[]', 'utf8');
+    await fs.writeFile(dataFilePath, "[]", "utf8");
   }
 }
 
@@ -89,7 +89,7 @@ async function readUsers(): Promise<StoredUser[]> {
 
   // File fallback (local dev)
   await ensureDataFile();
-  const raw = await fs.readFile(dataFilePath, 'utf8');
+  const raw = await fs.readFile(dataFilePath, "utf8");
   try {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as StoredUser[]) : [];
@@ -107,22 +107,22 @@ async function writeUsers(users: StoredUser[]) {
 
   // File fallback (local dev)
   await ensureDataFile();
-  await fs.writeFile(dataFilePath, JSON.stringify(users, null, 2), 'utf8');
+  await fs.writeFile(dataFilePath, JSON.stringify(users, null, 2), "utf8");
 }
 
 function hashPassword(password: string) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
   return `${salt}:${hash}`;
 }
 
 export function verifyPassword(password: string, storedHash: string) {
-  const [salt, key] = storedHash.split(':');
+  const [salt, key] = storedHash.split(":");
 
   if (!salt || !key) return false;
 
   const hashedBuffer = crypto.scryptSync(password, salt, 64);
-  const keyBuffer = Buffer.from(key, 'hex');
+  const keyBuffer = Buffer.from(key, "hex");
 
   if (hashedBuffer.length !== keyBuffer.length) return false;
 
@@ -132,16 +132,20 @@ export function verifyPassword(password: string, storedHash: string) {
 export async function findStoredUserByEmail(email: string) {
   const users = await readUsers();
   const normalizedEmail = normalizeEmail(email);
-  return users.find((user) => normalizeEmail(user.email) === normalizedEmail) || null;
+  return (
+    users.find((user) => normalizeEmail(user.email) === normalizedEmail) || null
+  );
 }
 
 export async function createStoredUser(input: CreateStoredUserInput) {
   const users = await readUsers();
   const normalizedEmail = normalizeEmail(input.email);
 
-  const exists = users.some((user) => normalizeEmail(user.email) === normalizedEmail);
+  const exists = users.some(
+    (user) => normalizeEmail(user.email) === normalizedEmail,
+  );
   if (exists) {
-    throw new Error('An account with this email already exists.');
+    throw new Error("An account with this email already exists.");
   }
 
   const now = new Date().toISOString();
@@ -175,13 +179,18 @@ export async function createStoredUser(input: CreateStoredUserInput) {
   return user;
 }
 
-export async function updateUserKyc(email: string, updates: Partial<StoredUser>) {
+export async function updateUserKyc(
+  email: string,
+  updates: Partial<StoredUser>,
+) {
   const users = await readUsers();
   const normalizedEmail = normalizeEmail(email);
-  const index = users.findIndex((u) => normalizeEmail(u.email) === normalizedEmail);
+  const index = users.findIndex(
+    (u) => normalizeEmail(u.email) === normalizedEmail,
+  );
 
   if (index === -1) {
-    throw new Error('User not found.');
+    throw new Error("User not found.");
   }
 
   const user = users[index];

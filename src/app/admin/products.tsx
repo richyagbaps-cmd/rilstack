@@ -48,14 +48,18 @@ export default function AdminProductsPage() {
     } else {
       setSuccess("Updated successfully");
       setProducts((prev) =>
-        prev.map((p) => (p.id === selectedId ? { ...p, available_for_purchase: amount } : p))
+        prev.map((p) =>
+          p.id === selectedId ? { ...p, available_for_purchase: amount } : p,
+        ),
       );
     }
   };
 
   return (
     <div className="max-w-xl mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Set Available Investment Amount</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        Set Available Investment Amount
+      </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block font-semibold mb-1">Select Product</label>
@@ -75,7 +79,9 @@ export default function AdminProductsPage() {
         </div>
         {selectedId && (
           <div>
-            <label className="block font-semibold mb-1">Available for Purchase</label>
+            <label className="block font-semibold mb-1">
+              Available for Purchase
+            </label>
             <input
               type="number"
               className="w-full border rounded px-3 py-2"
@@ -85,12 +91,15 @@ export default function AdminProductsPage() {
               required
             />
             <div className="text-xs text-slate-500 mt-1">
-              Already sold: {products.find((p) => p.id === selectedId)?.sold || 0}
+              Already sold:{" "}
+              {products.find((p) => p.id === selectedId)?.sold || 0}
             </div>
           </div>
         )}
         {error && <div className="text-red-600 font-semibold">{error}</div>}
-        {success && <div className="text-green-600 font-semibold">{success}</div>}
+        {success && (
+          <div className="text-green-600 font-semibold">{success}</div>
+        )}
         <button
           type="submit"
           className="bg-[#2c3e5f] text-white px-6 py-2 rounded font-semibold mt-2 disabled:opacity-50"

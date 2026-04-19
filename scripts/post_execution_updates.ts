@@ -1,6 +1,6 @@
 // Script to handle post-execution updates: push notification, analytics, wallet, portfolio
-import { prisma } from '../src/lib/prisma';
-import { investmentEvents } from '../src/lib/events';
+import { prisma } from "../src/lib/prisma";
+import { investmentEvents } from "../src/lib/events";
 
 // Example push notification function (replace with real provider)
 async function sendPushNotification(userId: string, message: string) {
@@ -12,7 +12,9 @@ async function updateAnalytics(productId: string, amount: number) {
   // Increment total invested for product
   await prisma.product.update({
     where: { id: productId },
-    data: { /* e.g., totalInvested: { increment: amount } */ },
+    data: {
+      /* e.g., totalInvested: { increment: amount } */
+    },
   });
 }
 
@@ -27,7 +29,14 @@ async function finalizeWalletDebit(userId: string, amount: number) {
 }
 
 // Update user portfolio
-async function updateUserPortfolio(userId: string, productId: string, invested_amount: number, quantity: number, purchase_date: Date, current_value: number) {
+async function updateUserPortfolio(
+  userId: string,
+  productId: string,
+  invested_amount: number,
+  quantity: number,
+  purchase_date: Date,
+  current_value: number,
+) {
   await prisma.userPortfolio.create({
     data: {
       id: `${userId}_${productId}_${Date.now()}`,
@@ -42,13 +51,23 @@ async function updateUserPortfolio(userId: string, productId: string, invested_a
 }
 
 // Event listener for InvestmentExecuted
-investmentEvents.on('InvestmentExecuted', async (payload) => {
-  const { userId, productId, amount, quantity, purchaseDate, currentValue } = payload;
-  await sendPushNotification(userId, 'Your investment has been executed!');
+investmentEvents.on("InvestmentExecuted", async (payload) => {
+  const { userId, productId, amount, quantity, purchaseDate, currentValue } =
+    payload;
+  await sendPushNotification(userId, "Your investment has been executed!");
   await updateAnalytics(productId, amount);
   await finalizeWalletDebit(userId, amount);
-  await updateUserPortfolio(userId, productId, amount, quantity, purchaseDate, currentValue);
-  console.log(`[Event] InvestmentExecuted handled for user ${userId}, product ${productId}`);
+  await updateUserPortfolio(
+    userId,
+    productId,
+    amount,
+    quantity,
+    purchaseDate,
+    currentValue,
+  );
+  console.log(
+    `[Event] InvestmentExecuted handled for user ${userId}, product ${productId}`,
+  );
 });
 
 // Example: emit event after order execution

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 
 interface Message {
   id: string;
-  type: 'user' | 'assistant';
+  type: "user" | "assistant";
   message: string;
   timestamp: Date;
 }
@@ -21,11 +21,19 @@ interface AIChatbotProps {
 const getAIResponse = (userInput: string): string => {
   const lowerInput = userInput.toLowerCase();
 
-  if (lowerInput.match(/hello|hi|hey|greetings|good morning|good afternoon|good evening/i)) {
+  if (
+    lowerInput.match(
+      /hello|hi|hey|greetings|good morning|good afternoon|good evening/i,
+    )
+  ) {
     return "Hello! I'm RILSTACK's AI Assistant. I'm here to help you with budgeting, savings, investments, and financial planning questions. How can I assist you today?";
   }
 
-  if (lowerInput.match(/locked savings|lock period|hourly|daily|monthly|yearly lock/i)) {
+  if (
+    lowerInput.match(
+      /locked savings|lock period|hourly|daily|monthly|yearly lock/i,
+    )
+  ) {
     return "Locked Savings Explanation:\n\nLocked Savings helps enforce disciplined saving by preventing access to funds until the unlock date:\n\nHourly Lock - 0.5% APY\nDaily Lock - 2% APY\nMonthly Lock - 4.5% APY\nYearly Lock - 7.2% APY\n\nInterest is calculated and paid to you when the lock period ends. This feature is perfect for building savings discipline!";
   }
 
@@ -33,7 +41,11 @@ const getAIResponse = (userInput: string): string => {
     return "Budget Models Explained:\n\n50/30/20 Model:\n- 50% Needs (Housing, Food, Utilities)\n- 30% Wants (Entertainment, Dining)\n- 20% Savings & Investments\n\nZero-Based Budgeting:\n- Allocate every naira to a specific category\n- Better control over discretionary spending\n\nWhich model works best for you depends on your income stability and goals. Would you like tips on identifying your expenses?";
   }
 
-  if (lowerInput.match(/investment|stocks|bonds|mutual funds|t-bills|returns|interest/i)) {
+  if (
+    lowerInput.match(
+      /investment|stocks|bonds|mutual funds|t-bills|returns|interest/i,
+    )
+  ) {
     return "Investment Options in RILSTACK:\n\nT-Bills (5-6% APY)\n- Government securities, low-risk\n- Short-term returns\n\nBonds (4-5% APY)\n- Fixed income investments\n- Regular interest payments\n\nMutual Funds (7-10% APY)\n- Professionally managed portfolios\n- Close-ended funds with sale cycles\n\nDiversification is key. Don't put all funds in one investment type. What's your risk tolerance?";
   }
 
@@ -45,11 +57,17 @@ const getAIResponse = (userInput: string): string => {
     return "Risk Management in Investing:\n\nConservative Strategy:\n- 60% Bonds/T-Bills, 40% Savings\n- Lower returns, stable growth\n\nModerate Strategy:\n- 50% Bonds, 30% Mutual Funds, 20% T-Bills\n- Balanced risk and returns\n\nAggressive Strategy:\n- 50% Mutual Funds, 40% Stocks, 10% Bonds\n- Higher returns, more volatility\n\nConsider your age, income, and financial goals when choosing your strategy.";
   }
 
-  if (lowerInput.match(/nin|validation|identity|verify|national id|kyc|settings/i)) {
+  if (
+    lowerInput.match(/nin|validation|identity|verify|national id|kyc|settings/i)
+  ) {
     return "NIN Validation Process:\n\nOur NIN Validation system:\n- Validates your 11-digit NIN\n- Auto-populates your profile with verified details\n- Ensures KYC compliance\n- Supports secure verification workflows\n\nBenefits:\n- Quick profile setup\n- Enhanced security\n- Full access to RILSTACK features\n- Regulatory compliance\n\nGo to the 'Settings' section to get started.";
   }
 
-  if (lowerInput.match(/account|deposit|withdraw|balance|transaction|payment method/i)) {
+  if (
+    lowerInput.match(
+      /account|deposit|withdraw|balance|transaction|payment method/i,
+    )
+  ) {
     return "Account Management:\n\nDeposit Methods:\n- Card - Credit/Debit cards\n- Transfer - Bank transfers\n- USSD - Mobile money via USSD\n\nBalance Types:\n- Total Balance - All your funds\n- Available Balance - Ready to withdraw\n- Locked/Invested - In investments or locked savings\n\nTrack all transactions in your account history. What would you like to do?";
   }
 
@@ -87,8 +105,8 @@ const getAIResponse = (userInput: string): string => {
 export default function AIChatbot({ onClose }: AIChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      type: 'assistant',
+      id: "1",
+      type: "assistant",
       message:
         "Welcome to RILSTACK AI Assistant! I'm here to help you with financial planning, budgeting, savings strategies, and investment advice.\n\nYou can ask me about:\n- Budget models and expense tracking\n- Locked savings strategies\n- Investment options\n- Savings goals\n- Financial tips\n- Account management\n- And much more!\n\nWhat would you like to know?",
       timestamp: new Date(),
@@ -99,7 +117,7 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
   const { register, handleSubmit, reset } = useForm<ChatFormData>();
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const sendMessage = (userMessage: string) => {
@@ -111,20 +129,20 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
 
     const newUserMessage: Message = {
       id: Date.now().toString(),
-      type: 'user',
+      type: "user",
       message: trimmedMessage,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, newUserMessage]);
-    reset({ userMessage: '' });
+    reset({ userMessage: "" });
     setIsLoading(true);
 
     setTimeout(() => {
       const aiResponse = getAIResponse(trimmedMessage);
       const newAIMessage: Message = {
         id: (Date.now() + 1).toString(),
-        type: 'assistant',
+        type: "assistant",
         message: aiResponse,
         timestamp: new Date(),
       };
@@ -139,11 +157,11 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
   };
 
   const suggestedQuestions = [
-    'Financial Planning Tips',
-    'How do Locked Savings work?',
-    '50/30/20 Budget Explained',
-    'Investment Strategies',
-    'NIN Validation Process',
+    "Financial Planning Tips",
+    "How do Locked Savings work?",
+    "50/30/20 Budget Explained",
+    "Investment Strategies",
+    "NIN Validation Process",
   ];
 
   return (
@@ -167,7 +185,9 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
       <div className="flex-1 space-y-3 overflow-y-auto p-3">
         {messages.length === 1 && (
           <div className="mb-2 space-y-1">
-            <p className="text-xs font-semibold text-gray-600">Quick prompts:</p>
+            <p className="text-xs font-semibold text-gray-600">
+              Quick prompts:
+            </p>
             <div className="space-y-1">
               {suggestedQuestions.slice(0, 3).map((question) => (
                 <button
@@ -185,24 +205,26 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
               className={`max-w-xs rounded px-3 py-2 text-sm ${
-                msg.type === 'user'
-                  ? 'rounded-br-none bg-[#2c3e5f] text-white'
-                  : 'rounded-bl-none bg-gray-200 text-gray-800'
+                msg.type === "user"
+                  ? "rounded-br-none bg-[#2c3e5f] text-white"
+                  : "rounded-bl-none bg-gray-200 text-gray-800"
               }`}
             >
-              <p className="whitespace-pre-wrap text-xs leading-relaxed">{msg.message}</p>
+              <p className="whitespace-pre-wrap text-xs leading-relaxed">
+                {msg.message}
+              </p>
               <p
                 className={`mt-1 text-xs ${
-                  msg.type === 'user' ? 'text-blue-100' : 'text-gray-600'
+                  msg.type === "user" ? "text-blue-100" : "text-gray-600"
                 }`}
               >
-                {msg.timestamp.toLocaleTimeString('en-NG', {
-                  hour: '2-digit',
-                  minute: '2-digit',
+                {msg.timestamp.toLocaleTimeString("en-NG", {
+                  hour: "2-digit",
+                  minute: "2-digit",
                 })}
               </p>
             </div>
@@ -216,11 +238,11 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
                 <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500"></div>
                 <div
                   className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500"
-                  style={{ animationDelay: '0.1s' }}
+                  style={{ animationDelay: "0.1s" }}
                 ></div>
                 <div
                   className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-500"
-                  style={{ animationDelay: '0.2s' }}
+                  style={{ animationDelay: "0.2s" }}
                 ></div>
               </div>
             </div>
@@ -235,7 +257,7 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
           <input
             type="text"
             placeholder="Ask..."
-            {...register('userMessage')}
+            {...register("userMessage")}
             className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none"
             disabled={isLoading}
           />
@@ -244,7 +266,7 @@ export default function AIChatbot({ onClose }: AIChatbotProps) {
             disabled={isLoading}
             className="rounded bg-[#2c3e5f] px-3 py-2 text-sm font-bold text-white transition-all hover:bg-[#1e2d46] disabled:opacity-50"
           >
-            {isLoading ? '...' : 'Send'}
+            {isLoading ? "..." : "Send"}
           </button>
         </form>
       </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 
 export type BudgetSaveStep =
@@ -17,10 +16,20 @@ type Category = {
   amount: number;
 };
 
-export default function BudgetSaveModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function BudgetSaveModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const [step, setStep] = useState<BudgetSaveStep>("chooseType");
-  const [budgetMode, setBudgetMode] = useState<"strict" | "relaxed" | null>(null);
-  const [budgetType, setBudgetType] = useState<"50-30-20" | "zero-based" | "custom" | null>(null);
+  const [budgetMode, setBudgetMode] = useState<"strict" | "relaxed" | null>(
+    null,
+  );
+  const [budgetType, setBudgetType] = useState<
+    "50-30-20" | "zero-based" | "custom" | null
+  >(null);
   const [userInfo, setUserInfo] = useState({
     occupation: "",
     age: "",
@@ -46,26 +55,45 @@ export default function BudgetSaveModal({ open, onClose }: { open: boolean; onCl
         {/* Step: Choose Budget Mode */}
         {step === "chooseBudgetMode" && (
           <>
-            <h2 className="text-xl font-bold mb-4 text-[#2c3e5f]">Choose your budgeting experience</h2>
+            <h2 className="text-xl font-bold mb-4 text-[#2c3e5f]">
+              Choose your budgeting experience
+            </h2>
             <div className="flex flex-col gap-4">
               <button
                 className="rounded-xl bg-gradient-to-r from-[#2c3e5f] to-[#4A8B6E] text-white py-3 font-semibold text-lg"
-                onClick={() => { setBudgetMode("strict"); setStep("chooseBudgetType"); }}
+                onClick={() => {
+                  setBudgetMode("strict");
+                  setStep("chooseBudgetType");
+                }}
                 disabled={!agreed}
               >
                 Strict (Mandatory Safelock)
-                <div className="text-xs font-normal mt-1">Money is locked until the end date. No withdrawals until completion.</div>
+                <div className="text-xs font-normal mt-1">
+                  Money is locked until the end date. No withdrawals until
+                  completion.
+                </div>
               </button>
               <button
                 className="rounded-xl bg-gradient-to-r from-[#FFA500] to-[#FFD700] text-white py-3 font-semibold text-lg"
-                onClick={() => { setBudgetMode("relaxed"); setStep("chooseBudgetType"); }}
+                onClick={() => {
+                  setBudgetMode("relaxed");
+                  setStep("chooseBudgetType");
+                }}
                 disabled={!agreed}
               >
                 Relaxed (3.5% withdrawal fee)
-                <div className="text-xs font-normal mt-1">Withdraw anytime, but pay a 3.5% fee on any amount removed before the end date.</div>
+                <div className="text-xs font-normal mt-1">
+                  Withdraw anytime, but pay a 3.5% fee on any amount removed
+                  before the end date.
+                </div>
               </button>
             </div>
-            <button className="mt-6 text-[#2c3e5f] underline" onClick={() => setStep("chooseType")}>Back</button>
+            <button
+              className="mt-6 text-[#2c3e5f] underline"
+              onClick={() => setStep("chooseType")}
+            >
+              Back
+            </button>
           </>
         )}
         {/* ...rest of the component code... */}

@@ -9,7 +9,9 @@ export default function LockAnimation({ show }: { show: boolean }) {
         <ellipse cx="30" cy="38" rx="4" ry="4" fill="#2c3e5f" />
         <rect x="28" y="38" width="4" height="8" rx="2" fill="#2c3e5f" />
       </svg>
-      <div className="mt-4 text-[#FFD700] font-bold text-lg animate-bounce">Locked!</div>
+      <div className="mt-4 text-[#FFD700] font-bold text-lg animate-bounce">
+        Locked!
+      </div>
     </div>
   ) : null;
 }

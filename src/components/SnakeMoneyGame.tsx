@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 
-
 export default function SnakeMoneyGame() {
   // Types and constants
   interface Point {
@@ -10,7 +9,7 @@ export default function SnakeMoneyGame() {
   }
   type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
   const GRID_SIZE = 16;
-  const INITIAL_SNAKE: Point[] = [ { x: 8, y: 8 } ];
+  const INITIAL_SNAKE: Point[] = [{ x: 8, y: 8 }];
   const INITIAL_MONEY: Point = { x: 4, y: 4 };
   const INITIAL_DIRECTION: Direction = "RIGHT";
   const INITIAL_SPEED = 220; // Start slower
@@ -33,9 +32,12 @@ export default function SnakeMoneyGame() {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowUp" && dirRef.current !== "DOWN") setDirection("UP");
-      else if (e.key === "ArrowDown" && dirRef.current !== "UP") setDirection("DOWN");
-      else if (e.key === "ArrowLeft" && dirRef.current !== "RIGHT") setDirection("LEFT");
-      else if (e.key === "ArrowRight" && dirRef.current !== "LEFT") setDirection("RIGHT");
+      else if (e.key === "ArrowDown" && dirRef.current !== "UP")
+        setDirection("DOWN");
+      else if (e.key === "ArrowLeft" && dirRef.current !== "RIGHT")
+        setDirection("LEFT");
+      else if (e.key === "ArrowRight" && dirRef.current !== "LEFT")
+        setDirection("RIGHT");
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -54,8 +56,10 @@ export default function SnakeMoneyGame() {
 
         // Wall or self collision
         if (
-          head.x < 0 || head.x >= GRID_SIZE ||
-          head.y < 0 || head.y >= GRID_SIZE ||
+          head.x < 0 ||
+          head.x >= GRID_SIZE ||
+          head.y < 0 ||
+          head.y >= GRID_SIZE ||
           prev.some((s) => s.x === head.x && s.y === head.y)
         ) {
           setGameOver(true);
@@ -75,12 +79,15 @@ export default function SnakeMoneyGame() {
         return newSnake;
       });
     }, speed);
-    return () => { if (moveRef.current) clearTimeout(moveRef.current); };
+    return () => {
+      if (moveRef.current) clearTimeout(moveRef.current);
+    };
   }, [snake, money, gameOver, speed]);
 
   // Touch controls for mobile
   useEffect(() => {
-    let startX = 0, startY = 0;
+    let startX = 0,
+      startY = 0;
     const handleTouchStart = (e: TouchEvent) => {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
@@ -130,7 +137,9 @@ export default function SnakeMoneyGame() {
     <div className="w-full flex flex-col items-center justify-center py-4">
       <div className="mb-2 flex items-center gap-2">
         <span className="font-bold text-lg">Ril-Snack</span>
-        <span className="text-xs bg-green-100 text-green-700 rounded px-2 py-0.5">Offline Ready</span>
+        <span className="text-xs bg-green-100 text-green-700 rounded px-2 py-0.5">
+          Offline Ready
+        </span>
       </div>
       <div
         className="relative"
@@ -176,15 +185,24 @@ export default function SnakeMoneyGame() {
             boxShadow: "0 0 8px 2px #ffd70099",
           }}
         >
-          <span role="img" aria-label="money" style={{ fontSize: 18 + moneySize * 2 }}>
+          <span
+            role="img"
+            aria-label="money"
+            style={{ fontSize: 18 + moneySize * 2 }}
+          >
             💰
           </span>
         </div>
       </div>
       <div className="mt-2 flex items-center gap-4">
-        <span className="text-sm">Score: <b>{score}</b></span>
+        <span className="text-sm">
+          Score: <b>{score}</b>
+        </span>
         {gameOver && (
-          <button className="ml-2 px-3 py-1 rounded bg-[#2c3e5f] text-white text-xs" onClick={handleRestart}>
+          <button
+            className="ml-2 px-3 py-1 rounded bg-[#2c3e5f] text-white text-xs"
+            onClick={handleRestart}
+          >
             Restart
           </button>
         )}
@@ -198,7 +216,9 @@ export default function SnakeMoneyGame() {
             onClick={() => direction !== "DOWN" && setDirection("UP")}
             tabIndex={0}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 4l-7 8h14l-7-8z" fill="currentColor"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M12 4l-7 8h14l-7-8z" fill="currentColor" />
+            </svg>
           </button>
         </div>
         <div className="flex gap-8">
@@ -208,7 +228,9 @@ export default function SnakeMoneyGame() {
             onClick={() => direction !== "RIGHT" && setDirection("LEFT")}
             tabIndex={0}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 12l8-7v14l-8-7z" fill="currentColor"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M4 12l8-7v14l-8-7z" fill="currentColor" />
+            </svg>
           </button>
           <button
             aria-label="Down"
@@ -216,7 +238,9 @@ export default function SnakeMoneyGame() {
             onClick={() => direction !== "UP" && setDirection("DOWN")}
             tabIndex={0}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 20l7-8H5l7 8z" fill="currentColor"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M12 20l7-8H5l7 8z" fill="currentColor" />
+            </svg>
           </button>
           <button
             aria-label="Right"
@@ -224,11 +248,15 @@ export default function SnakeMoneyGame() {
             onClick={() => direction !== "LEFT" && setDirection("RIGHT")}
             tabIndex={0}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 12l-8 7V5l8 7z" fill="currentColor"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M20 12l-8 7V5l8 7z" fill="currentColor" />
+            </svg>
           </button>
         </div>
       </div>
-      <div className="mt-1 text-xs text-gray-500">Use arrow keys, swipe, or tap arrows to play</div>
+      <div className="mt-1 text-xs text-gray-500">
+        Use arrow keys, swipe, or tap arrows to play
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { paystackRequest } from '@/lib/paystack';
+import { NextRequest, NextResponse } from "next/server";
+import { paystackRequest } from "@/lib/paystack";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface FinalizeRequest {
   transferCode: string;
@@ -14,11 +14,17 @@ export async function POST(request: NextRequest) {
     const { transferCode, otp } = body;
 
     if (!transferCode || !otp) {
-      return NextResponse.json({ error: 'Transfer code and OTP are required.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Transfer code and OTP are required." },
+        { status: 400 },
+      );
     }
 
-    const response = await paystackRequest<{ status: string; reference: string }>('/transfer/finalize_transfer', {
-      method: 'POST',
+    const response = await paystackRequest<{
+      status: string;
+      reference: string;
+    }>("/transfer/finalize_transfer", {
+      method: "POST",
       body: JSON.stringify({
         transfer_code: transferCode,
         otp,
@@ -29,12 +35,12 @@ export async function POST(request: NextRequest) {
       success: true,
       status: response.data.status,
       reference: response.data.reference,
-      message: 'Withdrawal OTP confirmed successfully.',
+      message: "Withdrawal OTP confirmed successfully.",
     });
   } catch (error: any) {
-    console.error('Finalize withdrawal error:', error);
+    console.error("Finalize withdrawal error:", error);
     return NextResponse.json(
-      { error: error.message || 'Failed to finalize withdrawal.' },
+      { error: error.message || "Failed to finalize withdrawal." },
       { status: 500 },
     );
   }

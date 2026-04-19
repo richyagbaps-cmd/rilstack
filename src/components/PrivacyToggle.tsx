@@ -1,5 +1,5 @@
-import React from 'react';
-import { usePrivacy } from './PrivacyContext';
+import React from "react";
+import { usePrivacy } from "./PrivacyContext";
 
 export default function PrivacyToggle() {
   const { privacyMode, setPrivacyMode } = usePrivacy();
@@ -10,11 +10,13 @@ export default function PrivacyToggle() {
         <input
           type="checkbox"
           checked={privacyMode}
-          onChange={e => setPrivacyMode(e.target.checked)}
+          onChange={(e) => setPrivacyMode(e.target.checked)}
           className="sr-only peer"
         />
         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
-        <span className="ml-3 text-sm text-gray-600">{privacyMode ? 'On' : 'Off'}</span>
+        <span className="ml-3 text-sm text-gray-600">
+          {privacyMode ? "On" : "Off"}
+        </span>
       </label>
     </div>
   );

@@ -1,16 +1,22 @@
-input, textarea, select {
-  color: #181A20;
+input,
+textarea,
+select {
+  color: #181a20;
   background: #fff;
   caret-color: #2c3e5f;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: 2px solid #2c3e5f;
   background: #fff;
-  color: #181A20;
+  color: #181a20;
 }
 
-input[readonly], textarea[readonly], select[readonly] {
+input[readonly],
+textarea[readonly],
+select[readonly] {
   background: #f3f4fa;
   color: #7a869a;
 }
@@ -18,25 +24,20 @@ input[readonly], textarea[readonly], select[readonly] {
 @tailwind components;
 @tailwind utilities;
 
-
-
-
 :root {
-  --app-bg: #0A0E17;
+  --app-bg: #0a0e17;
   --app-fg: #fff;
-  --app-blue: #2A6DFF;
+  --app-blue: #2a6dff;
   --app-blue-light: #eaf2fa;
-  --app-white: rgba(255,255,255,0.03);
-  --app-border: rgba(255,255,255,0.10);
-  --app-gray: #F1F4F9;
-  --accent-budget-strict: #14B8A6;
-  --accent-budget-relaxed: #F59E0B;
-  --accent-savings: #8B5CF6;
-  --accent-invest: #2A6DFF;
-  --accent-danger: #EF4444;
+  --app-white: rgba(255, 255, 255, 0.03);
+  --app-border: rgba(255, 255, 255, 0.1);
+  --app-gray: #f1f4f9;
+  --accent-budget-strict: #14b8a6;
+  --accent-budget-relaxed: #f59e0b;
+  --accent-savings: #8b5cf6;
+  --accent-invest: #2a6dff;
+  --accent-danger: #ef4444;
 }
-
-
 
 * {
   margin: 0;
@@ -48,11 +49,10 @@ html {
   scroll-behavior: smooth;
 }
 
-
 body {
   background: var(--app-bg);
   color: var(--app-fg);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -63,17 +63,34 @@ body {
   border: 1px solid var(--app-border);
   border-radius: 28px;
   backdrop-filter: blur(16px) saturate(180%);
-  box-shadow: 0 2px 24px rgba(0,0,0,0.10);
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.1);
 }
 
-.accent-budget-strict { background: var(--accent-budget-strict) !important; color: #fff !important; }
-.accent-budget-relaxed { background: var(--accent-budget-relaxed) !important; color: #fff !important; }
-.accent-savings { background: var(--accent-savings) !important; color: #fff !important; }
-.accent-invest { background: var(--accent-invest) !important; color: #fff !important; }
-.accent-danger { background: var(--accent-danger) !important; color: #fff !important; }
+.accent-budget-strict {
+  background: var(--accent-budget-strict) !important;
+  color: #fff !important;
+}
+.accent-budget-relaxed {
+  background: var(--accent-budget-relaxed) !important;
+  color: #fff !important;
+}
+.accent-savings {
+  background: var(--accent-savings) !important;
+  color: #fff !important;
+}
+.accent-invest {
+  background: var(--accent-invest) !important;
+  color: #fff !important;
+}
+.accent-danger {
+  background: var(--accent-danger) !important;
+  color: #fff !important;
+}
 
-.mono-number, .mono-number * {
-  font-family: 'Roboto Mono', 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace !important;
+.mono-number,
+.mono-number * {
+  font-family:
+    "Roboto Mono", "Menlo", "Monaco", "Consolas", "Courier New", monospace !important;
   font-variant-numeric: tabular-nums;
 }
 
@@ -86,22 +103,35 @@ body {
   animation: pulseInterest 1.2s infinite alternate;
 }
 @keyframes pulseInterest {
-  0% { opacity: 0.7; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .confetti {
   animation: confettiPop 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes confettiPop {
-  0% { transform: scale(0.8) rotate(-8deg); opacity: 0; }
-  60% { transform: scale(1.1) rotate(8deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  0% {
+    transform: scale(0.8) rotate(-8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 .glass-panel {
@@ -120,7 +150,7 @@ code {
 }
 
 .reel-bar {
-  background: linear-gradient(180deg, #2c5f2d 0%, #4A8B6E 55%, #6BAF8D 100%);
+  background: linear-gradient(180deg, #2c5f2d 0%, #4a8b6e 55%, #6baf8d 100%);
   animation: budgetPulse 1.8s ease-in-out infinite;
   transform-origin: bottom;
 }

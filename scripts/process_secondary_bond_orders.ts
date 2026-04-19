@@ -1,16 +1,17 @@
 // Node.js script to process secondary market bond orders
-import { prisma } from '../src/lib/prisma';
-import { investmentEvents } from '../src/lib/events';
+import { prisma } from "../src/lib/prisma";
+import { investmentEvents } from "../src/lib/events";
 
 async function processSecondaryBondOrders() {
   // Find all pending_broker orders for secondary bonds
   const orders = await prisma.investmentOrder.findMany({
-    where: { status: 'pending_broker' },
+    where: { status: "pending_broker" },
     include: { product: true, user: true },
   });
   for (const order of orders) {
     // Retry broker API up to 3 times with exponential backoff
-    let attempts = 0, brokerSuccess = false;
+    let attempts = 0,
+      brokerSuccess = false;
     let tradeConfirmation = null;
     while (attempts < 3 && !brokerSuccess) {
       try {
@@ -23,12 +24,14 @@ async function processSecondaryBondOrders() {
             settlementDate: new Date(Date.now() + 2 * 86400000),
           });
         } else {
-          throw new Error('Broker API failed');
+          throw new Error("Broker API failed");
         }
       } catch (e) {
         attempts++;
         if (attempts < 3) {
-          await new Promise(res => setTimeout(res, Math.pow(2, attempts - 1) * 1000));
+          await new Promise((res) =>
+            setTimeout(res, Math.pow(2, attempts - 1) * 1000),
+          );
         }
       }
     }
@@ -36,13 +39,13 @@ async function processSecondaryBondOrders() {
       await prisma.investmentOrder.update({
         where: { id: order.id },
         data: {
-          status: 'executed',
+          status: "executed",
           executedAt: new Date(),
           tradeConfirmation,
         },
       });
       // Emit InvestmentExecuted event for post-execution updates
-      investmentEvents.emit('InvestmentExecuted', {
+      investmentEvents.emit("InvestmentExecuted", {
         userId: order.userId,
         productId: order.productId,
         amount: order.amount,
@@ -54,8 +57,8 @@ async function processSecondaryBondOrders() {
       await prisma.investmentOrder.update({
         where: { id: order.id },
         data: {
-          status: 'failed',
-          failureReason: 'Broker API timeout or no liquidity',
+          status: "failed",
+          failureReason: "Broker API timeout or no liquidity",
         },
       });
       // Refund wallet on failure
@@ -64,16 +67,16 @@ async function processSecondaryBondOrders() {
         data: { wallet_balance: { increment: order.amount } },
       });
       // Emit InvestmentFailed event (optional)
-      investmentEvents.emit('InvestmentFailed', {
+      investmentEvents.emit("InvestmentFailed", {
         userId: order.userId,
         productId: order.productId,
         amount: order.amount,
-        reason: 'Broker API timeout or no liquidity',
+        reason: "Broker API timeout or no liquidity",
       });
     }
   }
   await prisma.$disconnect();
-  console.log('Secondary bond order processing complete');
+  console.log("Secondary bond order processing complete");
 }
 
 processSecondaryBondOrders().catch((e) => {

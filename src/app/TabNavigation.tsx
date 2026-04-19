@@ -1,2 +1,4 @@
 // Deprecated: replaced by DashboardTabContent logic in page.tsx
-export default function TabNavigation() { return null; }
+export default function TabNavigation() {
+  return null;
+}

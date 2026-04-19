@@ -1,39 +1,170 @@
 // Prisma schema for concurrency-safe investment reservation
 
+datasource db {
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
-}
-
-model Product {
-  id                     String   @id
-  name                   String
-  type                   String
-  min_investment         Int
-  available_for_purchase Int
-  active                 Boolean
-  investmentOrders       InvestmentOrder[]
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id             String   @id
-  kyc_verified   Boolean
-  active         Boolean
-  wallet_balance Int
-  investmentOrders InvestmentOrder[]
+  id                      String   @id @default(uuid())
+  email                   String   @unique
+  phone                   String   @unique
+  passwordHash            String
+  pinHash                 String
+  googleId                String?  @unique
+  avatarUrl               String?
+  kycData                 Json
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  lastLogin               DateTime?
+  isActive                Boolean  @default(true)
+  privacyModeEnabled      Boolean  @default(false)
+  biometricEnabled        Boolean  @default(false)
+  notificationPreferences Json     @default("{}")
+  budgets                 Budget[]
+  savingsGoals            SavingsGoal[]
+  userInvestments         UserInvestment[]
+  achievements            Achievement[]
+  notifications           Notification[]
+  challenges              Challenge[]
 }
 
-model InvestmentOrder {
+model Budget {
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  type          String
+  budgetStyle   String
+  startDate     DateTime
+  endDate       DateTime
+  totalIncome   Int
+  totalAllocated Int
+  totalSpent    Int
+  status        String
+  categories    Json
+  createdAt     DateTime @default(now())
+  transactions  BudgetTransaction[]
+}
+
+model BudgetTransaction {
+  id             String   @id @default(uuid())
+  budget         Budget   @relation(fields: [budgetId], references: [id])
+  budgetId       String
+  categoryName   String
+  amount         Int
+  fee            Int
+  timestamp      DateTime @default(now())
+  balanceAfter   Int
+}
+
+model SavingsGoal {
+  id                         String   @id @default(uuid())
+  user                      User     @relation(fields: [userId], references: [id])
+  userId                    String
+  name                      String
+  targetAmount              Int
+  currentAmount             Int
+  dueDate                   DateTime
+  type                      String
+  teamMembers               String[]
+  adminId                   String?
+  withdrawalApprovalRequired Boolean @default(false)
+  safeLocks                 Json
+  interestAccruedTotal      Int @default(0)
+  lastInterestCalculationDate DateTime?
+  savingsTransactions       SavingsTransaction[]
+}
+
+model SavingsTransaction {
+  id           String   @id @default(uuid())
+  goal         SavingsGoal @relation(fields: [goalId], references: [id])
+  goalId       String
+  userId       String
+  type         String
+  amount       Int
+  fee          Int
+  timestamp    DateTime @default(now())
+  balanceAfter Int
+}
+
+model InvestmentProduct {
+  id                          String   @id @default(uuid())
+  name                        String
+  description                 String
+  unitAmount                  Int
+  totalUnitsAvailable         Int
+  tenorDays                   Int?
+  returnRatePercent           Float
+  returnType                  String
+  earlyWithdrawalPenaltyPercent Float
+  riskLevel                   String
+  isActive                    Boolean @default(true)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+  userInvestments             UserInvestment[]
+}
+
+model UserInvestment {
+  id                String   @id @default(uuid())
+  user              User     @relation(fields: [userId], references: [id])
+  userId            String
+  product           InvestmentProduct @relation(fields: [productId], references: [id])
+  productId         String
+  units             Int
+  amountInvested    Int
+  expectedReturnTotal Int
+  startDate         DateTime
+  expectedEndDate   DateTime
+  status            String
+  actualReturn      Int?
+  maturityDate      DateTime?
+  withdrawnAt       DateTime?
+  penaltyAmount     Int?
+  accruedInterest   Int @default(0)
+  investmentTransactions InvestmentTransaction[]
+}
+
+model InvestmentTransaction {
+  id                  String   @id @default(uuid())
+  userInvestment      UserInvestment @relation(fields: [userInvestmentId], references: [id])
+  userInvestmentId    String
+  type                String
+  amount              Int
+  timestamp           DateTime @default(now())
+  balanceAfter        Int
+}
+
+model Achievement {
   id         String   @id @default(uuid())
   user       User     @relation(fields: [userId], references: [id])
   userId     String
-  product    Product  @relation(fields: [productId], references: [id])
-  productId  String
-  amount     Int
-  status     String   // e.g., 'pending_execution', 'completed', etc.
-  createdAt  DateTime @default(now())
+  badgeName  String
+  unlockedAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Challenge {
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  challengeType String
+  progress      Int
+  completedAt   DateTime?
+  rewardAmount  Int
+}
 }
