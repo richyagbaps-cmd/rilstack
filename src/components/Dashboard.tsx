@@ -2,29 +2,12 @@
 
 import Image from "next/image";
 import React, { useState } from "react";
-import SavingsInvestmentsCarousel from "./SavingsInvestmentsCarousel";
+import { useSession } from "next-auth/react";
+import ThreeDHome from "./ThreeDHome";
 import ReviewsWidget from "./ReviewsWidget";
 import MetricCardsCarousel from "./MetricCardsCarousel";
-import StepIndicator from "./StepIndicator";
-import LoadingDots from "./LoadingDots";
-import EmptyStatePiggy from "./EmptyStatePiggy";
-import SkeletonCard from "./SkeletonCard";
-import FeeWarningToast from "./FeeWarningToast";
-import MagicWandAI from "./MagicWandAI";
-import PinPad from "./PinPad";
-import LockAnimation from "./LockAnimation";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import DashboardTabContent from "../app/DashboardTabContent";
+import UserProfile from "./UserProfile";
 
 const monthlyData = [
   { month: "Jan", income: 0, expenses: 0, invest: 0 },
@@ -62,71 +45,67 @@ const metricCards = [
   },
 ];
 
-export default function Dashboard({
-  onNavigate,
-}: {
-  onNavigate?: (section: string) => void;
-}) {
-  // Example state for demoing micro-interactions (replace with real data logic)
-  const [step, setStep] = useState(1);
-  const [showFeeToast, setShowFeeToast] = useState(false);
-  const [showLock, setShowLock] = useState(false);
-  const [pin, setPin] = useState("");
-  const [empty, setEmpty] = useState(false);
+export default function Dashboard() {
+  const { data: session, status } = useSession();
+  const [showProfile, setShowProfile] = useState(false);
+
+  if (status === "loading") {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  if (!session) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+        <h2 className="text-2xl font-bold mb-4">Please log in to access your dashboard</h2>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="relative min-h-screen overflow-hidden px-2 pb-16 pt-6 bg-glass backdrop-blur-xl text-app-fg font-inter animate-fade-in"
-      style={{ color: "var(--app-fg)" }}
-    >
-      {/* Step indicator for onboarding or budgeting flows */}
-      <StepIndicator step={step} total={4} />
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#050b17]">
+      {/* 3D Interactive Background */}
+      <div className="absolute inset-0 -z-10">
+        <ThreeDHome />
+      </div>
 
-      {/* ReviewsWidget at the top */}
-      <div className="mb-8 rounded-3xl bg-glass shadow-lg p-4 animate-fade-in-up">
+      {/* Top Bar with Profile (mobile-friendly) */}
+      <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-8 z-20 relative">
+        <div className="flex items-center gap-3">
+          <span className="text-lg md:text-2xl font-bold text-white drop-shadow">Welcome back,</span>
+          <span className="text-lg md:text-2xl font-bold text-cyan-300 drop-shadow">{session.user?.name || "User"}</span>
+        </div>
+        <button
+          className="rounded-full border-2 border-cyan-400 p-1 md:p-2 bg-white/80 hover:scale-105 transition shadow"
+          style={{ width: 44, height: 44, overflow: "hidden" }}
+          onClick={() => setShowProfile(true)}
+        >
+          {session.user?.image ? (
+            <Image
+              src={session.user.image}
+              alt="Profile"
+              width={40}
+              height={40}
+              className="rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-cyan-200 rounded-full text-cyan-900 font-bold">
+              {session.user?.name?.[0] || "U"}
+            </div>
+          )}
+        </button>
+      </div>
+
+      {/* Profile Modal */}
+      {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
+
+      {/* Dashboard Content */}
+      <div className="relative z-10 w-full max-w-4xl mx-auto mt-8 md:mt-12 px-2 md:px-0">
         <ReviewsWidget />
+        <MetricCardsCarousel cards={metricCards} />
+        {/* Unified Budgets & Savings Tab */}
+        <div className="mt-8 rounded-3xl bg-white/90 shadow-xl p-4 md:p-8 animate-fade-in-up backdrop-blur-xl">
+          <DashboardTabContent />
+        </div>
       </div>
-
-      {/* Carousel below reviews */}
-      {/* Normal sized moving widget below reviews */}
-      {/* MovingWidget removed to unblock deployment */}
-
-      {/* Metric cards carousel */}
-      {/* Normal sized moving widget for metrics */}
-      {/* MovingWidget removed to unblock deployment */}
-
-      {/* Loading state example removed */}
-
-      {/* Empty state example */}
-      {empty && (
-        <EmptyStatePiggy message="No data yet. Start budgeting or saving!" />
-      )}
-
-      {/* Fee warning toast example */}
-      {showFeeToast && (
-        <FeeWarningToast
-          fee={350}
-          onConfirm={() => setShowFeeToast(false)}
-          onCancel={() => setShowFeeToast(false)}
-        />
-      )}
-
-      {/* MagicWandAI example (AI allocation) */}
-      <div className="flex justify-center my-8">
-        <MagicWandAI onShuffle={() => {}} onUndo={() => {}} disabled={false} />
-      </div>
-
-      {/* PinPad and LockAnimation example (PIN/lock step) */}
-      <div className="flex flex-col items-center gap-4 my-8">
-        <PinPad
-          value={pin}
-          onChange={setPin}
-          onBiometric={() => setShowLock(true)}
-        />
-        <LockAnimation show={showLock} />
-      </div>
-
-      {/* Main content section (hero, charts, etc.) would follow here, as in the original layout */}
     </div>
   );
 }

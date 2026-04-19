@@ -64,22 +64,25 @@ export default function DashboardTabContent() {
   // 0: Overview, 1: Budget & Save, 2: Invest
   return (
     <>
-      <div className="w-full max-w-2xl mx-auto mb-10">
-        <div className="flex rounded-2xl bg-[#f3f4fa] p-2 shadow gap-3 md:gap-6">
+      <div className="w-full max-w-2xl mx-auto mb-10" style={{fontFamily: "'Inter', sans-serif"}}>
+        <div className="flex rounded-[16px] bg-[#F8F9FA] p-2 shadow gap-3 md:gap-6" style={{boxShadow: "0 4px 16px #1A5F7A22, 2px 2px 0 #F4A26133"}}>
           <button
-            className={`flex-1 py-4 md:py-5 rounded-xl font-semibold text-base md:text-lg ${tab === 0 ? "text-[#2c3e5f] bg-white shadow" : "text-[#4A5B6E]"} transition`}
+            className={`flex-1 py-4 md:py-5 rounded-[12px] font-semibold text-base md:text-lg ${tab === 0 ? "text-[#1A5F7A] bg-white shadow" : "text-[#4A5F7A]"} transition`}
+            style={tab === 0 ? {boxShadow: "2px 2px 0 #F4A26133"} : {}}
             onClick={() => setTab(0)}
           >
             Overview
           </button>
           <button
-            className={`flex-1 py-4 md:py-5 rounded-xl font-semibold text-base md:text-lg ${tab === 1 ? "text-[#2c3e5f] bg-white shadow" : "text-[#4A5B6E]"} transition`}
+            className={`flex-1 py-4 md:py-5 rounded-[12px] font-semibold text-base md:text-lg ${tab === 1 ? "text-[#F4A261] bg-white shadow" : "text-[#4A5F7A]"} transition`}
+            style={tab === 1 ? {boxShadow: "2px 2px 0 #F4A26133"} : {}}
             onClick={() => setTab(1)}
           >
             Budget & Save
           </button>
           <button
-            className={`flex-1 py-4 md:py-5 rounded-xl font-semibold text-base md:text-lg ${tab === 2 ? "text-[#FFD700] bg-white shadow" : "text-[#FFD700] hover:text-[#2c3e5f]"}`}
+            className={`flex-1 py-4 md:py-5 rounded-[12px] font-semibold text-base md:text-lg ${tab === 2 ? "text-[#2E7D32] bg-white shadow" : "text-[#4A5F7A] hover:text-[#2E7D32]"}`}
+            style={tab === 2 ? {boxShadow: "2px 2px 0 #F4A26133"} : {}}
             onClick={() => setTab(2)}
           >
             Invest
@@ -190,6 +193,38 @@ export default function DashboardTabContent() {
             </div>
           </div>
           <RecentActivity />
+          {/* Quick Support & Security Footer */}
+          <div className="w-full flex justify-center mt-8 mb-4">
+            <div className="flex gap-2 md:gap-4 bg-transparent rounded-xl p-2">
+              <button
+                className="flex flex-col items-center px-4 py-2 rounded-lg border border-transparent hover:bg-[#F8F9FA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A] transition"
+                style={{ minWidth: 90 }}
+                aria-label="Report Fraud"
+                onClick={() => alert('Fraud reporting coming soon!')}
+              >
+                <span style={{ fontSize: 22, color: '#2E7D32', marginBottom: 2 }}>🛡️</span>
+                <span style={{ fontSize: 13, color: '#1A5F7A', fontWeight: 600 }}>Report Fraud</span>
+              </button>
+              <button
+                className="flex flex-col items-center px-4 py-2 rounded-lg border border-transparent hover:bg-[#F8F9FA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A] transition"
+                style={{ minWidth: 90 }}
+                aria-label="Help & Support"
+                onClick={() => alert('Support center coming soon!')}
+              >
+                <span style={{ fontSize: 22, color: '#F4A261', marginBottom: 2 }}>❓</span>
+                <span style={{ fontSize: 13, color: '#1A5F7A', fontWeight: 600 }}>Help & Support</span>
+              </button>
+              <button
+                className="flex flex-col items-center px-4 py-2 rounded-lg border border-transparent hover:bg-[#F8F9FA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A] transition"
+                style={{ minWidth: 90 }}
+                aria-label="Settings"
+                onClick={() => window.open('/settings', '_self')}
+              >
+                <span style={{ fontSize: 22, color: '#1A5F7A', marginBottom: 2 }}>⚙️</span>
+                <span style={{ fontSize: 13, color: '#1A5F7A', fontWeight: 600 }}>Settings</span>
+              </button>
+            </div>
+          </div>
         </>
       )}
       {tab === 1 && (

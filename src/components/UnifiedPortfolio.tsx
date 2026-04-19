@@ -45,7 +45,7 @@ export default function UnifiedPortfolio() {
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Investments */}
-        <div className="bg-white rounded-2xl p-6 shadow">
+        <div className="bg-white rounded-[16px] p-6 shadow" style={{fontFamily: "'Inter', sans-serif", boxShadow: "0 4px 16px #1A5F7A22, 2px 2px 0 #F4A26133"}}>
           <div className="text-lg font-bold mb-4 text-[#2c3e5f]">
             Investments
           </div>
@@ -53,7 +53,7 @@ export default function UnifiedPortfolio() {
             <div className="text-[#4A5B6E]">No investments yet.</div>
           )}
           {investments.map((inv) => (
-            <div key={inv.id} className="mb-4 p-4 rounded-lg bg-[#f8f9fc]">
+            <div key={inv.id} className="mb-4 p-4 rounded-[12px] bg-[#F8F9FA]" style={{boxShadow: "2px 2px 0 #F4A26122"}}>
               <div className="flex justify-between items-center">
                 <div className="font-semibold text-[#2c3e5f]">
                   {inv.name} ({inv.symbol})
@@ -69,7 +69,7 @@ export default function UnifiedPortfolio() {
           ))}
         </div>
         {/* Safe Locks as cash-like holdings */}
-        <div className="bg-white rounded-2xl p-6 shadow">
+        <div className="bg-white rounded-[16px] p-6 shadow" style={{fontFamily: "'Inter', sans-serif", boxShadow: "0 4px 16px #1A5F7A22, 2px 2px 0 #F4A26133"}}>
           <div className="text-lg font-bold mb-4 text-[#2c3e5f]">
             Safe Locks (Cash-like)
           </div>
@@ -77,7 +77,7 @@ export default function UnifiedPortfolio() {
             <div className="text-[#4A5B6E]">No safe locks yet.</div>
           )}
           {safeLocks.map((lock) => (
-            <div key={lock.id} className="mb-4 p-4 rounded-lg bg-[#f8f9fc]">
+            <div key={lock.id} className="mb-4 p-4 rounded-[12px] bg-[#F8F9FA]" style={{boxShadow: "2px 2px 0 #F4A26122"}}>
               <div className="flex justify-between items-center">
                 <div className="font-semibold text-[#2c3e5f]">
                   ₦{lock.amount.toLocaleString()}

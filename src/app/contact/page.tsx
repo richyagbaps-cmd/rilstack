@@ -17,8 +17,8 @@ export default function ContactPage() {
           </li>
           <li>
             Phone:{" "}
-            <a href="tel:08116883025" className="text-[#00e096] underline">
-              08116883025
+            <a href="tel:+2348116883025" className="text-[#00e096] underline">
+              +234 811 688 3025
             </a>
           </li>
           <li>Address: Plot 233 Ago Palace Way, Okota, Lagos, Nigeria</li>

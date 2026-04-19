@@ -39,7 +39,7 @@ export default function Home() {
       <ThreeDHome />
       <div
         className="content"
-        style={{ position: "relative", zIndex: 10, pointerEvents: "auto" }}
+        style={{ position: "relative", zIndex: 10, pointerEvents: "auto", fontFamily: "'Inter', sans-serif" }}
       >
         <nav
           style={{
@@ -51,26 +51,34 @@ export default function Home() {
             justifyContent: "space-between",
             alignItems: "center",
             padding: "0.8rem 2rem",
-            background: "rgba(10, 20, 40, 0.6)",
+            background: "rgba(10, 20, 40, 0.7)",
             backdropFilter: "blur(12px)",
-            borderRadius: 60,
-            border: "1px solid rgba(79, 172, 254, 0.3)",
+            borderRadius: 16,
+            border: "1.5px solid #1A5F7A",
             zIndex: 100,
-            boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+            boxShadow: "0 6px 24px 0 rgba(26,95,122,0.13), 0 1.5px 0 #F4A261 inset",
           }}
         >
-          <div
-            className="logo"
-            style={{
-              fontSize: "1.8rem",
-              fontWeight: 800,
-              background: "linear-gradient(135deg, #fff, #6bc5ff)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-            }}
-          >
-            RILSTACK<span style={{ fontSize: "0.9rem" }}>.xyz</span>
+          <div className="logo" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img
+              src="/images/rilstack-logo.png"
+              alt="Rilstack Logo"
+              style={{ height: 38, width: 38, marginRight: 8, borderRadius: 16, background: "#fff", boxShadow: "0 2px 8px #1A5F7A22" }}
+            />
+            <span
+              style={{
+                fontSize: "1.8rem",
+                fontWeight: 800,
+                fontFamily: "'Inter', sans-serif",
+                background: "linear-gradient(135deg, #1A5F7A, #F4A261)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+                letterSpacing: 1,
+              }}
+            >
+              RILSTACK<span style={{ fontSize: "0.9rem" }}>.xyz</span>
+            </span>
           </div>
           <div
             className="nav-links"
@@ -80,12 +88,14 @@ export default function Home() {
               className="btn-outline"
               style={{
                 background: "transparent",
-                border: "1.5px solid rgba(79,172,254,0.7)",
+                border: "2px solid #F4A261",
                 padding: "0.5rem 1.3rem",
-                borderRadius: 40,
+                borderRadius: 16,
                 fontWeight: 600,
-                color: "#6bc5ff",
+                color: "#F4A261",
                 cursor: "pointer",
+                boxShadow: "2px 2px 0 #F4A26155",
+                fontFamily: "'Inter', sans-serif",
               }}
               onClick={() => (window.location.href = "/login")}
             >
@@ -109,11 +119,16 @@ export default function Home() {
             style={{
               fontSize: "4.5rem",
               fontWeight: 800,
-              background: "linear-gradient(135deg, #fff, #a0e0ff, #3e8eff)",
+              fontFamily: "'Inter', sans-serif",
+              background: "linear-gradient(135deg, #1A5F7A, #F4A261, #F8F9FA)",
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
               color: "transparent",
               marginBottom: "1rem",
+              borderRadius: 16,
+              boxShadow: "0 4px 16px #1A5F7A22",
+              padding: "0.5rem 1.5rem 0.5rem 1.5rem",
+              display: "inline-block",
             }}
           >
             Next‑Gen Personal Finance
@@ -137,19 +152,21 @@ export default function Home() {
               gap: "1rem",
               flexWrap: "wrap",
               justifyContent: "center",
+              marginTop: 12,
             }}
           >
             <button
               className="btn-primary"
               style={{
-                background: "linear-gradient(105deg, #2b6ef0, #1645b0)",
+                background: "linear-gradient(105deg, #1A5F7A, #F4A261)",
                 border: "none",
                 padding: "0.9rem 2rem",
-                borderRadius: 60,
+                borderRadius: 16,
                 fontWeight: 700,
-                color: "white",
+                color: "#fff",
                 cursor: "pointer",
-                boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
+                boxShadow: "2px 2px 0 #1A5F7A55",
+                fontFamily: "'Inter', sans-serif",
               }}
               onClick={() => (window.location.href = "/login")}
             >
@@ -159,12 +176,14 @@ export default function Home() {
               className="btn-outline"
               style={{
                 background: "transparent",
-                border: "1.5px solid #6bc5ff",
+                border: "2px solid #1A5F7A",
                 padding: "0.9rem 2rem",
-                borderRadius: 60,
+                borderRadius: 16,
                 fontWeight: 700,
-                color: "#6bc5ff",
+                color: "#1A5F7A",
                 cursor: "pointer",
+                boxShadow: "2px 2px 0 #1A5F7A33",
+                fontFamily: "'Inter', sans-serif",
               }}
               onClick={() => (window.location.href = "/signup")}
             >
@@ -182,101 +201,103 @@ export default function Home() {
             <span>Access to features requires authentication.</span>
           </div>
         </div>
-        <div
-          className="features"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "2rem",
-            flexWrap: "wrap",
-            padding: "4rem 2rem",
-            background:
-              "linear-gradient(180deg, rgba(5,15,30,0.7), rgba(1,5,15,0.9))",
-            backdropFilter: "blur(10px)",
-          }}
-        >
+          <div
+            className="features"
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "2rem",
+              flexWrap: "wrap",
+              padding: "4rem 2rem",
+              background:
+                "linear-gradient(180deg, #F8F9FA 0%, rgba(5,15,30,0.7) 100%)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
           <div
             className="card"
             style={{
-              background: "rgba(20, 35, 65, 0.6)",
-              backdropFilter: "blur(12px)",
-              borderRadius: 32,
+              background: "#fff",
+              boxShadow: "0 4px 16px #1A5F7A22, 2px 2px 0 #F4A26133",
+              borderRadius: 16,
               padding: "2rem",
               width: 280,
               textAlign: "center",
-              border: "1px solid rgba(79,172,254,0.3)",
+              border: "1.5px solid #F8F9FA",
               transition: "0.3s",
+              fontFamily: "'Inter', sans-serif",
             }}
           >
             <i
               className="fas fa-piggy-bank"
               style={{
-                color: "#4cd964",
+                color: "#2E7D32",
                 fontSize: "3rem",
                 marginBottom: "1rem",
                 display: "inline-block",
+                filter: "drop-shadow(2px 2px 0 #1A5F7A22)",
               }}
             ></i>
-            <h3 style={{ fontSize: "1.8rem", marginBottom: "0.5rem" }}>Save</h3>
-            <p style={{ color: "#bfd9ff" }}>
+            <h3 style={{ fontSize: "1.8rem", marginBottom: "0.5rem", color: "#1A5F7A", fontWeight: 700 }}>Save</h3>
+            <p style={{ color: "#212529" }}>
               Automated vaults, high-yield goals & round-ups.
             </p>
           </div>
           <div
             className="card"
             style={{
-              background: "rgba(20, 35, 65, 0.6)",
-              backdropFilter: "blur(12px)",
-              borderRadius: 32,
+              background: "#fff",
+              boxShadow: "0 4px 16px #1A5F7A22, 2px 2px 0 #F4A26133",
+              borderRadius: 16,
               padding: "2rem",
               width: 280,
               textAlign: "center",
-              border: "1px solid rgba(79,172,254,0.3)",
+              border: "1.5px solid #F8F9FA",
               transition: "0.3s",
+              fontFamily: "'Inter', sans-serif",
             }}
           >
             <i
               className="fas fa-chart-pie"
               style={{
-                color: "#ffb347",
+                color: "#F4A261",
                 fontSize: "3rem",
                 marginBottom: "1rem",
                 display: "inline-block",
+                filter: "drop-shadow(2px 2px 0 #1A5F7A22)",
               }}
             ></i>
-            <h3 style={{ fontSize: "1.8rem", marginBottom: "0.5rem" }}>
-              Budget
-            </h3>
-            <p style={{ color: "#bfd9ff" }}>
+            <h3 style={{ fontSize: "1.8rem", marginBottom: "0.5rem", color: "#F4A261", fontWeight: 700 }}>Budget</h3>
+            <p style={{ color: "#212529" }}>
               Real-time tracking, AI insights & smart alerts.
             </p>
           </div>
           <div
             className="card"
             style={{
-              background: "rgba(20, 35, 65, 0.6)",
-              backdropFilter: "blur(12px)",
-              borderRadius: 32,
+              background: "#fff",
+              boxShadow: "0 4px 16px #1A5F7A22, 2px 2px 0 #F4A26133",
+              borderRadius: 16,
               padding: "2rem",
               width: 280,
               textAlign: "center",
-              border: "1px solid rgba(79,172,254,0.3)",
+              border: "1.5px solid #F8F9FA",
               transition: "0.3s",
+              fontFamily: "'Inter', sans-serif",
             }}
           >
             <i
               className="fas fa-chart-line"
               style={{
-                color: "#3e8eff",
+                color: "#1A5F7A",
                 fontSize: "3rem",
                 marginBottom: "1rem",
                 display: "inline-block",
+                filter: "drop-shadow(2px 2px 0 #F4A26133)",
               }}
             ></i>
-            <h3 style={{ fontSize: "1.8rem", marginBottom: "0.5rem" }}>
-              Invest
-            </h3>
-            <p style={{ color: "#bfd9ff" }}>
+            <h3 style={{ fontSize: "1.8rem", marginBottom: "0.5rem", color: "#1A5F7A", fontWeight: 700 }}>Invest</h3>
+            <p style={{ color: "#212529" }}>
               Fractional investing, personalized portfolios.
             </p>
           </div>
@@ -287,9 +308,11 @@ export default function Home() {
             textAlign: "center",
             padding: "2rem",
             fontSize: "0.8rem",
-            color: "#7a9bcb",
-            borderTop: "1px solid rgba(79,172,254,0.2)",
-            background: "rgba(1,5,15,0.8)",
+            color: "#212529",
+            borderTop: "1.5px solid #F8F9FA",
+            background: "#fff",
+            borderRadius: "16px 16px 0 0",
+            fontFamily: "'Inter', sans-serif",
           }}
         >
           <p>© 2025 Rilstack.xyz — Security meets innovation</p>

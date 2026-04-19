@@ -9,7 +9,6 @@ const initialProfile = {
   bvn: "12345678901",
   nin: "12345678901",
   address: "Lagos, Nigeria",
-  state: "Lagos",
   lga: "Ikeja",
   idType: "National ID",
   idNumber: "A1234567",
@@ -70,27 +69,110 @@ export default function ProfileScreen() {
     <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 mt-8">
       <h2 className="text-2xl font-bold mb-4 text-center">Profile</h2>
       <div className="flex flex-col gap-4">
-        {Object.entries(profile).map(([k, v]) => (
-          <div key={k} className="flex gap-2 items-center">
-            <label className="w-32 font-medium capitalize">
-              {k.replace(/([A-Z])/g, " $1")}
-            </label>
-            <input
-              className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
-              value={v}
-              onChange={(e) => setProfile({ ...profile, [k]: e.target.value })}
-              disabled={!editing || (["bvn", "nin"].includes(k) && !pinVerify)}
-            />
-            {["bvn", "nin"].includes(k) && !pinVerify && editing && (
-              <button
-                className="text-blue-600 underline text-xs"
-                onClick={() => setPinVerify(true)}
-              >
-                Re-verify PIN
-              </button>
-            )}
-          </div>
-        ))}
+        {/* Profile fields with placeholders/examples */}
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">Full Name</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.fullName}
+            onChange={e => setProfile({ ...profile, fullName: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., Jane Doe"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">Date of Birth</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.dob}
+            onChange={e => setProfile({ ...profile, dob: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., 1990-01-01"
+            type="date"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">Phone</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.phone}
+            onChange={e => setProfile({ ...profile, phone: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., 08012345678"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">Email</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.email}
+            onChange={e => setProfile({ ...profile, email: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., jane@email.com"
+            type="email"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">Address</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.address}
+            onChange={e => setProfile({ ...profile, address: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., Lagos, Nigeria"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">LGA</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.lga}
+            onChange={e => setProfile({ ...profile, lga: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., Ikeja"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">ID Type</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.idType}
+            onChange={e => setProfile({ ...profile, idType: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., National ID"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">ID Number</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.idNumber}
+            onChange={e => setProfile({ ...profile, idNumber: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., A1234567"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">Occupation</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.occupation}
+            onChange={e => setProfile({ ...profile, occupation: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., Engineer"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="w-32 font-medium">Income</label>
+          <input
+            className={`flex-1 border p-2 rounded ${editing ? "" : "bg-gray-100"}`}
+            value={profile.income}
+            onChange={e => setProfile({ ...profile, income: e.target.value })}
+            disabled={!editing}
+            placeholder="e.g., 500000"
+            type="number"
+          />
+        </div>
         {editing ? (
           <div className="flex gap-2 mt-2">
             <button
@@ -195,27 +277,7 @@ export default function ProfileScreen() {
             onChange={(e) => setPrivacy(e.target.checked)}
           />
         </div>
-        <div className="mt-4">
-          <span className="font-medium">Notification Preferences</span>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {notifTypes.map((n) => (
-              <label key={n} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={notifs.includes(n)}
-                  onChange={(e) =>
-                    setNotifs(
-                      e.target.checked
-                        ? [...notifs, n]
-                        : notifs.filter((x) => x !== n),
-                    )
-                  }
-                />
-                {n}
-              </label>
-            ))}
-          </div>
-        </div>
+        {/* Notification preferences removed as requested */}
         <div className="mt-4">
           <button
             className="text-blue-600 underline"

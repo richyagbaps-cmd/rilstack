@@ -214,47 +214,74 @@ export default function InvestmentPortfolio() {
   /* ── MENU VIEW ── */
   if (view === "menu") {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 py-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
-            Investments
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Grow your wealth with secure investment plans
-          </p>
+      <div className="mx-auto max-w-3xl space-y-8 py-6">
+        {/* Featured/Trending Securities Carousel */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-[#2c3e5f] mb-2 text-center">Featured & Trending</h2>
+          <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+            {INVESTMENT_PLANS.map((plan) => (
+              <div key={plan.type} className={`min-w-[220px] rounded-2xl border-2 ${plan.borderColor} ${plan.bgColor} p-5 flex-shrink-0 shadow-md hover:scale-105 transition-transform duration-200`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-3xl">{plan.icon}</span>
+                  <span className={`font-bold text-lg ${plan.color}`}>{plan.label}</span>
+                </div>
+                <div className="text-xs text-slate-600 mb-2">{plan.description}</div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-semibold">{plan.rateByTimeline[12]}% p.a.</span>
+                  <span className="text-slate-400">•</span>
+                  <span>Up to 12mo</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* Explore/Discover Section */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-[#2c3e5f] mb-4 text-center">Explore Investment Products</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {INVESTMENT_PLANS.map((plan) => (
+              <button
+                key={plan.type}
+                onClick={() => {
+                  setSelectedPlan(plan.type);
+                  setView("invest");
+                }}
+                className={`group rounded-2xl border-2 ${plan.borderColor} ${plan.bgColor} p-6 text-left shadow-md hover:shadow-xl hover:border-[#2c3e5f] transition-all`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-3xl">{plan.icon}</span>
+                  <span className={`font-bold text-lg ${plan.color}`}>{plan.label}</span>
+                </div>
+                <div className="text-xs text-slate-600 mb-2">{plan.description}</div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-semibold">{plan.rateByTimeline[12]}% p.a.</span>
+                  <span className="text-slate-400">•</span>
+                  <span>Up to 12mo</span>
+                </div>
+                <div className="mt-3">
+                  <span className="inline-block rounded-full bg-[#2c3e5f] px-3 py-1 text-xs font-semibold text-white">Explore</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Actions Section */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <button
             onClick={() => setView("choose-plan")}
-            className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-[#2c3e5f] hover:shadow-md"
+            className="flex-1 rounded-[24px] bg-[#2c3e5f] px-6 py-4 text-lg font-bold text-white shadow-lg hover:bg-[#244d24] transition"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl">
-              +
-            </div>
-            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">
-              Create New Investment
-            </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Choose a plan, set your amount, and start earning returns.
-            </p>
+            Create New Investment
           </button>
-
           <button
             onClick={() => setView("manage")}
-            className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-[#2c3e5f] hover:shadow-md"
+            className="flex-1 rounded-[24px] border-2 border-[#2c3e5f] bg-white px-6 py-4 text-lg font-bold text-[#2c3e5f] shadow-lg hover:bg-[#f3f4fa] transition"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-2xl">
-              📊
-            </div>
-            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#2c3e5f]">
-              Manage Existing
-            </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              View balances, track returns, and manage your portfolio.
-            </p>
+            Manage Portfolio
             {investments.length > 0 && (
-              <span className="mt-3 inline-block rounded-full bg-[#2c3e5f] px-3 py-1 text-xs font-semibold text-white">
+              <span className="ml-2 inline-block rounded-full bg-[#2c3e5f] px-3 py-1 text-xs font-semibold text-white">
                 {investments.length} active
               </span>
             )}
