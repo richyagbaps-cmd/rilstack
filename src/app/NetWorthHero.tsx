@@ -1,4 +1,5 @@
 import React from "react";
+import PrivacyAmount from "@/components/PrivacyAmount";
 import BudgetingFlowModal from "../components/BudgetingFlowModal";
 
 export default function NetWorthHero() {
@@ -34,7 +35,9 @@ export default function NetWorthHero() {
           <button className="bg-[#FFD700] text-[#2c3e5f] px-4 py-2 rounded-lg font-semibold shadow hover:bg-[#ffe066] transition" onClick={handleSetSavingsGoal}>Set Savings Goal</button>
         </div>
         <div className="text-xs uppercase tracking-widest text-[#4A5B6E] mb-2">Total Net Worth</div>
-        <div className="text-5xl sm:text-6xl font-extrabold text-[#2c3e5f] mb-4 animate-pulse">₦{netWorth.toLocaleString()}</div>
+        <div className="text-5xl sm:text-6xl font-extrabold text-[#2c3e5f] mb-4 animate-pulse">
+          <PrivacyAmount amount={netWorth} />
+        </div>
         <div className="w-full flex flex-col gap-2 items-center">
           <div className="w-full h-4 bg-[#f3f4fa] rounded-full overflow-hidden flex">
             <div className="h-4 bg-[#FFD700]" style={{ width: '40%' }}></div>

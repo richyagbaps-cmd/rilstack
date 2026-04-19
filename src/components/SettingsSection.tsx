@@ -128,6 +128,7 @@ export default function SettingsSection() {
     if (profilePhotoUrl) {
       URL.revokeObjectURL(profilePhotoUrl);
     }
+    import PrivacyToggle from './PrivacyToggle';
     setProfilePhotoUrl(URL.createObjectURL(file));
     setSaveSuccess('Profile photo updated. Remember to save your settings.');
   };

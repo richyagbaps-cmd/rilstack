@@ -3,16 +3,19 @@ import { useRouter } from "next/navigation";
 import React from "react";
 
 const navItems = [
-	{ label: "Home", icon: (
-		<svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4h-4v4a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" stroke="#2c3e5f" strokeWidth="2" strokeLinejoin="round"/></svg>
-	), href: "/" },
-	{ label: "Budgets", icon: (
+	{ label: "Budget", icon: (
 		<svg width="24" height="24" fill="none" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" stroke="#2c3e5f" strokeWidth="2"/><path d="M16 3v4M8 3v4" stroke="#2c3e5f" strokeWidth="2" strokeLinecap="round"/></svg>
 	), href: "/budgets" },
-	{ label: "Invest", icon: (
+	{ label: "Savings", icon: (
 		<svg width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#2c3e5f" strokeWidth="2"/><path d="M8 12l2 2 4-4" stroke="#2c3e5f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+	), href: "/savings-goals" },
+	{ label: "Investments", icon: (
+		<svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M3 10.5L12 4l9 6.5V20a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4h-4v4a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" stroke="#2c3e5f" strokeWidth="2" strokeLinejoin="round"/></svg>
 	), href: "/investments" },
-	{ label: "Account", icon: (
+	{ label: "History", icon: (
+		<svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M12 8v4l3 3" stroke="#2c3e5f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="10" stroke="#2c3e5f" strokeWidth="2"/></svg>
+	), href: "/history" },
+	{ label: "Profile", icon: (
 		<svg width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="#2c3e5f" strokeWidth="2"/><path d="M4 20c0-2.21 3.582-4 8-4s8 1.79 8 4" stroke="#2c3e5f" strokeWidth="2"/></svg>
 	), href: "/account" },
 ];
