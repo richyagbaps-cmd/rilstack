@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { insertSafeLock, updateSafeLock } from "@/lib/supabaseAdminMutations";
 
 const ADMIN_MIN_DAYS = 10; // This can be fetched from backend/admin settings
 
@@ -40,12 +39,13 @@ export default function SafeLockManager() {
         `Unlock date must be at least ${ADMIN_MIN_DAYS} days from today`,
       );
     try {
-      const [inserted] = await insertSafeLock({
+      const inserted = {
+        id: Math.random().toString(36).slice(2),
         amount: Number(amount),
         unlockDate,
         createdAt: new Date().toISOString(),
         status: "locked",
-      });
+      };
       setLocks([...locks, inserted]);
       setAmount("");
       setUnlockDate(daysFromToday(ADMIN_MIN_DAYS));
@@ -102,7 +102,7 @@ export default function SafeLockManager() {
                 className="ml-4 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
                 onClick={async () => {
                   try {
-                    await updateSafeLock(lock.id, { status: "withdrawn" });
+                    // supabase removed: updateSafeLock
                     setLocks(
                       locks.map((l, i) =>
                         i === idx ? { ...l, status: "withdrawn" } : l
@@ -125,3 +125,5 @@ export default function SafeLockManager() {
     </div>
   );
 }
+
+

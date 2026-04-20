@@ -37,7 +37,7 @@ export default function BudgetFinalize() {
       // Categories: reconstruct from allocation logic
       let categories = [];
       if (type === "custom" && Object.keys(customPercents).length) {
-        categories = Object.entries(customPercents).map(([key, percent]) => ({
+        categories = Object.entries(customPercents).map(([key, percent]: [string, any]) => ({
           name: key.charAt(0).toUpperCase() + key.slice(1),
           allocated_amount: Math.round((percent / 100) * income),
           spent_amount: 0,

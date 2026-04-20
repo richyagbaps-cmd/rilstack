@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(req: Request) {
   // Fetch all savings goals for the authenticated user (placeholder: userId from query)
@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
   const goals = await prisma.savingsGoal.findMany({
     where: { userId },
-    orderBy: { createdAt: 'desc' },
+    // No createdAt field in SavingsGoal, so no orderBy
   });
   return NextResponse.json(goals);
 }

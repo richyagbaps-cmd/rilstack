@@ -14,6 +14,7 @@ interface SafeLock {
   amount: number;
   releaseDate: string;
   createdAt: string;
+  status: "locked" | "unlocked" | "withdrawn";
 }
 
 export default function UnifiedPortfolio() {

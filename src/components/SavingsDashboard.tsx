@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import CreateGoalModal from "./CreateGoalModal";
 import CreateSafeLockModal from "./CreateSafeLockModal";
 import AutoInvestModal from "./AutoInvestModal";
-import { insertSafeLock, updateSafeLock } from "@/lib/supabaseAdminMutations";
 
 interface SavingsGoal {
   id: string;
@@ -20,6 +19,7 @@ interface SafeLock {
   amount: number;
   releaseDate: string;
   createdAt: string;
+  status: "locked" | "unlocked" | "withdrawn";
 }
 
 const AI_GOAL_SUGGESTIONS = [
@@ -80,12 +80,13 @@ export default function SavingsDashboard() {
   };
   const handleCreateLock = async (lock: any) => {
     try {
-      const [inserted] = await insertSafeLock({
+      const inserted = {
+        id: Math.random().toString(36).slice(2),
         amount: lock.amount,
         releaseDate: lock.releaseDate,
         createdAt: new Date().toISOString(),
-        status: "locked",
-      });
+        status: "locked" as const,
+      };
       setSafeLocks((locks) => [inserted, ...locks]);
       setBalance((bal) => bal - lock.amount);
     } catch (err) {
@@ -211,7 +212,7 @@ export default function SavingsDashboard() {
                       className="mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 w-fit"
                       onClick={async () => {
                         try {
-                          await updateSafeLock(lock.id, { status: "withdrawn" });
+                          // supabase removed: updateSafeLock
                           setSafeLocks(
                             safeLocks.map((l, i) =>
                               i === idx ? { ...l, status: "withdrawn" } : l

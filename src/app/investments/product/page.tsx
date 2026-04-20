@@ -1,8 +1,7 @@
 "use client";
-import { useState } from "react";
-
-import { useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+
 // TODO: Get productId from route/query if available
 const defaultProduct = {
   id: "prod1",
@@ -17,6 +16,7 @@ const defaultProduct = {
   maturity: "2026-10-19",
 };
 
+function ProductPageContent() {
   const [productDetail, setProductDetail] = useState<any>(defaultProduct);
   const [units, setUnits] = useState(1);
   const [pin, setPin] = useState("");
@@ -62,7 +62,7 @@ const defaultProduct = {
       setError("Check units and savings balance.");
       return;
     }
-    if (!/^\d{4,6}$/.test(pin)) {
+    if (!/^\\d{4,6}$/.test(pin)) {
       setError("PIN must be 4-6 digits.");
       return;
     }
@@ -103,7 +103,7 @@ const defaultProduct = {
       <div className="mb-2">
         Unit Amount:{" "}
         <span className="font-bold">
-          ₦{productDetail.unit.toLocaleString()}
+          {productDetail.unit.toLocaleString()}
         </span>
       </div>
       <div className="mb-2">
@@ -133,7 +133,7 @@ const defaultProduct = {
       </div>
       <div className="mb-2">
         Your Savings Balance:{" "}
-        <span className="font-bold">₦{userSavings.toLocaleString()}</span>
+        <span className="font-bold">{userSavings.toLocaleString()}</span>
       </div>
       <form onSubmit={handlePurchase} className="space-y-3 mt-4">
         <div>
@@ -150,7 +150,7 @@ const defaultProduct = {
         </div>
         <div>
           Total Cost:{" "}
-          <span className="font-bold">₦{totalCost.toLocaleString()}</span>
+          <span className="font-bold">{totalCost.toLocaleString()}</span>
         </div>
         <div>
           <label className="block mb-1 font-medium">Confirm with PIN</label>
@@ -158,10 +158,10 @@ const defaultProduct = {
             type="password"
             maxLength={6}
             minLength={4}
-            pattern="\d*"
+            pattern="\\d*"
             className="w-full border p-2 rounded"
             value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => setPin(e.target.value.replace(/\\D/g, ""))}
             required
           />
         </div>
@@ -180,5 +180,13 @@ const defaultProduct = {
         )}
       </form>
     </div>
+  );
+}
+
+export default function ProductPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProductPageContent />
+    </Suspense>
   );
 }

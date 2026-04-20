@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { insertSafeLock, updateSafeLock } from "@/lib/supabaseAdminMutations";
 
 interface LockedSaving {
   id: string;
@@ -117,9 +116,7 @@ export default function LockedSavings() {
     };
 
     try {
-      const [inserted] = await insertSafeLock(newSaving);
-      setLockedSavings([{ ...inserted }, ...lockedSavings]);
-      reset();
+      // supabase removed: insertSafeLock
     } catch (err) {
       alert("Failed to create locked savings. Please try again.");
     }
@@ -330,7 +327,7 @@ export default function LockedSavings() {
                       onClick={async () => {
                         try {
                           // Update status to withdrawn in backend
-                          await updateSafeLock(saving.id, { status: "withdrawn" });
+                          // supabase removed: updateSafeLock
                           setLockedSavings(
                             lockedSavings.map((s) =>
                               s.id === saving.id ? { ...s, status: "withdrawn" } : s
@@ -426,3 +423,4 @@ export default function LockedSavings() {
     </div>
   );
 }
+

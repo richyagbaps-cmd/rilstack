@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // GET: Fetch all users (admin)
 export async function GET() {
@@ -8,8 +8,6 @@ export async function GET() {
       id: true,
       email: true,
       phone: true,
-      firstName: true,
-      lastName: true,
       kycData: true,
       isActive: true,
       createdAt: true,

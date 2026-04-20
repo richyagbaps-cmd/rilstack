@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { saveUserData } from "@/lib/saveUserData";
 import { logUserAction } from "@/lib/logUserAction";
 
