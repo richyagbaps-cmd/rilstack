@@ -35,8 +35,11 @@ export async function GET() {
         email: user.email,
         name: user.name,
         gender: user.gender || "",
+        stateOfOrigin: user.stateOfOrigin || "",
+        address: user.address || "",
         bvn: user.bvn ? `***${user.bvn.slice(-4)}` : "",
         nin: user.nin ? `***${user.nin.slice(-4)}` : "",
+        profileComplete: Boolean(user.phone && user.pinHash && user.termsAccepted),
       },
     });
   } catch (error: any) {

@@ -3,10 +3,11 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import {
   findStoredUserByEmail,
+  findStoredUserByIdentifier,
   verifyPassword,
-  createStoredUser,
+  isStoredUserProfileComplete,
+  upsertGoogleUser,
 } from "@/lib/user-store";
-import crypto from "crypto";
 
 const handler = NextAuth({
   session: {
@@ -21,17 +22,19 @@ const handler = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
+        identifier: { label: "Email or Phone", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const email = credentials?.email?.trim().toLowerCase();
+        const identifier =
+          credentials?.identifier?.trim() || credentials?.email?.trim() || "";
         const password = credentials?.password;
 
-        if (!email || !password) {
+        if (!identifier || !password) {
           return null;
         }
 
-        const user = await findStoredUserByEmail(email);
+        const user = await findStoredUserByIdentifier(identifier);
         if (!user) {
           return null;
         }
@@ -46,6 +49,7 @@ const handler = NextAuth({
           name: user.name,
           email: user.email,
           kycLevel: user.kycLevel ?? 0,
+          profileComplete: isStoredUserProfileComplete(user),
         };
       },
     }),
@@ -55,38 +59,47 @@ const handler = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      // Create user record for Google sign-in if they don't exist
-      if (account?.provider === "google" && user.email) {
-        const existing = await findStoredUserByEmail(user.email);
-        if (!existing) {
-          await createStoredUser({
-            name: user.name || "",
-            email: user.email,
-            password: crypto.randomUUID(),
-            phone: "",
-          });
+      if (account?.provider === "google" && user.email && account.providerAccountId) {
+        const storedUser = await upsertGoogleUser({
+          name: user.name || "",
+          email: user.email,
+          googleId: account.providerAccountId,
+        });
+
+        (user as any).id = storedUser.id;
+        (user as any).kycLevel = storedUser.kycLevel ?? 0;
+        (user as any).profileComplete = isStoredUserProfileComplete(storedUser);
+
+        if (!isStoredUserProfileComplete(storedUser)) {
+          return "/signup?provider=google";
         }
       }
+
       return true;
     },
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.kycLevel = (user as any).kycLevel ?? 0;
+        token.profileComplete = (user as any).profileComplete ?? true;
       }
-      // Re-fetch kycLevel when session.update() is called
+
       if (trigger === "update" && token.email) {
         const storedUser = await findStoredUserByEmail(token.email as string);
         if (storedUser) {
           token.kycLevel = storedUser.kycLevel ?? 0;
+          token.id = storedUser.id;
+          token.profileComplete = isStoredUserProfileComplete(storedUser);
         }
       }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).kycLevel = token.kycLevel ?? 0;
+        (session.user as any).profileComplete = token.profileComplete ?? true;
       }
       return session;
     },

@@ -164,9 +164,9 @@ export async function deleteRow(tableName: string, rowId: string): Promise<void>
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ table_name: tableName, row_id: rowId }),
       },
-      body: JSON.stringify({ table_name: tableName, row_id: rowId }),
-    },
     );
     if (!res.ok) {
       const data = await res.json();
@@ -194,6 +194,18 @@ export type STUser = {
   KYC_Status: "Pending" | "Verified" | "Rejected";
   Privacy_Mode_Enabled?: boolean;
   Is_Active?: boolean;
+  Date_Of_Birth?: string;
+  NIN?: string;
+  BVN?: string;
+  Address?: string;
+  State_Of_Origin?: string;
+  Gender?: "M" | "F" | "other";
+  KYC_Level?: number;
+  KYC_Data_JSON?: string;
+  Terms_Accepted?: boolean;
+  Auth_Provider?: "credentials" | "google";
+  Created_At?: string;
+  Updated_At?: string;
 };
 
 export type STBudget = {
@@ -303,6 +315,19 @@ export async function getUserById(userId: string): Promise<STUser | null> {
     `SELECT * FROM ${TABLES.USERS} WHERE User_ID='${userId}' LIMIT 1`,
   );
   return rows[0] ?? null;
+}
+
+export async function getUserByPhone(phone: string): Promise<STUser | null> {
+  const rows = await query<STUser>(
+    `SELECT * FROM ${TABLES.USERS} WHERE Phone='${phone.replace(/'/g, "''")}' LIMIT 1`,
+  );
+  return rows[0] ?? null;
+}
+
+export async function listUsers(): Promise<STUser[]> {
+  return query<STUser>(
+    `SELECT * FROM ${TABLES.USERS} ORDER BY Updated_At DESC`,
+  );
 }
 
 export async function getBudgetsByUser(userId: string): Promise<STBudget[]> {

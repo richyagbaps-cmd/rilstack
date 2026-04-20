@@ -1,28 +1,21 @@
-// GoogleSignInButton: Handles Google OAuth popup and returns profile
-import { useEffect } from "react";
+"use client";
+
+import { signIn } from "next-auth/react";
 
 export default function GoogleSignInButton({
-  onSuccess,
+  callbackUrl = "/signup?provider=google",
+  label = "Continue with Google",
 }: {
-  onSuccess: (profile: any) => void;
+  callbackUrl?: string;
+  label?: string;
 }) {
-  useEffect(() => {
-    // Optionally load Google SDK here
-  }, []);
-
   const handleGoogleSignIn = async () => {
-    // TODO: Integrate real Google OAuth (e.g., next-auth or Google API)
-    // Simulate Google profile for demo
-    const profile = {
-      fullName: "Demo User",
-      email: "demo@gmail.com",
-      picture: "https://randomuser.me/api/portraits/men/1.jpg",
-    };
-    onSuccess(profile);
+    await signIn("google", { callbackUrl });
   };
 
   return (
     <button
+      type="button"
       className="w-full bg-red-500 text-white py-2 rounded flex items-center justify-center gap-2 font-semibold"
       onClick={handleGoogleSignIn}
     >
@@ -31,7 +24,7 @@ export default function GoogleSignInButton({
         alt="Google"
         style={{ width: 22, height: 22 }}
       />
-      Continue with Google
+      {label}
     </button>
   );
 }

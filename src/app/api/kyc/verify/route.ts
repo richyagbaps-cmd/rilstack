@@ -229,6 +229,7 @@ export async function POST(request: NextRequest) {
         await updateUserKyc(session.user.email, {
           dateOfBirth,
           gender,
+          name: user.name,
           stateOfOrigin: stateOfOrigin.trim(),
           address: address.trim(),
           kycLevel: newLevel,

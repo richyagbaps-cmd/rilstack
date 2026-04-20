@@ -6,12 +6,35 @@ interface RegisterRequest {
   email: string;
   password: string;
   phone: string;
+  pin?: string;
+  dateOfBirth?: string;
+  nin?: string;
+  bvn?: string;
+  address?: string;
+  stateOfOrigin?: string;
+  gender?: "M" | "F" | "other";
+  termsAccepted?: boolean;
+  kycData?: Record<string, unknown>;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: RegisterRequest = await request.json();
-    const { name, email, password, phone } = body;
+    const {
+      name,
+      email,
+      password,
+      phone,
+      pin,
+      dateOfBirth,
+      nin,
+      bvn,
+      address,
+      stateOfOrigin,
+      gender,
+      termsAccepted,
+      kycData,
+    } = body;
 
     if (!name || !email || !password || !phone) {
       return NextResponse.json(
@@ -39,6 +62,16 @@ export async function POST(request: NextRequest) {
       email,
       password,
       phone,
+      pin,
+      dateOfBirth,
+      nin,
+      bvn,
+      address,
+      stateOfOrigin,
+      gender,
+      termsAccepted,
+      authProvider: "credentials",
+      kycData: (kycData || undefined) as any,
     });
 
     return NextResponse.json({
@@ -47,6 +80,7 @@ export async function POST(request: NextRequest) {
         id: user.id,
         name: user.name,
         email: user.email,
+        kycLevel: user.kycLevel,
       },
       message: "Account created successfully.",
     });

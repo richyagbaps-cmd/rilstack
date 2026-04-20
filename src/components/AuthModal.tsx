@@ -89,36 +89,8 @@ export default function AuthModal({ mode, onClose }: AuthModalProps) {
     setIsSubmitting(true);
 
     try {
-      const registerResponse = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-          phone: data.phone,
-        }),
-      });
-      const registerResult = await registerResponse.json();
-
-      if (!registerResponse.ok || !registerResult.success) {
-        throw new Error(registerResult.error || "Failed to create account.");
-      }
-
-      const authResult = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (!authResult || authResult.error) {
-        throw new Error(
-          "Account created but login failed. Please login manually.",
-        );
-      }
-
-      setSuccess("Account created! Redirecting to verification...");
-      window.location.href = "/";
+      window.sessionStorage.setItem("rilstack-signup-draft", JSON.stringify(data));
+      window.location.href = "/signup";
     } catch (submitError: any) {
       setError(submitError.message || "Unable to create account.");
     } finally {
@@ -336,7 +308,7 @@ export default function AuthModal({ mode, onClose }: AuthModalProps) {
 
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/" })}
+            onClick={() => signIn("google", { callbackUrl: "/signup?provider=google" })}
             className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:bg-slate-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">

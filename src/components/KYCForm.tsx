@@ -1,5 +1,13 @@
 import { useState } from "react";
 
+type KycStepField = {
+  name: string;
+  label: string;
+  required: boolean;
+  type?: string;
+  validate?: (value: string) => boolean;
+};
+
 export default function KYCForm({
   mode,
   initialData,
@@ -7,33 +15,37 @@ export default function KYCForm({
   onComplete,
 }: {
   mode: "google" | "email";
-  initialData?: any;
-  onSaveDraft?: (draft: any) => void;
-  onComplete: () => void;
+  initialData?: Record<string, any>;
+  onSaveDraft?: (draft: Record<string, any>) => void;
+  onComplete: (data: Record<string, any>) => void;
 }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<any>(initialData || {});
+  const [form, setForm] = useState<Record<string, any>>(initialData || {});
   const [saving, setSaving] = useState(false);
 
-  // Validation helpers
   const validatePhone = (phone: string) =>
     /^(080|081|070|090)\d{7,8}$/.test(phone);
   const validateNIN = (nin: string) => /^\d{11}$/.test(nin);
 
-  // Step fields
-  const steps = [
+  const steps: Array<{ label: string; fields: KycStepField[] }> = [
     {
       label: "Basic Info",
       fields: [
         { name: "fullName", label: "Full Name", required: true },
         { name: "dob", label: "Date of Birth", type: "date", required: true },
+        { name: "gender", label: "Gender", required: true },
         {
           name: "phone",
           label: "Phone Number",
           required: true,
           validate: validatePhone,
         },
-        { name: "email", label: "Email", required: true, type: "email" },
+        {
+          name: "email",
+          label: "Email",
+          required: true,
+          type: "email",
+        },
       ],
     },
     {
@@ -71,55 +83,63 @@ export default function KYCForm({
   ];
 
   const handleChange = (name: string, value: any) => {
-    setForm((prev: any) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleNext = () => {
-    // Validate required fields
-    const current = steps[step - 1];
-    for (const field of current.fields) {
-      if (field.required && !form[field.name])
-        return alert(`${field.label} is required`);
+  const validateFields = (fields: KycStepField[]) => {
+    for (const field of fields) {
+      if (field.required && !form[field.name]) {
+        return `${field.label} is required`;
+      }
       if (
         field.validate &&
         form[field.name] &&
-        !field.validate(form[field.name])
-      )
-        return alert(`Invalid ${field.label}`);
+        !field.validate(String(form[field.name]))
+      ) {
+        return `Invalid ${field.label}`;
+      }
     }
-    setStep((s) => s + 1);
+    return null;
   };
 
-  const handlePrev = () => setStep((s) => s - 1);
+  const handleNext = () => {
+    const error = validateFields(steps[step - 1].fields);
+    if (error) {
+      alert(error);
+      return;
+    }
+    setStep((value) => value + 1);
+  };
+
+  const handlePrev = () => setStep((value) => value - 1);
 
   const handleSaveDraft = () => {
     setSaving(true);
-    onSaveDraft && onSaveDraft(form);
+    onSaveDraft?.(form);
     setTimeout(() => setSaving(false), 500);
   };
 
   const handleSubmit = () => {
-    // Validate all fields
-    for (const s of steps) {
-      for (const field of s.fields) {
-        if (field.required && !form[field.name])
-          return alert(`${field.label} is required`);
-        if (
-          field.validate &&
-          form[field.name] &&
-          !field.validate(form[field.name])
-        )
-          return alert(`Invalid ${field.label}`);
+    for (const currentStep of steps) {
+      const error = validateFields(currentStep.fields);
+      if (error) {
+        alert(error);
+        return;
       }
     }
-    // Terms & PIN setup would go here
-    onComplete();
+
+    onComplete(form);
   };
 
   return (
     <div>
       <div className="mb-4">
-        <div className="font-bold text-lg mb-2">{steps[step - 1].label}</div>
+        <div className="font-bold text-lg mb-2">
+          {steps[step - 1].label}
+          <span className="ml-2 text-xs font-normal text-gray-500">
+            {mode === "google" ? "Google account" : "Email account"}
+          </span>
+        </div>
         <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
           <div
             className="bg-blue-500 h-2 rounded-full"
@@ -132,7 +152,18 @@ export default function KYCForm({
               {field.label}
               {field.required && <span className="text-red-500">*</span>}
             </label>
-            {field.type === "file" ? (
+            {field.name === "gender" ? (
+              <select
+                className="w-full border p-2 rounded"
+                value={form[field.name] || ""}
+                onChange={(e) => handleChange(field.name, e.target.value)}
+              >
+                <option value="">Select gender</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+                <option value="other">Other</option>
+              </select>
+            ) : field.type === "file" ? (
               <input
                 type="file"
                 className="w-full border p-2 rounded"
@@ -154,6 +185,7 @@ export default function KYCForm({
           <button
             className="px-4 py-2 rounded bg-gray-300"
             onClick={handlePrev}
+            type="button"
           >
             Back
           </button>
@@ -162,6 +194,7 @@ export default function KYCForm({
           <button
             className="px-4 py-2 rounded bg-blue-500 text-white"
             onClick={handleNext}
+            type="button"
           >
             Next
           </button>
@@ -170,6 +203,7 @@ export default function KYCForm({
           <button
             className="px-4 py-2 rounded bg-green-500 text-white"
             onClick={handleSubmit}
+            type="button"
           >
             Submit
           </button>
@@ -180,6 +214,7 @@ export default function KYCForm({
           className="px-3 py-1 rounded border border-blue-400 text-blue-600"
           onClick={handleSaveDraft}
           disabled={saving}
+          type="button"
         >
           {saving ? "Saving..." : "Save & Resume Later"}
         </button>
