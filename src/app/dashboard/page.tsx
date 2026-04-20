@@ -39,7 +39,7 @@ function MiniChart() {
       {chartData.map((d, i) => {
         const x = (i / (chartData.length - 1)) * w;
         return (
-          <text key={i} x={x} y={h + 16} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="11" fontFamily="var(--font-poppins), sans-serif">
+          <text key={i} x={x} y={h + 16} textAnchor="middle" fill="#9CA3AF" fontSize="11" fontFamily="var(--font-poppins), sans-serif">
             {d.month}
           </text>
         );
@@ -109,7 +109,7 @@ function DashboardContent() {
 
         {/* Greeting */}
         <h1 style={{ fontSize: "1.8rem", fontWeight: 700, margin: 0, color: "#fff" }}>Hi, {firstName}!</h1>
-        <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.7)", margin: "4px 0 24px" }}>
+        <p style={{ fontSize: "0.95rem", color: "#D1D5DB", margin: "4px 0 24px" }}>
           Your financial overview at a glance.
         </p>
 
@@ -133,7 +133,7 @@ function DashboardContent() {
                 borderRadius: 10,
                 border: tab === t ? "1px solid #fff" : "1px solid rgba(255,255,255,0.15)",
                 background: tab === t ? "rgba(255,255,255,0.1)" : "transparent",
-                color: tab === t ? "#fff" : "rgba(255,255,255,0.4)",
+                color: tab === t ? "#fff" : "#9CA3AF",
                 fontWeight: 600,
                 fontSize: "0.8rem",
                 cursor: "pointer",
@@ -161,7 +161,7 @@ function DashboardContent() {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.65)", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Income</p>
+            <p style={{ fontSize: "0.8rem", color: "#D1D5DB", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Income</p>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
               <span style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff" }}>₦262,144</span>
               <span style={{ fontSize: "0.8rem", color: "#22C55E" }}>+69.42 ▲</span>
@@ -175,7 +175,7 @@ function DashboardContent() {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.65)", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Outcome</p>
+            <p style={{ fontSize: "0.8rem", color: "#D1D5DB", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Outcome</p>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
               <span style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff" }}>₦65,536</span>
               <span style={{ fontSize: "0.8rem", color: "#EF4444" }}>-694.2 ▼</span>
@@ -199,11 +199,11 @@ function DashboardContent() {
               transform="rotate(-90 36 36)"
             />
             <text x="36" y="34" textAnchor="middle" fill="#fff" fontSize="16" fontWeight="700" fontFamily="var(--font-poppins), sans-serif">72%</text>
-            <text x="36" y="46" textAnchor="middle" fill="rgba(255,255,255,0.65)" fontSize="9" fontFamily="var(--font-poppins), sans-serif">Budget used</text>
+            <text x="36" y="46" textAnchor="middle" fill="#D1D5DB" fontSize="9" fontFamily="var(--font-poppins), sans-serif">Budget used</text>
           </svg>
           <div>
             <p style={{ margin: 0, fontWeight: 700, fontSize: "1rem", color: "#fff" }}>Monthly Budget</p>
-            <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.7)", fontSize: "0.85rem" }}>₦94,000 of ₦150,000 · 12 days left</p>
+            <p style={{ margin: "4px 0 0", color: "#D1D5DB", fontSize: "0.85rem" }}>₦94,000 of ₦150,000 · 12 days left</p>
             <a href="/budget" style={{ color: "#5BB5E0", fontSize: "0.8rem", textDecoration: "none", fontWeight: 600, marginTop: 6, display: "inline-block" }}>View Budget →</a>
           </div>
         </div>
@@ -226,7 +226,7 @@ function DashboardContent() {
             >
               <div>
                 <p style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{item.label}</p>
-                <p style={{ margin: "2px 0 0", color: "rgba(255,255,255,0.6)", fontSize: "0.8rem" }}>{item.sub}</p>
+                <p style={{ margin: "2px 0 0", color: "#D1D5DB", fontSize: "0.8rem" }}>{item.sub}</p>
               </div>
               <span style={{ fontWeight: 700, fontSize: "0.95rem", color: item.color }}>{item.amount}</span>
             </div>
