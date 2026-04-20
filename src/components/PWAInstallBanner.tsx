@@ -54,7 +54,7 @@ export default function PWAInstallBanner() {
 
   const handleInstall = async () => {
     if (deferredPrompt) {
-      (deferredPrompt as { prompt: () => void }).prompt();
+      (deferredPrompt as unknown as { prompt: () => void }).prompt();
     }
     dismiss();
   };

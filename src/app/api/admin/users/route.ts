@@ -5,7 +5,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "eleko44";
 
 function sanitizeUsers(users: Record<string, unknown>[]) {
   return users.map((u) => {
-    const { passwordHash, ...rest } = u;
+    const { passwordHash: _pw, ...rest } = u;
     return rest;
   });
 }
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   const users = await listStoredUsers();
-  const sanitized = sanitizeUsers(users);
+  const sanitized = sanitizeUsers(users as unknown as Record<string, unknown>[]);
 
   return NextResponse.json({
     count: sanitized.length,
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   }
 
   const users = await listStoredUsers();
-  const sanitized = sanitizeUsers(users);
+  const sanitized = sanitizeUsers(users as unknown as Record<string, unknown>[]);
 
   return NextResponse.json({
     count: sanitized.length,
