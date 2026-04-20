@@ -6,7 +6,9 @@
  */
 
 const SEATABLE_SERVER = "https://cloud.seatable.io";
-const SEATABLE_TOKEN = process.env.SEATABLE_API_TOKEN!;
+const SEATABLE_API_TOKEN  = process.env.SEATABLE_API_TOKEN!;
+const SEATABLE_WORKSPACE_ID = process.env.SEATABLE_WORKSPACE_ID!;
+const SEATABLE_BASE_NAME    = process.env.SEATABLE_BASE_NAME!;
 
 // Table names — must match your SeaTable base exactly
 export const TABLES = {
@@ -24,22 +26,43 @@ let _token: string | null = null;
 let _dtable: string | null = null;
 let _tokenExpiry = 0;
 
-/** Get a short-lived API access token (cached for 45 min) */
-async function getAccessToken(): Promise<{ token: string; dtable: string }> {
+/**
+ * Obtain a Base Token via the workspace endpoint.
+ * Token is requested with exp=3d but cached locally for 2 days 23 hours
+ * to avoid using an expired token.
+ */
+export async function getBaseToken(
+  apiToken = SEATABLE_API_TOKEN,
+  workspaceId = SEATABLE_WORKSPACE_ID,
+  baseName = SEATABLE_BASE_NAME,
+): Promise<{ token: string; dtable: string }> {
   const now = Date.now();
   if (_token && _dtable && now < _tokenExpiry) {
     return { token: _token, dtable: _dtable };
   }
-  const res = await fetch(`${SEATABLE_SERVER}/api/v2.1/dtable/app-access-token/`, {
-    headers: { Authorization: `Token ${SEATABLE_TOKEN}` },
+
+  const url =
+    `${SEATABLE_SERVER}/api/v2.1/workspace/${encodeURIComponent(workspaceId)}` +
+    `/dtable/${encodeURIComponent(baseName)}/access-token/?exp=3d`;
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${apiToken}` },
   });
-  if (!res.ok) throw new Error(`SeaTable auth failed: ${res.status}`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`SeaTable auth failed (${res.status}): ${text}`);
+  }
+
   const data = await res.json();
-  _token = data.access_token;
-  _dtable = data.dtable_uuid;
-  _tokenExpiry = now + 45 * 60 * 1000;
-  return { token: _token!, dtable: _dtable! };
+  _token  = data.access_token  as string;
+  _dtable = data.dtable_uuid   as string;
+  // Cache for slightly less than 3 days so the token is always fresh
+  _tokenExpiry = now + (3 * 24 * 60 - 5) * 60 * 1000;
+  return { token: _token, dtable: _dtable };
 }
+
+/** Internal alias kept for all existing callers inside this file */
+const getAccessToken = getBaseToken;
 
 /** Build base URL for the dtable-db SQL endpoint */
 async function baseUrl(): Promise<string> {
@@ -52,21 +75,26 @@ export async function query<T = Record<string, unknown>>(
   sql: string,
   convert = true,
 ): Promise<T[]> {
-  const { token } = await getAccessToken();
-  const url = await baseUrl();
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Token ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ sql, convert_keys: convert }),
-  });
-  const data = await res.json();
-  if (!res.ok || data.error_message) {
-    throw new Error(data.error_message || `SeaTable query error: ${res.status}`);
+  try {
+    const { token } = await getAccessToken();
+    const url = await baseUrl();
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ sql, convert_keys: convert }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error_message) {
+      throw new Error(data.error_message || `SeaTable query error: ${res.status}`);
+    }
+    return (data.results ?? []) as T[];
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`SQL query failed: ${msg}`);
   }
-  return (data.results ?? []) as T[];
 }
 
 /** Insert a row into a table via the REST API (not SQL) */
@@ -74,21 +102,26 @@ export async function insertRow(
   tableName: string,
   row: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const { token, dtable } = await getAccessToken();
-  const res = await fetch(
-    `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${token}`,
-        "Content-Type": "application/json",
+  try {
+    const { token, dtable } = await getAccessToken();
+    const res = await fetch(
+      `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ table_name: tableName, row }),
       },
-      body: JSON.stringify({ table_name: tableName, row }),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error_message || "SeaTable insert failed");
-  return data;
+    );
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_message || "SeaTable insert failed");
+    return data;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Insert into ${tableName} failed: ${msg}`);
+  }
 }
 
 /** Update a row by its SeaTable row_id */
@@ -97,41 +130,51 @@ export async function updateRow(
   rowId: string,
   updates: Record<string, unknown>,
 ): Promise<void> {
-  const { token, dtable } = await getAccessToken();
-  const res = await fetch(
-    `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Token ${token}`,
-        "Content-Type": "application/json",
+  try {
+    const { token, dtable } = await getAccessToken();
+    const res = await fetch(
+      `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ table_name: tableName, row_id: rowId, row: updates }),
       },
-      body: JSON.stringify({ table_name: tableName, row_id: rowId, row: updates }),
-    },
-  );
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error_message || "SeaTable update failed");
+    );
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error_message || "SeaTable update failed");
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Update in ${tableName} (row ${rowId}) failed: ${msg}`);
   }
 }
 
 /** Delete a row by its SeaTable row_id */
 export async function deleteRow(tableName: string, rowId: string): Promise<void> {
-  const { token, dtable } = await getAccessToken();
-  const res = await fetch(
-    `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Token ${token}`,
-        "Content-Type": "application/json",
+  try {
+    const { token, dtable } = await getAccessToken();
+    const res = await fetch(
+      `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
       },
       body: JSON.stringify({ table_name: tableName, row_id: rowId }),
     },
-  );
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error_message || "SeaTable delete failed");
+    );
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error_message || "SeaTable delete failed");
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Delete from ${tableName} (row ${rowId}) failed: ${msg}`);
   }
 }
 
