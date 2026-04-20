@@ -3,14 +3,7 @@
 import { Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-const chartData = [
-  { month: "May", value: 20 },
-  { month: "Jun", value: 35 },
-  { month: "Jul", value: 30 },
-  { month: "Aug", value: 60 },
-];
+import { useEffect } from "react";
 
 const recentItems = [
   { label: "Funded Wallet", sub: "Apr 15, 2026", amount: "+₦5,000", color: "#22C55E" },
@@ -20,38 +13,9 @@ const recentItems = [
   { label: "Interest Earned", sub: "Apr 11, 2026", amount: "+₦12.50", color: "#22C55E" },
 ];
 
-function MiniChart() {
-  const max = Math.max(...chartData.map((d) => d.value));
-  const h = 140;
-  const w = 260;
-  const points = chartData.map((d, i) => {
-    const x = (i / (chartData.length - 1)) * w;
-    const y = h - (d.value / max) * h;
-    return `${x},${y}`;
-  });
-  const polyline = points.join(" ");
-  const lastPt = points[points.length - 1].split(",");
-
-  return (
-    <svg width={w} height={h + 20} viewBox={`0 0 ${w} ${h + 20}`} style={{ width: "100%", maxWidth: w }}>
-      <polyline points={polyline} fill="none" stroke="#5BB5E0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={lastPt[0]} cy={lastPt[1]} r="6" fill="#fff" stroke="#5BB5E0" strokeWidth="2" />
-      {chartData.map((d, i) => {
-        const x = (i / (chartData.length - 1)) * w;
-        return (
-          <text key={i} x={x} y={h + 16} textAnchor="middle" fill="#9CA3AF" fontSize="11" fontFamily="var(--font-poppins), sans-serif">
-            {d.month}
-          </text>
-        );
-      })}
-    </svg>
-  );
-}
-
 function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [tab, setTab] = useState<"overview" | "income" | "outcome">("overview");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -78,7 +42,7 @@ function DashboardContent() {
         background: "#0B1120",
         fontFamily: "var(--font-poppins), sans-serif",
         color: "#fff",
-        paddingBottom: 90,
+        paddingBottom: 100,
       }}
     >
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 20px" }}>
@@ -122,59 +86,57 @@ function DashboardContent() {
           <div style={{ width: 48, height: 4, borderRadius: 2, background: "#5BB5E0", marginTop: 8 }} />
         </div>
 
-        {/* Toggle tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {(["overview", "income", "outcome"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              style={{
-                padding: "8px 18px",
-                borderRadius: 10,
-                border: tab === t ? "1px solid #fff" : "1px solid rgba(255,255,255,0.15)",
-                background: tab === t ? "rgba(255,255,255,0.1)" : "transparent",
-                color: tab === t ? "#fff" : "#9CA3AF",
-                fontWeight: 600,
-                fontSize: "0.8rem",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                textTransform: "capitalize",
-              }}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        {/* Chart */}
-        <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
-          <MiniChart />
+        {/* Deposit & Withdraw buttons */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
+          <a
+            href="/account"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              background: "#22C55E",
+              color: "#fff",
+              padding: "14px 0",
+              borderRadius: 14,
+              fontWeight: 700,
+              fontSize: "1rem",
+              textDecoration: "none",
+            }}
+          >
+            ↓ Deposit
+          </a>
+          <a
+            href="/account"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              background: "rgba(255,255,255,0.08)",
+              color: "#fff",
+              padding: "14px 0",
+              borderRadius: 14,
+              fontWeight: 700,
+              fontSize: "1rem",
+              textDecoration: "none",
+              border: "1px solid rgba(255,255,255,0.15)",
+            }}
+          >
+            ↑ Withdraw
+          </a>
         </div>
 
         {/* Income / Outcome */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
-          <div
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              borderRadius: 14,
-              padding: "16px",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
+          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px", border: "1px solid rgba(255,255,255,0.08)" }}>
             <p style={{ fontSize: "0.8rem", color: "#D1D5DB", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Income</p>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
               <span style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff" }}>₦262,144</span>
               <span style={{ fontSize: "0.8rem", color: "#22C55E" }}>+69.42 ▲</span>
             </div>
           </div>
-          <div
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              borderRadius: 14,
-              padding: "16px",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
+          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px", border: "1px solid rgba(255,255,255,0.08)" }}>
             <p style={{ fontSize: "0.8rem", color: "#D1D5DB", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Outcome</p>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
               <span style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff" }}>₦65,536</span>
@@ -187,17 +149,7 @@ function DashboardContent() {
         <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: 24, border: "1px solid rgba(255,255,255,0.08)", marginBottom: 20, display: "flex", alignItems: "center", gap: 20 }}>
           <svg width="72" height="72" viewBox="0 0 72 72">
             <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
-            <circle
-              cx="36"
-              cy="36"
-              r="30"
-              fill="none"
-              stroke="#5BB5E0"
-              strokeWidth="6"
-              strokeDasharray={`${0.72 * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
-              strokeLinecap="round"
-              transform="rotate(-90 36 36)"
-            />
+            <circle cx="36" cy="36" r="30" fill="none" stroke="#5BB5E0" strokeWidth="6" strokeDasharray={`${0.72 * 2 * Math.PI * 30} ${2 * Math.PI * 30}`} strokeLinecap="round" transform="rotate(-90 36 36)" />
             <text x="36" y="34" textAnchor="middle" fill="#fff" fontSize="16" fontWeight="700" fontFamily="var(--font-poppins), sans-serif">72%</text>
             <text x="36" y="46" textAnchor="middle" fill="#D1D5DB" fontSize="9" fontFamily="var(--font-poppins), sans-serif">Budget used</text>
           </svg>
@@ -247,31 +199,38 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* FAB */}
-      <a
-        href="/account"
+      {/* Bottom Widget Nav */}
+      <nav
         style={{
           position: "fixed",
-          bottom: 90,
-          right: 24,
-          width: 56,
-          height: 56,
-          borderRadius: "50%",
-          background: "#E74C3C",
-          color: "#fff",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "#131A2E",
+          borderTop: "1px solid rgba(255,255,255,0.1)",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "1.6rem",
-          fontWeight: 700,
-          boxShadow: "0 4px 20px rgba(231,76,60,0.4)",
-          textDecoration: "none",
-          zIndex: 40,
+          justifyContent: "space-around",
+          padding: "10px 0 14px",
+          zIndex: 50,
         }}
-        title="Add Money"
       >
-        +
-      </a>
+        <a href="/budgets" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textDecoration: "none", color: "#9CA3AF", fontSize: "0.7rem", fontWeight: 600, fontFamily: "var(--font-poppins), sans-serif" }}>
+          <span style={{ fontSize: "1.4rem" }}>📊</span>
+          Budget
+        </a>
+        <a href="/savings" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textDecoration: "none", color: "#9CA3AF", fontSize: "0.7rem", fontWeight: 600, fontFamily: "var(--font-poppins), sans-serif" }}>
+          <span style={{ fontSize: "1.4rem" }}>🔒</span>
+          Save
+        </a>
+        <a href="/investments" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textDecoration: "none", color: "#9CA3AF", fontSize: "0.7rem", fontWeight: 600, fontFamily: "var(--font-poppins), sans-serif" }}>
+          <span style={{ fontSize: "1.4rem" }}>📈</span>
+          Invest
+        </a>
+        <a href="/account" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textDecoration: "none", color: "#9CA3AF", fontSize: "0.7rem", fontWeight: 600, fontFamily: "var(--font-poppins), sans-serif" }}>
+          <span style={{ fontSize: "1.4rem" }}>👤</span>
+          Account
+        </a>
+      </nav>
     </main>
   );
 }
