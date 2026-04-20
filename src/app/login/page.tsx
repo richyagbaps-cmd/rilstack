@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState(""); // email or phone
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -54,14 +55,30 @@ export default function LoginPage() {
             onChange={(e) => setIdentifier(e.target.value)}
             required
           />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full px-4 py-3 rounded-lg border border-[#e0e6f7] focus:outline-none focus:ring-2 focus:ring-[#00e096] text-[#2c3e5f]"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative w-full">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              aria-label="Password"
+              className="w-full px-4 py-3 rounded-lg border border-[#e0e6f7] focus:outline-none focus:ring-2 focus:ring-[#00e096] text-[#2c3e5f] pr-12"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A5B6E] hover:text-[#2c3e5f] focus:outline-none"
+              tabIndex={0}
+              onClick={() => setShowPassword((v) => !v)}
+            >
+              {showPassword ? (
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M12 5c-7 0-9 7-9 7s2 7 9 7 9-7 9-7-2-7-9-7z" stroke="#2c3e5f" strokeWidth="2"/><circle cx="12" cy="12" r="3" stroke="#2c3e5f" strokeWidth="2"/></svg>
+              ) : (
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M17.94 17.94A10.97 10.97 0 0112 19c-7 0-9-7-9-7a17.92 17.92 0 014.06-5.94M9.53 9.53A3.5 3.5 0 0112 8.5c1.93 0 3.5 1.57 3.5 3.5 0 .47-.09.92-.26 1.33" stroke="#2c3e5f" strokeWidth="2"/><path d="M1 1l22 22" stroke="#2c3e5f" strokeWidth="2"/></svg>
+              )}
+            </button>
+          </div>
           <div className="flex justify-between items-center text-sm">
             <Link
               href="/forgot-password"
@@ -75,9 +92,13 @@ export default function LoginPage() {
           </div>
           <button
             type="submit"
-            className="w-full bg-[#00e096] text-white font-bold py-3 rounded-lg shadow hover:bg-[#00c080] transition text-lg mt-2 disabled:opacity-60"
+            className="w-full bg-[#00e096] text-white font-bold py-3 rounded-lg shadow hover:bg-[#00c080] transition text-lg mt-2 disabled:opacity-60 flex items-center justify-center gap-2"
             disabled={loading}
+            aria-busy={loading}
           >
+            {loading && (
+              <svg className="animate-spin mr-2" width="20" height="20" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="#fff" strokeWidth="4"/><path className="opacity-75" fill="#fff" d="M4 12a8 8 0 018-8v8z"/></svg>
+            )}
             {loading ? "Signing in..." : "Sign in"}
           </button>
           {error && (
@@ -86,15 +107,14 @@ export default function LoginPage() {
         </form>
         <div className="flex flex-col gap-2 w-full mt-6">
           <button
-            className="w-full bg-[#23263a] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#181A20] transition"
+            className="w-full border border-[#e0e6f7] bg-white text-[#23263a] font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#f5f5f5] transition shadow-sm focus:outline-none"
+            aria-label="Sign in with Google"
             onClick={async () => {
               await signIn("google", { callbackUrl: "/dashboard" });
             }}
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M21.35 11.1h-9.18v2.92h5.27c-.23 1.23-1.41 3.6-5.27 3.6-3.18 0-5.78-2.63-5.78-5.87s2.6-5.87 5.78-5.87c1.81 0 3.03.77 3.73 1.43l2.54-2.47C16.09 3.98 14.13 3 12 3 6.48 3 2 7.48 2 12s4.48 9 10 9c5.75 0 9.54-4.03 9.54-9.7 0-.65-.07-1.14-.19-1.6z" />
-            </svg>
-            Sign in with Google
+            <img src="/icons/google.svg" alt="Google" className="w-5 h-5" />
+            <span>Sign in with Google</span>
           </button>
         </div>
         {/* ...existing code... (Google sign in remains) */}

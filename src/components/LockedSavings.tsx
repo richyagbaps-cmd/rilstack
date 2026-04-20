@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { insertSafeLock, updateSafeLock } from "@/lib/supabaseAdminMutations";
 
 interface LockedSaving {
   id: string;
@@ -75,7 +76,7 @@ export default function LockedSavings() {
     return () => clearInterval(timer);
   }, [lockedSavings]);
 
-  const onSubmit = (data: {
+  const onSubmit = async (data: {
     amount: string;
     lockPeriod: string;
     description: string;
@@ -98,10 +99,9 @@ export default function LockedSavings() {
         break;
     }
 
-    const newSaving: LockedSaving = {
-      id: Date.now().toString(),
+    const newSaving = {
       amount: parseFloat(data.amount),
-      lockPeriod: data.lockPeriod as "hourly" | "daily" | "monthly" | "yearly",
+      lockPeriod: data.lockPeriod,
       createdDate: now.toISOString().split("T")[0],
       unlockDate: unlockDate.toISOString().split("T")[0],
       status: "locked",
@@ -116,8 +116,13 @@ export default function LockedSavings() {
               : 0.5,
     };
 
-    setLockedSavings([newSaving, ...lockedSavings]);
-    reset();
+    try {
+      const [inserted] = await insertSafeLock(newSaving);
+      setLockedSavings([{ ...inserted }, ...lockedSavings]);
+      reset();
+    } catch (err) {
+      alert("Failed to create locked savings. Please try again.");
+    }
   };
 
   const totalLocked = lockedSavings
@@ -320,7 +325,22 @@ export default function LockedSavings() {
                         saving.amount + (saving.interestEarned || 0)
                       ).toLocaleString()}
                     </p>
-                    <button className="mt-1 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                    <button
+                      className="mt-1 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                      onClick={async () => {
+                        try {
+                          // Update status to withdrawn in backend
+                          await updateSafeLock(saving.id, { status: "withdrawn" });
+                          setLockedSavings(
+                            lockedSavings.map((s) =>
+                              s.id === saving.id ? { ...s, status: "withdrawn" } : s
+                            )
+                          );
+                        } catch (err) {
+                          alert("Failed to withdraw. Please try again.");
+                        }
+                      }}
+                    >
                       Withdraw
                     </button>
                   </div>

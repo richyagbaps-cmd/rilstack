@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { insertSafeLock, updateSafeLock } from "@/lib/supabaseAdminMutations";
 
 const ADMIN_MIN_DAYS = 10; // This can be fetched from backend/admin settings
 
@@ -31,16 +32,26 @@ export default function SafeLockManager() {
     return () => clearInterval(interval);
   }, [locks]);
 
-  const handleAddLock = () => {
+  const handleAddLock = async () => {
     setError("");
     if (!amount || Number(amount) <= 0) return setError("Enter a valid amount");
     if (!unlockDate || unlockDate < daysFromToday(ADMIN_MIN_DAYS))
       return setError(
         `Unlock date must be at least ${ADMIN_MIN_DAYS} days from today`,
       );
-    setLocks([...locks, { amount: Number(amount), unlockDate }]);
-    setAmount("");
-    setUnlockDate(daysFromToday(ADMIN_MIN_DAYS));
+    try {
+      const [inserted] = await insertSafeLock({
+        amount: Number(amount),
+        unlockDate,
+        createdAt: new Date().toISOString(),
+        status: "locked",
+      });
+      setLocks([...locks, inserted]);
+      setAmount("");
+      setUnlockDate(daysFromToday(ADMIN_MIN_DAYS));
+    } catch (err) {
+      setError("Failed to create safe lock. Please try again.");
+    }
   };
 
   return (
@@ -86,6 +97,28 @@ export default function SafeLockManager() {
             <span className="text-blue-600 font-mono">
               {getCountdown(lock.unlockDate)}
             </span>
+            {getCountdown(lock.unlockDate) === "Unlocked" && lock.status !== "withdrawn" && (
+              <button
+                className="ml-4 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                onClick={async () => {
+                  try {
+                    await updateSafeLock(lock.id, { status: "withdrawn" });
+                    setLocks(
+                      locks.map((l, i) =>
+                        i === idx ? { ...l, status: "withdrawn" } : l
+                      )
+                    );
+                  } catch (err) {
+                    setError("Failed to withdraw. Please try again.");
+                  }
+                }}
+              >
+                Withdraw
+              </button>
+            )}
+            {lock.status === "withdrawn" && (
+              <span className="ml-4 text-green-700 font-semibold">Withdrawn</span>
+            )}
           </li>
         ))}
       </ul>

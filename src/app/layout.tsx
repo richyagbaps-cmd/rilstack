@@ -9,6 +9,7 @@ import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 import AppFooter from "@/components/AppFooter";
 import Navigation from "@/components/Navigation";
 import TopBarNavigation from "@/components/TopBarNavigation";
+import { useSession } from "next-auth/react";
 import PinConfirmModal, { hasPin } from "@/components/PinConfirmModal";
 // import ThemeToggle from '@/components/ThemeToggle';
 import React, { useEffect, useState } from "react";
@@ -18,6 +19,18 @@ const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
 });
+
+function AuthContentWrapper({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  if (status !== "authenticated" || !session) return <>{children}</>;
+  return (
+    <>
+      <TopBarNavigation />
+      {children}
+      <Navigation />
+    </>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -87,11 +100,11 @@ export default function RootLayout({
         {/* ThemeToggle removed: app is always light mode */}
         <PrivacyProvider>
           <AuthProvider>
-            <TopBarNavigation />
-            {children}
+            <AuthContentWrapper>
+              {children}
+            </AuthContentWrapper>
           </AuthProvider>
         </PrivacyProvider>
-        <Navigation />
         <AppFooter />
         <OnboardingModal
           open={showOnboarding}

@@ -755,12 +755,28 @@ function InvestmentActions({
   onReinvest,
   onRedeem,
   onSell,
+  refreshInvestments,
 }: {
   inv: any;
   onReinvest?: () => void;
   onRedeem?: () => void;
   onSell?: () => void;
+  refreshInvestments?: () => void;
 }) {
+  const handleRedeem = async () => {
+    try {
+      const res = await fetch("/api/investment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: inv.id, status: "withdrawn", withdrawnAt: new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error("Failed to redeem");
+      if (refreshInvestments) refreshInvestments();
+      alert("Redeemed to wallet!");
+    } catch (err) {
+      alert("Failed to redeem. Please try again.");
+    }
+  };
   if (inv.type === "tbill" || inv.type === "bond") {
     if (inv.isClosed || daysTo(inv.maturityDate) === 0) {
       return (
@@ -773,7 +789,7 @@ function InvestmentActions({
           </button>
           <button
             className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
-            onClick={onRedeem}
+            onClick={handleRedeem}
           >
             Redeem to Wallet
           </button>
@@ -788,7 +804,7 @@ function InvestmentActions({
         <button className="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
           Additional Investment
         </button>
-        <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700">
+        <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700" onClick={handleRedeem}>
           Redeem
         </button>
         <button className="px-3 py-1 rounded bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700">

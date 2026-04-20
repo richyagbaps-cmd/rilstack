@@ -16,6 +16,7 @@ export default function SignupPage() {
   const [pin, setPin] = useState<string>("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<string>("");
   const router = useRouter();
 
   // After KYC, go to PIN setup
@@ -52,21 +53,74 @@ export default function SignupPage() {
     }
   };
 
+  // Stepper logic
+  const steps = ["choose", "google/email", "kyc", "pin", "terms", "done"];
+  const stepIndex =
+    step === "choose"
+      ? 0
+      : step === "google" || step === "email"
+      ? 1
+      : step === "kyc"
+      ? 2
+      : step === "pin"
+      ? 3
+      : step === "terms"
+      ? 4
+      : 5;
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-blue-600 p-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+        {/* Stepper */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {steps.slice(0, 5).map((s, idx) => (
+            <div key={s} className="flex flex-col items-center">
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm border-2 ${stepIndex === idx ? "bg-blue-600 text-white border-blue-600" : "bg-white text-blue-600 border-blue-300"}`}
+                aria-current={stepIndex === idx ? "step" : undefined}
+              >
+                {idx + 1}
+              </div>
+              <span className="text-xs mt-1 text-blue-600 opacity-80">
+                {[
+                  "Start",
+                  "Method",
+                  "KYC",
+                  "PIN",
+                  "Terms",
+                ][idx]}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Toasts */}
+        {error && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded shadow font-semibold z-10 animate-fade-in">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded shadow font-semibold z-10 animate-fade-in">
+            {success}
+          </div>
+        )}
+
+        {/* Steps */}
         {step === "choose" && (
           <>
             <h2 className="text-2xl font-bold mb-4 text-center">Sign Up</h2>
             <button
-              className="w-full bg-red-500 text-white py-2 rounded mb-4 flex items-center justify-center gap-2 font-semibold"
+              className="w-full bg-red-500 text-white py-2 rounded mb-4 flex items-center justify-center gap-2 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
               onClick={() => setStep("google")}
+              aria-label="Continue with Google"
             >
               Continue with Google
             </button>
             <button
-              className="w-full border border-blue-500 text-blue-700 py-2 rounded font-semibold"
+              className="w-full border border-blue-500 text-blue-700 py-2 rounded font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
               onClick={() => setStep("email")}
+              aria-label="Sign up with Email"
             >
               Sign up with Email
             </button>
@@ -116,10 +170,10 @@ export default function SignupPage() {
               />
               <span>I accept the terms and conditions</span>
             </label>
-            {error && <div className="text-red-500 mb-2">{error}</div>}
             <button
-              className="w-full bg-blue-600 text-white py-2 rounded font-semibold"
+              className="w-full bg-blue-600 text-white py-2 rounded font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
               onClick={handleRegister}
+              aria-label="Finish Registration"
             >
               Finish Registration
             </button>

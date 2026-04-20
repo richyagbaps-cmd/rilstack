@@ -25,19 +25,70 @@ export default function SavingsGoal() {
   });
   const [error, setError] = useState("");
 
-  const handleSelect = (g: string) => {
+  const handleSelect = async (g: string) => {
     if (g === "custom") setStep("custom");
     else if (g === "team") setStep("team");
     else {
       setGoal(g);
       // Save and continue
+      setError("");
+      const userId = localStorage.getItem("user_id");
+      if (!userId) {
+        setError("User not logged in");
+        return;
+      }
+      try {
+        const res = await fetch("/api/savings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            name: g,
+            targetAmount: 0,
+            currentAmount: 0,
+            dueDate: new Date(new Date().setMonth(new Date().getMonth() + 6)),
+            type: "personal",
+            teamMembers: [],
+            withdrawalApprovalRequired: false,
+            safeLocks: [],
+          }),
+        });
+        if (!res.ok) throw new Error("Failed to create goal");
+      } catch (err) {
+        setError("Failed to create goal");
+      }
     }
   };
 
-  const handleCustom = () => {
+  const handleCustom = async () => {
     if (!customGoal) return setError("Enter a goal name");
     setGoal(customGoal);
-    // Save and continue
+    setError("");
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      setError("User not logged in");
+      return;
+    }
+    try {
+      const res = await fetch("/api/savings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          name: customGoal,
+          targetAmount: 0,
+          currentAmount: 0,
+          dueDate: new Date(new Date().setMonth(new Date().getMonth() + 6)),
+          type: "personal",
+          teamMembers: [],
+          withdrawalApprovalRequired: false,
+          safeLocks: [],
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create goal");
+    } catch (err) {
+      setError("Failed to create goal");
+    }
   };
 
   const handleTeam = () => {
@@ -46,11 +97,34 @@ export default function SavingsGoal() {
     setStep("teamDetails");
   };
 
-  const handleInvite = () => {
-    // Simulate invite (send emails)
-    // Save team goal
-    setGoal(team.name);
-    // Continue to progress bar, etc.
+  const handleInvite = async () => {
+    setError("");
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      setError("User not logged in");
+      return;
+    }
+    try {
+      const res = await fetch("/api/savings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          name: team.name,
+          targetAmount: parseInt(team.amount, 10),
+          currentAmount: 0,
+          dueDate: new Date(team.date),
+          type: "team",
+          teamMembers: team.emails.split(",").map((e) => e.trim()).filter(Boolean),
+          withdrawalApprovalRequired: team.approval,
+          safeLocks: [],
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create team goal");
+      setGoal(team.name);
+    } catch (err) {
+      setError("Failed to create team goal");
+    }
   };
 
   return (

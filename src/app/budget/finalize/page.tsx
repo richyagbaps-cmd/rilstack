@@ -9,7 +9,7 @@ export default function BudgetFinalize() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!terms) {
       setError("You must accept the terms and conditions.");
@@ -24,9 +24,80 @@ export default function BudgetFinalize() {
       return;
     }
     setError("");
-    // Save budget as finalized (can POST to backend here)
-    localStorage.setItem("budget_finalized", "true");
-    setTimeout(() => router.push("/dashboard"), 800);
+
+    // Gather budget data from localStorage
+    try {
+      const demographics = JSON.parse(localStorage.getItem("demographics") || "{}");
+      const mode = localStorage.getItem("budgeting_mode") || "strict";
+      const type = localStorage.getItem("budget_type") || "502030";
+      const dates = JSON.parse(localStorage.getItem("budget_dates") || "{}");
+      const window = localStorage.getItem("spending_window") || "monthly";
+      const customPercents = JSON.parse(localStorage.getItem("custom_percents") || "{}");
+      const income = Number(demographics.income || 0);
+      // Categories: reconstruct from allocation logic
+      let categories = [];
+      if (type === "custom" && Object.keys(customPercents).length) {
+        categories = Object.entries(customPercents).map(([key, percent]) => ({
+          name: key.charAt(0).toUpperCase() + key.slice(1),
+          allocated_amount: Math.round((percent / 100) * income),
+          spent_amount: 0,
+          rollover_enabled: false,
+          spending_window: mode === "strict" ? window : null,
+        }));
+      } else {
+        // Default categories for 50/30/20 or zero-based
+        const defaultCats = type === "502030"
+          ? [
+              { name: "Rent", percent: 20 },
+              { name: "Utilities", percent: 10 },
+              { name: "Groceries", percent: 20 },
+              { name: "Dining", percent: 10 },
+              { name: "Entertainment", percent: 10 },
+              { name: "Savings", percent: 20 },
+            ]
+          : [
+              { name: "Rent", percent: 0 },
+              { name: "Utilities", percent: 0 },
+              { name: "Groceries", percent: 0 },
+              { name: "Dining", percent: 0 },
+              { name: "Entertainment", percent: 0 },
+              { name: "Savings", percent: 0 },
+            ];
+        categories = defaultCats.map((c) => ({
+          name: c.name,
+          allocated_amount: Math.round((c.percent / 100) * income),
+          spent_amount: 0,
+          rollover_enabled: false,
+          spending_window: mode === "strict" ? window : null,
+        }));
+      }
+
+      // Prepare payload
+      const payload = {
+        type: mode,
+        budgetStyle: type,
+        startDate: dates.start,
+        endDate: dates.end,
+        totalIncome: income,
+        totalAllocated: categories.reduce((sum, c) => sum + c.allocated_amount, 0),
+        totalSpent: 0,
+        status: "active",
+        categories,
+        pin, // Optionally send hashed PIN
+        demographics,
+      };
+
+      const res = await fetch("/api/budget", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Failed to create budget");
+      localStorage.setItem("budget_finalized", "true");
+      setTimeout(() => router.push("/dashboard"), 800);
+    } catch (err: any) {
+      setError(err.message || "Failed to create budget");
+    }
   };
 
   return (

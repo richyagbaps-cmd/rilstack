@@ -1,21 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-// Demo data for goals
-const demoGoals = [
-  {
-    name: "Emergency Fund",
-    target: 500000,
-    saved: 200000,
-    safeLocks: [{ amount: 100000, unlockDate: "2026-05-10" }],
-  },
-  {
-    name: "Travel",
-    target: 300000,
-    saved: 120000,
-    safeLocks: [],
-  },
-];
+const initialGoals: any[] = [];
 
 const DAILY_INTEREST = 0.03; // 3% daily
 
@@ -30,36 +16,84 @@ function daysSince(date: string) {
 }
 
 export default function SavingsDashboard() {
-  const [goals, setGoals] = useState<any[]>(demoGoals);
-  const [lastUpdate] = useState("2026-04-01"); // Simulate last interest compounding
+  const [goals, setGoals] = useState<any[]>(initialGoals);
+  const [lastUpdate, setLastUpdate] = useState<string>("");
   const [showAdd, setShowAdd] = useState<number | null>(null);
   const [showWithdraw, setShowWithdraw] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch savings goals from backend
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return;
+    fetch(`/api/savings?userId=${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setGoals(data || []);
+        setLastUpdate(data?.[0]?.lastInterestCalculationDate || "");
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   // Calculate total saved and interest
-  const totalSaved = goals.reduce((sum, g) => sum + g.saved, 0);
-  const days = daysSince(lastUpdate);
+  const totalSaved = goals.reduce((sum, g) => sum + (g.currentAmount || 0), 0);
+  const days = daysSince(lastUpdate || new Date().toISOString().slice(0, 10));
   const interest = getInterest(totalSaved, days);
 
-  const handleAdd = (idx: number, amt: number) => {
-    const updated = [...goals];
-    updated[idx].saved += amt;
-    setGoals(updated);
+  const handleAdd = async (idx: number, amt: number) => {
+    const goal = goals[idx];
+    const userId = localStorage.getItem("user_id");
+    try {
+      const res = await fetch(`/api/savings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "deposit",
+          goalId: goal.id,
+          userId,
+          amount: amt,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to add money");
+      // Refresh goals
+      const updated = await fetch(`/api/savings?userId=${userId}`).then((r) => r.json());
+      setGoals(updated || []);
+    } catch (err) {
+      alert("Failed to add money");
+    }
     setShowAdd(null);
   };
-  const handleWithdraw = (idx: number, amt: number) => {
+  const handleWithdraw = async (idx: number, amt: number) => {
     const goal = goals[idx];
+    const userId = localStorage.getItem("user_id");
     // Check safe lock
-    const locked = goal.safeLocks?.some(
-      (l: any) => new Date(l.unlockDate) > new Date(),
-    );
+    const locked = goal.safeLocks?.some((l: any) => new Date(l.unlockDate) > new Date());
     if (locked) return alert("Funds are locked and cannot be withdrawn.");
     if (amt > goal.saved) return alert("Insufficient funds.");
-    const updated = [...goals];
-    updated[idx].saved -= amt;
-    setGoals(updated);
+    try {
+      const res = await fetch(`/api/savings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "withdraw",
+          goalId: goal.id,
+          userId,
+          amount: amt,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to withdraw");
+      // Refresh goals
+      const updated = await fetch(`/api/savings?userId=${userId}`).then((r) => r.json());
+      setGoals(updated || []);
+    } catch (err) {
+      alert("Failed to withdraw");
+    }
     setShowWithdraw(null);
   };
 
+  if (loading) {
+    return <div className="text-center mt-20 text-xl">Loading savings goals...</div>;
+  }
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-8 mt-8">
       <h2 className="text-2xl font-bold mb-4 text-center">Savings Dashboard</h2>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import CreateGoalModal from "./CreateGoalModal";
 import CreateSafeLockModal from "./CreateSafeLockModal";
 import AutoInvestModal from "./AutoInvestModal";
+import { insertSafeLock, updateSafeLock } from "@/lib/supabaseAdminMutations";
 
 interface SavingsGoal {
   id: string;
@@ -78,18 +79,18 @@ export default function SavingsDashboard() {
     ]);
   };
   const handleCreateLock = async (lock: any) => {
-    // POST to backend if endpoint exists (pseudo-code, adjust as needed)
-    // await fetch("/api/safe-locks", { method: "POST", ... })
-    setSafeLocks((locks) => [
-      {
-        id: Math.random().toString(36).slice(2),
+    try {
+      const [inserted] = await insertSafeLock({
         amount: lock.amount,
         releaseDate: lock.releaseDate,
         createdAt: new Date().toISOString(),
-      },
-      ...locks,
-    ]);
-    setBalance((bal) => bal - lock.amount);
+        status: "locked",
+      });
+      setSafeLocks((locks) => [inserted, ...locks]);
+      setBalance((bal) => bal - lock.amount);
+    } catch (err) {
+      alert("Failed to create safe lock. Please try again.");
+    }
   };
 
   return (
@@ -187,24 +188,49 @@ export default function SavingsDashboard() {
             {safeLocks.length === 0 && (
               <div className="text-[#4A5B6E]">No safe locks yet.</div>
             )}
-            {safeLocks.map((lock) => (
-              <div
-                key={lock.id}
-                className="bg-white rounded-lg p-4 shadow flex flex-col gap-2"
-              >
-                <div className="flex justify-between items-center">
-                  <div className="font-semibold text-[#2c3e5f]">
-                    ₦{lock.amount.toLocaleString()}
+            {safeLocks.map((lock, idx) => {
+              const isUnlocked = new Date(lock.releaseDate) <= new Date();
+              return (
+                <div
+                  key={lock.id}
+                  className="bg-white rounded-lg p-4 shadow flex flex-col gap-2"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="font-semibold text-[#2c3e5f]">
+                      ₦{lock.amount.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-[#4A5B6E]">
+                      Unlocks: {lock.releaseDate}
+                    </div>
                   </div>
-                  <div className="text-xs text-[#4A5B6E]">
-                    Unlocks: {lock.releaseDate}
+                  <div className="text-xs text-[#00e096]">
+                    Earning daily interest
                   </div>
+                  {isUnlocked && lock.status !== "withdrawn" && (
+                    <button
+                      className="mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 w-fit"
+                      onClick={async () => {
+                        try {
+                          await updateSafeLock(lock.id, { status: "withdrawn" });
+                          setSafeLocks(
+                            safeLocks.map((l, i) =>
+                              i === idx ? { ...l, status: "withdrawn" } : l
+                            )
+                          );
+                        } catch (err) {
+                          alert("Failed to withdraw. Please try again.");
+                        }
+                      }}
+                    >
+                      Withdraw
+                    </button>
+                  )}
+                  {lock.status === "withdrawn" && (
+                    <span className="mt-2 text-green-700 font-semibold">Withdrawn</span>
+                  )}
                 </div>
-                <div className="text-xs text-[#00e096]">
-                  Earning daily interest
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

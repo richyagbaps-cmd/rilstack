@@ -1,8 +1,11 @@
 "use client";
 import { useState } from "react";
 
-// Demo product detail (would be fetched from backend)
-const productDetail = {
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+// TODO: Get productId from route/query if available
+const defaultProduct = {
+  id: "prod1",
   name: "Rilstack Fixed Income",
   description:
     "A low-risk fixed income product with 18% annualized return. Principal is protected and paid at maturity.",
@@ -14,20 +17,47 @@ const productDetail = {
   maturity: "2026-10-19",
 };
 
-export default function InvestmentProductDetail() {
+  const [productDetail, setProductDetail] = useState<any>(defaultProduct);
   const [units, setUnits] = useState(1);
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const userSavings = 50000; // Demo: user's savings balance
+  const [loading, setLoading] = useState(false);
+  const [userSavings, setUserSavings] = useState(0);
+  const searchParams = useSearchParams();
+
+  // Fetch product detail by ID if available, and user savings balance
+  useEffect(() => {
+    const productId = searchParams.get("id");
+    if (productId) {
+      fetch(`/api/products`)
+        .then((res) => res.json())
+        .then((products) => {
+          const found = products.find((p: any) => p.id === productId);
+          if (found) setProductDetail(found);
+        });
+    }
+    // Fetch user savings balance
+    const userId = localStorage.getItem("user_id");
+    if (userId) {
+      fetch(`/api/payment/account?userId=${userId}`)
+        .then((res) => res.json())
+        .then((result) => {
+          // Try to find savings or main wallet
+          const acc = (result.accounts || []).find((a: any) => a.type === "savings" || a.type === "checking");
+          setUserSavings(acc?.availableBalance || 0);
+        });
+    }
+  }, [searchParams]);
 
   const totalCost = units * productDetail.unit;
   const canBuy =
     units > 0 && units <= productDetail.available && totalCost <= userSavings;
 
-  const handlePurchase = (e: React.FormEvent) => {
+  const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess(false);
     if (!canBuy) {
       setError("Check units and savings balance.");
       return;
@@ -36,8 +66,34 @@ export default function InvestmentProductDetail() {
       setError("PIN must be 4-6 digits.");
       return;
     }
-    // Simulate purchase: deduct savings, create investment, reduce inventory
-    setSuccess(true);
+    setLoading(true);
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      setError("User not logged in");
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch("/api/investment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          productId: productDetail.id,
+          units,
+          amountInvested: totalCost,
+          expectedReturnTotal: Math.round(totalCost * productDetail.rate),
+          startDate: new Date(),
+          expectedEndDate: new Date(new Date().setMonth(new Date().getMonth() + (productDetail.tenor || 6))),
+          status: "active",
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to invest");
+      setSuccess(true);
+    } catch (err) {
+      setError("Failed to invest");
+    }
+    setLoading(false);
   };
 
   return (
