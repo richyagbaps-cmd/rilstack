@@ -1,7 +1,7 @@
 "use client";
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
-import { Inter } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import AuthProvider from "@/components/AuthProvider";
 import { PrivacyProvider } from "@/components/PrivacyContext";
 import OnboardingModal from "@/components/OnboardingModal";
@@ -18,6 +18,12 @@ import "../styles/globals.css";
 const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-poppins",
 });
 
 function AuthContentWrapper({ children }: { children: React.ReactNode }) {
@@ -95,7 +101,7 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${poppins.variable}`}>
         {/* SplashScreen removed for faster load */}
         {/* ThemeToggle removed: app is always light mode */}
         <PrivacyProvider>

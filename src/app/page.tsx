@@ -4,35 +4,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const features = [
-  {
-    icon: "📊",
-    title: "Smart Budgeting",
-    desc: "Strict or relaxed budgets with spending pockets. AI allocates your income using 50/30/20, zero‑based, or custom rules.",
-  },
-  {
-    icon: "🔒",
-    title: "Savings with Safe Locks",
-    desc: "Earn daily interest. Lock money away until a future date — no early access.",
-  },
-  {
-    icon: "📈",
-    title: "Automated Investments",
-    desc: "Admin‑managed investment products. Your returns are calculated and paid automatically at maturity.",
-  },
-  {
-    icon: "🛡️",
-    title: "Nigerian KYC & Security",
-    desc: "Full compliance. Biometric login, fraud reporting, and bank‑level encryption.",
-  },
-];
-
-const steps = [
-  { num: "1", text: "Sign up with email or Google — complete KYC in 3 minutes." },
-  { num: "2", text: "Choose Budget, Savings, or Investments — AI guides you." },
-  { num: "3", text: "Start stacking — watch your money grow daily." },
-];
-
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -45,127 +16,119 @@ export default function Home() {
 
   if (status === "loading" || status === "authenticated") {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%)" }}>
-        <p style={{ color: "#1A5F7A", fontSize: "1.1rem" }}>Loading...</p>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0B1120" }}>
+        <p style={{ color: "#5BB5E0", fontFamily: "var(--font-poppins), sans-serif" }}>Loading...</p>
       </div>
     );
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%)", fontFamily: "'Inter', sans-serif" }}>
-      {/* Top bar — logo only, no nav */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "24px 0 0" }}>
-        <img
-          src="/images/rilstack-logo.png"
-          alt="Rilstack"
-          style={{ height: 48, width: 48, borderRadius: 16, background: "#fff", boxShadow: "0 2px 8px #1A5F7A22" }}
-        />
-      </div>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#0B1120",
+        fontFamily: "var(--font-poppins), sans-serif",
+        color: "#fff",
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Gradient blob shapes */}
+      <div
+        style={{
+          position: "absolute",
+          top: -80,
+          left: -60,
+          width: 360,
+          height: 360,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #1A5F7A 0%, #0B1120 70%)",
+          opacity: 0.7,
+          filter: "blur(40px)",
+          zIndex: 0,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: 60,
+          right: -80,
+          width: 300,
+          height: 300,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #5BB5E0 0%, #0B1120 70%)",
+          opacity: 0.5,
+          filter: "blur(50px)",
+          zIndex: 0,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: 100,
+          left: "30%",
+          width: 260,
+          height: 260,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #1A5F7A 0%, #0B1120 70%)",
+          opacity: 0.4,
+          filter: "blur(60px)",
+          zIndex: 0,
+        }}
+      />
 
-      {/* Hero */}
-      <section style={{ textAlign: "center", padding: "48px 24px 32px", maxWidth: 700, margin: "0 auto" }}>
-        <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, color: "#1A5F7A", lineHeight: 1.2, marginBottom: 16 }}>
-          Stack Your Finances, One Layer at a Time.
+      {/* Content */}
+      <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "0 28px 60px" }}>
+        {/* Carousel dots */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 32 }}>
+          <div style={{ width: 24, height: 6, borderRadius: 3, background: "#fff" }} />
+          <div style={{ width: 6, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.3)" }} />
+          <div style={{ width: 6, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.3)" }} />
+        </div>
+
+        <h1 style={{ fontSize: "clamp(2rem, 6vw, 2.8rem)", fontWeight: 700, lineHeight: 1.15, marginBottom: 16 }}>
+          The best way<br />to stack your<br />finances
         </h1>
-        <p style={{ fontSize: "1.15rem", color: "#4A5F7A", lineHeight: 1.6, marginBottom: 32 }}>
+        <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 36, maxWidth: 340 }}>
           AI budgets, daily interest savings, automated investments — all in one place.
         </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <a
-            href="/login"
-            style={{
-              background: "#1A5F7A",
-              color: "#fff",
-              padding: "14px 36px",
-              borderRadius: 16,
-              fontWeight: 700,
-              fontSize: "1rem",
-              textDecoration: "none",
-              boxShadow: "0 4px 12px rgba(26,95,122,0.25)",
-              transition: "transform 0.15s",
-            }}
-          >
-            Login
-          </a>
-          <a
-            href="/signup"
-            style={{
-              background: "transparent",
-              color: "#1A5F7A",
-              padding: "14px 36px",
-              borderRadius: 16,
-              fontWeight: 700,
-              fontSize: "1rem",
-              textDecoration: "none",
-              border: "2px solid #1A5F7A",
-              transition: "transform 0.15s",
-            }}
-          >
-            Sign Up
-          </a>
-        </div>
-      </section>
 
-      {/* Feature Highlights */}
-      <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 48px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 20 }}>
-          {features.map((f, i) => (
-            <div
-              key={i}
-              style={{
-                background: "#fff",
-                borderRadius: 16,
-                padding: "28px 24px",
-                boxShadow: "0 4px 16px rgba(26,95,122,0.08), 2px 2px 0 rgba(244,162,97,0.12)",
-                border: "1.5px solid #F0F2F5",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: "2.4rem", marginBottom: 12 }}>{f.icon}</div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#1A5F7A", marginBottom: 8 }}>{f.title}</h3>
-              <p style={{ fontSize: "0.92rem", color: "#4A5F7A", lineHeight: 1.5 }}>{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <a
+          href="/signup"
+          style={{
+            display: "inline-block",
+            background: "#E74C3C",
+            color: "#fff",
+            padding: "16px 0",
+            borderRadius: 14,
+            fontWeight: 700,
+            fontSize: "1.05rem",
+            textAlign: "center",
+            textDecoration: "none",
+            width: "100%",
+            maxWidth: 320,
+            letterSpacing: 0.5,
+          }}
+        >
+          Get Started
+        </a>
 
-      {/* How It Works */}
-      <section style={{ maxWidth: 640, margin: "0 auto", padding: "0 16px 56px" }}>
-        <h2 style={{ textAlign: "center", fontSize: "1.4rem", fontWeight: 700, color: "#1A5F7A", marginBottom: 28 }}>How It Works</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {steps.map((s) => (
-            <div key={s.num} style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-              <div
-                style={{
-                  minWidth: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  background: "#1A5F7A",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 800,
-                  fontSize: "1.1rem",
-                  flexShrink: 0,
-                }}
-              >
-                {s.num}
-              </div>
-              <p style={{ fontSize: "1.05rem", color: "#2c3e5f", lineHeight: 1.5, margin: 0, paddingTop: 8 }}>{s.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <p style={{ textAlign: "center", marginTop: 16, fontSize: "0.9rem", color: "rgba(255,255,255,0.5)", maxWidth: 320 }}>
+          Already have an account?{" "}
+          <a href="/login" style={{ color: "#5BB5E0", textDecoration: "none", fontWeight: 600 }}>Login</a>
+        </p>
+      </div>
 
       {/* Footer */}
-      <footer style={{ textAlign: "center", padding: "24px 16px 32px", borderTop: "1px solid #E9EDF2" }}>
-        <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", marginBottom: 12 }}>
-          <a href="/terms" style={{ color: "#6C757D", fontSize: "0.85rem", textDecoration: "none" }}>Terms &amp; Conditions</a>
-          <a href="/privacy" style={{ color: "#6C757D", fontSize: "0.85rem", textDecoration: "none" }}>Privacy Policy</a>
-          <a href="/contact-support" style={{ color: "#6C757D", fontSize: "0.85rem", textDecoration: "none" }}>Contact Support</a>
+      <footer style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "16px 16px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap", marginBottom: 8 }}>
+          <a href="/terms" style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", textDecoration: "none" }}>Terms</a>
+          <a href="/privacy" style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", textDecoration: "none" }}>Privacy</a>
+          <a href="/contact-support" style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", textDecoration: "none" }}>Support</a>
         </div>
-        <p style={{ color: "#6C757D", fontSize: "0.8rem", margin: 0 }}>© 2026 Rilstack.xyz — Stack your finances.</p>
+        <p style={{ color: "rgba(255,255,255,0.25)", fontSize: "0.75rem", margin: 0 }}>© 2026 Rilstack.xyz</p>
       </footer>
     </main>
   );
