@@ -119,14 +119,14 @@ function DashboardContent() {
         <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: "10px 14px", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
           <svg width="52" height="52" viewBox="0 0 72 72">
             <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
-            <circle cx="36" cy="36" r="30" fill="none" stroke="#5BB5E0" strokeWidth="6" strokeDasharray={$budgetArc } strokeLinecap="round" transform="rotate(-90 36 36)" />
+            <circle cx="36" cy="36" r="30" fill="none" stroke="#5BB5E0" strokeWidth="6" strokeDasharray={`${budgetArc} ${budgetFull}`} strokeLinecap="round" transform="rotate(-90 36 36)" />
             <text x="36" y="34" textAnchor="middle" fill="#fff" fontSize="16" fontWeight="700" fontFamily="var(--font-poppins), sans-serif">{budgetPct}%</text> 
             <text x="36" y="46" textAnchor="middle" fill="#D1D5DB" fontSize="9" fontFamily="var(--font-poppins), sans-serif">Budget</text>
           </svg>
           <div>
             <p style={{ margin: 0, fontWeight: 700, fontSize: "0.88rem", color: "#fff" }}>Monthly Budget</p>
-            <p style={{ margin: "2px 0 0", color: "#D1D5DB", fontSize: "0.76rem" }}>{fmt(budgetSpent)} of {fmt(budgetAlloc)}  12 days left</p>
-            <a href="/budget" style={{ color: "#5BB5E0", fontSize: "0.74rem", textDecoration: "none", fontWeight: 600, marginTop: 3, display: "inline-block" }}>View </a>
+            <p style={{ margin: "2px 0 0", color: "#D1D5DB", fontSize: "0.76rem" }}>{fmt(budgetSpent)} of {fmt(budgetAlloc)} · 12 days left</p>
+            <a href="/budget" style={{ color: "#5BB5E0", fontSize: "0.74rem", textDecoration: "none", fontWeight: 600, marginTop: 3, display: "inline-block" }}>View →</a>
           </div>
         </div>
 

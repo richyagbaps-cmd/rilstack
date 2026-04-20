@@ -1,69 +1,104 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  query,
+  updateRow,
+  insertRow,
+  logTransaction,
+  TABLES,
+  nairaToKobo,
+  getUserById,
+  type STProduct,
+  type STInvestment,
+} from "@/lib/seatable";
+import { randomUUID } from "crypto";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { user_id, product_id, amount } = await request.json();
 
-    const result = await prisma.$transaction(async (tx: any) => {
-      // Lock product row for update (works in PostgreSQL/MySQL)
-      const product = await tx.product.findUnique({
-        where: { id: product_id },
-        // lock: { mode: 'ForUpdate' }, // Uncomment for PostgreSQL/MySQL
-      });
-      if (!product || !product.active) {
-        throw new Error("Product not found or inactive");
-      }
-      if (amount < product.min_investment) {
-        throw new Error(`Minimum investment is ₦${product.min_investment}`);
-      }
-      if (amount > product.available_for_purchase) {
-        throw new Error("INSUFFICIENT_SUPPLY");
-      }
+    if (!user_id || !product_id || !amount) {
+      return NextResponse.json(
+        { error: "user_id, product_id and amount are required" },
+        { status: 400 },
+      );
+    }
 
-      // Lock user row for update (works in PostgreSQL/MySQL)
-      const user = await tx.user.findUnique({
-        where: { id: user_id },
-        // lock: { mode: 'ForUpdate' },
-      });
-      if (!user || !user.kyc_verified || !user.active) {
-        throw new Error("User not KYC verified or inactive");
-      }
-      if (amount > user.wallet_balance) {
-        throw new Error("Insufficient wallet balance");
-      }
+    // Fetch product
+    const products = await query<STProduct>(
+      `SELECT * FROM ${TABLES.INVESTMENT_PRODUCTS} WHERE Product_ID='${product_id}' AND Is_Active=1 LIMIT 1`,
+    );
+    const product = products[0];
+    if (!product) {
+      return NextResponse.json({ error: "Product not found or inactive" }, { status: 404 });
+    }
 
-      // Deduct available supply and soft debit wallet
-      await tx.product.update({
-        where: { id: product_id },
-        data: { available_for_purchase: { decrement: amount } },
-      });
-      await tx.user.update({
-        where: { id: user_id },
-        data: { wallet_balance: { decrement: amount } },
-      });
+    const minInvestment = product.Unit_Amount / 100; // kobo → naira
+    if (amount < minInvestment) {
+      return NextResponse.json(
+        { error: `Minimum investment is ₦${minInvestment.toLocaleString()}` },
+        { status: 400 },
+      );
+    }
 
-      // Create investment order
-      const order = await tx.investmentOrder.create({
-        data: {
-          userId: user_id,
-          productId: product_id,
-          amount,
-          status: "pending_execution",
-        },
-      });
+    if (product.Total_Units_Available <= 0) {
+      return NextResponse.json({ error: "INSUFFICIENT_SUPPLY" }, { status: 400 });
+    }
 
-      return order;
+    const amtKobo = nairaToKobo(amount);
+    const unitsToBook = Math.floor(amtKobo / product.Unit_Amount);
+    if (unitsToBook < 1) {
+      return NextResponse.json({ error: "Amount too small for any units" }, { status: 400 });
+    }
+
+    // Calculate maturity date
+    const start = new Date();
+    const maturity = new Date(start);
+    maturity.setDate(maturity.getDate() + (product.Tenor_Days || 90));
+    const expectedReturn = Math.round(amtKobo * (1 + product.Return_Rate_Percent / 100));
+
+    // Reduce available units
+    await updateRow(TABLES.INVESTMENT_PRODUCTS, product._id, {
+      Total_Units_Available: Math.max(0, product.Total_Units_Available - unitsToBook),
+    });
+
+    // Create investment record
+    const inv: Omit<STInvestment, "_id"> = {
+      Investment_ID: `inv_${randomUUID().replace(/-/g, "").slice(0, 12)}`,
+      User_ID: user_id,
+      Product_ID: product_id,
+      Units: unitsToBook,
+      Amount_Invested: amtKobo,
+      Expected_Return_Total: expectedReturn,
+      Start_Date: start.toISOString().slice(0, 10),
+      Expected_End_Date: maturity.toISOString().slice(0, 10),
+      Status: "active",
+      Accrued_Interest: 0,
+      Penalty_Amount: 0,
+    };
+
+    const row = await insertRow(TABLES.INVESTMENTS, inv as Record<string, unknown>);
+
+    // Log transaction
+    await logTransaction({
+      Transaction_ID: `txn_${randomUUID().replace(/-/g, "").slice(0, 12)}`,
+      User_ID: user_id,
+      Type: "investment_purchase",
+      Amount: amtKobo,
+      Net_Effect: -amtKobo,
+      Balance_After: 0,
+      Reference_ID: inv.Investment_ID,
     });
 
     return NextResponse.json(
-      { message: "Order reserved", order: result },
+      { message: "Investment order created", investment: row },
       { status: 201 },
     );
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || "Reservation failed" },
+      { error: error.message || "Investment failed" },
       { status: 400 },
     );
   }
 }
+
+

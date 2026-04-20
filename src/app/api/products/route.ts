@@ -1,54 +1,65 @@
-// API route for managing products and available investment amounts
-import { NextResponse } from "next/server";
-
-// In-memory mock data for products
-let products = [
-  {
-    id: "tbill-91",
-    name: "91-day T-bill",
-    available_for_purchase: 500000000, // ₦500,000,000
-    sold: 0,
-    type: "tbill",
-  },
-  {
-    id: "bond-2030",
-    name: "FG Bond 2030",
-    available_for_purchase: 1000000000, // ₦1,000,000,000
-    sold: 0,
-    type: "bond",
-  },
-  {
-    id: "mf-equity",
-    name: "Equity Mutual Fund",
-    available_for_purchase: 1000000, // 1,000,000 units
-    sold: 0,
-    type: "mutual-fund",
-  },
-];
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getActiveProducts,
+  insertRow,
+  updateRow,
+  query,
+  TABLES,
+  type STProduct,
+  nairaToKobo,
+} from "@/lib/seatable";
+import { randomUUID } from "crypto";
 
 export async function GET() {
-  return NextResponse.json(products);
+  try {
+    const products = await getActiveProducts();
+    return NextResponse.json(products);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to fetch products" }, { status: 500 });
+  }
 }
 
-export async function PATCH(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { id, available_for_purchase } = await request.json();
-    const product = products.find((p) => p.id === id);
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    const body = await request.json();
+    const {
+      name, description, unitAmount, totalUnits, tenorDays,
+      isFlexible, returnRatePercent, returnType, penaltyPercent, riskLevel,
+    } = body;
+
+    if (!name || !unitAmount || !totalUnits || !tenorDays || !returnRatePercent) {
+      return NextResponse.json({ error: "Missing required product fields" }, { status: 400 });
     }
-    if (available_for_purchase < product.sold) {
-      return NextResponse.json(
-        { error: "Cannot set available below already sold quantity" },
-        { status: 400 },
-      );
-    }
-    product.available_for_purchase = available_for_purchase;
-    return NextResponse.json(product);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to update product" },
-      { status: 500 },
-    );
+
+    const product: Omit<STProduct, "_id"> = {
+      Product_ID: `prod_${randomUUID().replace(/-/g, "").slice(0, 12)}`,
+      Name: name,
+      Description: description || "",
+      Unit_Amount: nairaToKobo(unitAmount),
+      Total_Units_Available: totalUnits,
+      Tenor_Days: tenorDays,
+      Is_Flexible: isFlexible || false,
+      Return_Rate_Percent: returnRatePercent,
+      Return_Type: returnType || "fixed_at_maturity",
+      Early_Withdrawal_Penalty_Percent: penaltyPercent || 5,
+      Risk_Level: riskLevel || "Low",
+      Is_Active: true,
+    };
+
+    const row = await insertRow(TABLES.INVESTMENT_PRODUCTS, product as Record<string, unknown>);
+    return NextResponse.json(row, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to create product" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const { rowId, updates } = await request.json();
+    if (!rowId) return NextResponse.json({ error: "rowId required" }, { status: 400 });
+    await updateRow(TABLES.INVESTMENT_PRODUCTS, rowId, updates);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to update product" }, { status: 500 });
   }
 }
