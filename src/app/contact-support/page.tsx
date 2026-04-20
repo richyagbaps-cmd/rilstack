@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useMemo, useEffect } from "react";
 import { 
   Search, 
@@ -119,7 +119,7 @@ function ContactForm({ onSubmit }: { onSubmit: (data: any) => void }) {
     priority: "Normal",
     highReason: ""
   });
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -266,7 +266,7 @@ export default function ContactSupportPage() {
   const [submitted, setSubmitted] = useState(false);
   const [ticketDetails, setTicketDetails] = useState({ id: "", sla: "" });
 
-  const handleFormSubmit = (data) => {
+    const handleFormSubmit = (data: any) => {
     const id = "TKT-" + Math.floor(100000 + Math.random() * 900000);
     setTicketDetails({
       id,

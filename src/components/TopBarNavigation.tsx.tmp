@@ -1,0 +1,94 @@
+"use client";
+import React from "react";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
+import { useSession } from "next-auth/react";
+import { FaBell, FaBars, FaChevronDown, FaUserCircle } from "react-icons/fa";   
+
+export default function TopBarNavigation() {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [profileOpen, setProfileOpen] = React.useState(false);
+  const user = session?.user;
+
+  return (
+    <>
+      {/* Status Bar & Top Bar */}
+      <header
+        className="fixed top-0 left-0 w-full z-40 bg-white flex items-center justify-between px-2 md:px-6"
+        style={{ height: 56, borderBottom: "1.5px solid #E9EDF2", boxShadow: "0 2px 8px #E9EDF2" }}
+        role="banner"
+        aria-label="Dashboard top bar"
+      >
+        {/* Left: Hamburger */}
+        <button
+          className="flex items-center justify-center h-10 w-10 rounded-full transition hover:bg-[#F8F9FA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]"
+          aria-label="Open menu"
+          tabIndex={0}
+          onClick={() => setDrawerOpen(true)}
+        >
+          <FaBars size={22} color="#1A5F7A" />
+        </button>
+
+        {/* Center: Logo (click to refresh) */}
+        <div className="flex-1 flex justify-center">
+          <button
+            onClick={() => router.refresh()}
+            style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            aria-label="Refresh dashboard"
+            tabIndex={0}
+            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]"
+          >
+            <img
+              src="/images/rilstack-logo.png"
+              alt="Rilstack Logo"
+              style={{ height: 32, width: 32, borderRadius: 8, background: "#fff", boxShadow: "0 2px 8px #1A5F7A22" }}
+              draggable={false}
+            />
+            <span style={{
+              fontSize: "1.5rem",
+              fontWeight: 800,
+              fontFamily: "'Inter', sans-serif",
+              color: "#1A5F7A",
+              letterSpacing: 1,
+              userSelect: "none",
+            }}>
+              rilstack
+            </span>
+          </button>
+        </div>
+
+        {/* Right: Bell and Avatar */}
+        <div className="flex items-center gap-2 md:gap-3 pr-1">
+          <button
+            className="flex items-center justify-center h-10 w-10 rounded-full transition hover:bg-[#F8F9FA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]"
+            aria-label="Notifications"
+            tabIndex={0}
+            onClick={() => alert('Notifications coming soon!')}
+          >
+            <FaBell size={20} color="#1A5F7A" />
+          </button>
+          <div className="relative">
+            <button
+              className="flex items-center justify-center h-10 w-10 rounded-full border border-[#E9EDF2] bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]"
+              aria-label="Profile menu"
+              tabIndex={0}
+              onClick={() => setProfileOpen((v) => !v)}
+            >
+              {user?.image ? (
+                <img
+                  src={user.image}
+                  alt="Avatar"
+                  className="h-8 w-8 rounded-full object-cover"
+                  draggable={false}
+                />
+                />
+              ) : (
+                <FaUserCircle size={28} color=\"#1A5F7A\" />
+              )}
+            </button>
+            {profileOpen && (
+              <div className=\"absolute right-0 mt-2 w-48 bg-white border border-[#E9EDF2] rounded-lg shadow-xl py-2 z-50 animate-fadeIn\">
+                <button

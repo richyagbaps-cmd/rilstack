@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const INCIDENT_TYPES = [
@@ -10,7 +10,7 @@ const INCIDENT_TYPES = [
   "Other",
 ];
 
-export default function ReportFraudFlow() {
+function ReportFraudFlowContent() {
   const router = useRouter();
   const params = useSearchParams();
   const transactionId = params.get("tx") || "";
@@ -77,9 +77,9 @@ export default function ReportFraudFlow() {
   };
 
   // File upload
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {        
     if (!e.target.files) return;
-    const selected = Array.from(e.target.files).slice(0, 5 - files.length);
+    const selected = Array.from(e.target.files).slice(0, 5 - files.length);     
     setFiles((prev) => [...prev, ...selected].slice(0, 5));
   };
   const removeFile = (idx: number) => {
@@ -96,7 +96,7 @@ export default function ReportFraudFlow() {
               <label className="block text-sm font-semibold mb-2">Incident Type</label>
               <div className="space-y-2">
                 {INCIDENT_TYPES.map((type) => (
-                  <label key={type} className="flex items-center gap-2">
+                  <label key={type} className="flex items-center gap-2">        
                     <input
                       type="radio"
                       name="incidentType"
@@ -110,7 +110,7 @@ export default function ReportFraudFlow() {
                 ))}
               </div>
             </div>
-            {error && <div className="text-red-600 text-xs">{error}</div>}
+            {error && <div className="text-red-600 text-xs">{error}</div>}      
             <button
               type="submit"
               className="w-full rounded bg-[#D32F2F] text-white font-semibold py-2 mt-2 hover:bg-[#b71c1c]"
@@ -153,7 +153,7 @@ export default function ReportFraudFlow() {
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold mb-1">Description</label>
                 <textarea
-                  className="w-full rounded border px-3 py-2 min-h-[80px]"
+                  className="w-full rounded border px-3 py-2 min-h-[80px]"      
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   minLength={20}
@@ -182,7 +182,7 @@ export default function ReportFraudFlow() {
                 </div>
               </div>
             </div>
-            {error && <div className="text-red-600 text-xs">{error}</div>}
+            {error && <div className="text-red-600 text-xs">{error}</div>}      
             <button
               type="submit"
               className="w-full rounded bg-[#D32F2F] text-white font-semibold py-2 mt-2 hover:bg-[#b71c1c]"
@@ -204,7 +204,7 @@ export default function ReportFraudFlow() {
                 required
               />
             </div>
-            {error && <div className="text-red-600 text-xs">{error}</div>}
+            {error && <div className="text-red-600 text-xs">{error}</div>}      
             <button
               type="submit"
               className="w-full rounded bg-[#D32F2F] text-white font-semibold py-2 mt-2 hover:bg-[#b71c1c]"
@@ -228,7 +228,7 @@ export default function ReportFraudFlow() {
           </form>
         )}
         {success && (
-          <div className="text-green-700 text-center font-semibold py-4">
+          <div className="text-green-700 text-center font-semibold py-4">       
             {success}
           </div>
         )}
@@ -236,3 +236,12 @@ export default function ReportFraudFlow() {
     </div>
   );
 }
+
+export default function ReportFraudFlow() {
+  return (
+    <Suspense fallback={<div className="text-center p-10">Loading...</div>}>
+      <ReportFraudFlowContent />
+    </Suspense>
+  );
+}
+

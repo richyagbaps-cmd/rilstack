@@ -5,7 +5,6 @@ import { Inter } from "next/font/google";
 import AuthProvider from "@/components/AuthProvider";
 import { PrivacyProvider } from "@/components/PrivacyContext";
 import OnboardingModal from "@/components/OnboardingModal";
-import SplashScreen from "@/components/SplashScreen";
 import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 import AppFooter from "@/components/AppFooter";
 import Navigation from "@/components/Navigation";
