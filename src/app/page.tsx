@@ -59,7 +59,7 @@ export default function Home() {
           <h1 style={{ fontSize: "clamp(2rem, 6vw, 3rem)", fontWeight: 800, lineHeight: 1.15, marginBottom: 16, color: "#fff" }}>
             Stack Your Finances,<br />One Layer at a Time.
           </h1>
-          <p style={{ fontSize: "1.1rem", color: "#D1D5DB", lineHeight: 1.7, marginBottom: 36, maxWidth: 420, margin: "0 auto 36px" }}>
+          <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.75)", lineHeight: 1.7, marginBottom: 36, maxWidth: 420, margin: "0 auto 36px" }}>
             AI budgets, daily interest savings, automated investments — all in one place.
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
@@ -88,7 +88,7 @@ export default function Home() {
                 fontWeight: 700,
                 fontSize: "1.05rem",
                 textDecoration: "none",
-                border: "2px solid rgba(255,255,255,0.6)",
+                border: "2px solid rgba(255,255,255,0.3)",
               }}
             >
               Login
@@ -112,16 +112,16 @@ export default function Home() {
               >
                 <div style={{ fontSize: "2.2rem", marginBottom: 10 }}>{f.icon}</div>
                 <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", marginBottom: 8 }}>{f.title}</h3>
-                <p style={{ fontSize: "0.88rem", color: "#D1D5DB", lineHeight: 1.5, margin: 0 }}>{f.desc}</p>
+                <p style={{ fontSize: "0.88rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.5, margin: 0 }}>{f.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* How It Works */}
-        <section style={{ maxWidth: 560, margin: "0 auto", padding: "0 20px 56px", textAlign: "center" }}>
+        <section style={{ maxWidth: 560, margin: "0 auto", padding: "0 20px 56px" }}>
           <h2 style={{ textAlign: "center", fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: 28 }}>How It Works</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {steps.map((s) => (
               <div key={s.num} style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
                 <div
@@ -141,7 +141,7 @@ export default function Home() {
                 >
                   {s.num}
                 </div>
-                <p style={{ fontSize: "1.05rem", color: "#E5E7EB", lineHeight: 1.5, margin: 0, paddingTop: 8 }}>{s.text}</p>
+                <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.8)", lineHeight: 1.5, margin: 0, paddingTop: 8 }}>{s.text}</p>
               </div>
             ))}
           </div>
@@ -172,11 +172,12 @@ export default function Home() {
         {/* Footer */}
         <footer style={{ textAlign: "center", padding: "20px 16px 28px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", marginBottom: 10 }}>
-            <a href="/terms" style={{ color: "#9CA3AF", fontSize: "0.85rem", textDecoration: "none" }}>Terms</a>
-            <a href="/privacy" style={{ color: "#9CA3AF", fontSize: "0.85rem", textDecoration: "none" }}>Privacy</a>
-            <a href="/contact-support" style={{ color: "#9CA3AF", fontSize: "0.85rem", textDecoration: "none" }}>Support</a>
+            <a href="/terms" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.85rem", textDecoration: "none" }}>Terms</a>
+            <a href="/privacy" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.85rem", textDecoration: "none" }}>Privacy</a>
+            <a href="tel:+2348000000000" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.85rem", textDecoration: "none" }}>Call our helpline</a>
+            <a href="mailto:support@rilstack.xyz?subject=Support%20Request" style={{ color: "#5BB5E0", fontSize: "0.85rem", textDecoration: "none", fontWeight: 700, marginLeft: 12, border: "1px solid #5BB5E0", borderRadius: 8, padding: "4px 14px", background: "rgba(91,181,224,0.08)" }}>Submit a request</a>
           </div>
-          <p style={{ color: "#9CA3AF", fontSize: "0.8rem", margin: 0 }}>© 2026 Rilstack.xyz — Stack your finances.</p>
+          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.8rem", margin: 0 }}>© 2026 Rilstack.xyz — Stack your finances.</p>
         </footer>
       </div>
     </main>
