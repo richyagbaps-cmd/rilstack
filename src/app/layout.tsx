@@ -9,10 +9,9 @@ import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 import AppFooter from "@/components/AppFooter";
 import Navigation from "@/components/Navigation";
 import TopBarNavigation from "@/components/TopBarNavigation";
-import { useSession } from "next-auth/react";
-import PinConfirmModal, { hasPin } from "@/components/PinConfirmModal";
-// import ThemeToggle from '@/components/ThemeToggle';
-import React, { useEffect, useState } from "react";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
+import { useSession, signOut } from "next-auth/react";
+import React from "react";
 import "../styles/globals.css";
 
 const inter = Inter({
@@ -38,15 +37,14 @@ function AuthContentWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [showOnboarding, setShowOnboarding] = React.useState(false);
-  const [locked, setLocked] = React.useState(false);
-  const [lastActive, setLastActive] = React.useState(Date.now());
-  // Splash screen removed
 
   // Onboarding check
   React.useEffect(() => {
@@ -56,21 +54,34 @@ export default function RootLayout({
     }
   }, []);
 
-  // Inactivity lock logic
+  // Auto-logout on tab/window close
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    let timeout: NodeJS.Timeout;
-    const resetTimer = () => setLastActive(Date.now());
-    const events = ["mousemove", "mousedown", "keydown", "touchstart"];
-    events.forEach((e) => window.addEventListener(e, resetTimer));
-    timeout = setInterval(() => {
-      if (hasPin() && Date.now() - lastActive > 60000) setLocked(true);
-    }, 1000);
-    return () => {
-      events.forEach((e) => window.removeEventListener(e, resetTimer));
-      clearInterval(timeout);
+    const handleUnload = () => {
+      signOut({ redirect: false });
     };
-  }, [lastActive]);
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, []);
+
+  // Auto-logout after 10 minutes of inactivity
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    let timer: NodeJS.Timeout;
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        signOut({ callbackUrl: "/" });
+      }, INACTIVITY_TIMEOUT);
+    };
+    const events = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"];
+    events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true }));
+    resetTimer();
+    return () => {
+      clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
+    };
+  }, []);
 
   const handleOnboardingClose = () => {
     localStorage.setItem("rilstack_onboarding_complete", "1");
@@ -80,26 +91,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/icons/icon-192x192.svg"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/icons/icon-32x32.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/icons/icon-16x16.png"
-        />
-        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="icon" href="/icons/rilstack-logo.png" type="image/png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/rilstack-logo.png" />
+        <link rel="manifest" href="/manifest.json" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Rilstack" />
+        <meta name="theme-color" content="#0B1120" />
+        <meta name="application-name" content="Rilstack" />
+        <meta name="msapplication-TileColor" content="#0B1120" />
+        <meta name="msapplication-TileImage" content="/icons/rilstack-logo.png" />
       </head>
       <body className={`${inter.className} ${poppins.variable}`}>
         {/* SplashScreen removed for faster load */}
@@ -112,24 +114,13 @@ export default function RootLayout({
           </AuthProvider>
         </PrivacyProvider>
         <AppFooter />
+        <PWAInstallBanner />
         <OnboardingModal
           open={showOnboarding}
           onClose={handleOnboardingClose}
         />
         <PushNotificationPrompt />
         <Analytics />
-        {locked && (
-          <PinConfirmModal
-            title="App Locked"
-            description="Enter your PIN to unlock"
-            open={locked}
-            onConfirm={() => {
-              setLocked(false);
-              setLastActive(Date.now());
-            }}
-            onCancel={() => {}}
-          />
-        )}
         <script
           dangerouslySetInnerHTML={{
             __html: `

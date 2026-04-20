@@ -1,9 +1,8 @@
-const CACHE_NAME = "rilstack-v1";
+const CACHE_NAME = "rilstack-v2";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
-  "/icons/icon-192x192.svg",
-  "/icons/icon-512x512.svg",
+  "/icons/rilstack-logo.png",
   "/offline",
 ];
 

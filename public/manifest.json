@@ -1,46 +1,32 @@
-    }
-  ]
-  "description": "Budget, Save with Safelock, and Invest — all in one free app.",
+﻿{
+  "name": "Rilstack",
+  "short_name": "Rilstack",
+  "description": "Budget, Save with Safelock, and Invest  all in one free app.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2c3e5f",
+  "background_color": "#0B1120",
+  "theme_color": "#0B1120",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
     {
-      "src": "/icons/icon-192x192.svg",
+      "src": "/icons/rilstack-logo.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512x512.svg",
+      "src": "/icons/rilstack-logo.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/favicon.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-192x192.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512x512.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-maskable.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    { "name": "Budget", "url": "/budget", "description": "Manage your budget" },
+    { "name": "Savings", "url": "/savings", "description": "View your savings goals" },
+    { "name": "Investments", "url": "/investments", "description": "View your investments" }
+  ],
+  "categories": ["finance", "productivity"],
+  "prefer_related_applications": false
+}
