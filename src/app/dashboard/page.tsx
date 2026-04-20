@@ -108,16 +108,16 @@ function DashboardContent() {
         </div>
 
         {/* Greeting */}
-        <h1 style={{ fontSize: "1.6rem", fontWeight: 700, margin: 0 }}>Hi, {firstName}!</h1>
-        <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.45)", margin: "4px 0 24px" }}>
+        <h1 style={{ fontSize: "1.8rem", fontWeight: 700, margin: 0, color: "#fff" }}>Hi, {firstName}!</h1>
+        <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.7)", margin: "4px 0 24px" }}>
           Your financial overview at a glance.
         </p>
 
         {/* Big Balance */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ fontSize: "2.6rem", fontWeight: 700, letterSpacing: -1 }}>₦69,420</span>
-            <span style={{ fontSize: "0.85rem", color: "#22C55E", fontWeight: 600 }}>+₦6,942</span>
+            <span style={{ fontSize: "2.8rem", fontWeight: 800, letterSpacing: -1, color: "#fff" }}>₦69,420</span>
+            <span style={{ fontSize: "0.95rem", color: "#22C55E", fontWeight: 700 }}>+₦6,942</span>
           </div>
           <div style={{ width: 48, height: 4, borderRadius: 2, background: "#5BB5E0", marginTop: 8 }} />
         </div>
@@ -161,10 +161,10 @@ function DashboardContent() {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Income</p>
+            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.65)", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Income</p>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
-              <span style={{ fontSize: "1.25rem", fontWeight: 700 }}>₦262,144</span>
-              <span style={{ fontSize: "0.7rem", color: "#22C55E" }}>+69.42 ▲</span>
+              <span style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff" }}>₦262,144</span>
+              <span style={{ fontSize: "0.8rem", color: "#22C55E" }}>+69.42 ▲</span>
             </div>
           </div>
           <div
@@ -175,10 +175,10 @@ function DashboardContent() {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Outcome</p>
+            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.65)", margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>Outcome</p>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
-              <span style={{ fontSize: "1.25rem", fontWeight: 700 }}>₦65,536</span>
-              <span style={{ fontSize: "0.7rem", color: "#EF4444" }}>-694.2 ▼</span>
+              <span style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff" }}>₦65,536</span>
+              <span style={{ fontSize: "0.8rem", color: "#EF4444" }}>-694.2 ▼</span>
             </div>
           </div>
         </div>
@@ -199,17 +199,17 @@ function DashboardContent() {
               transform="rotate(-90 36 36)"
             />
             <text x="36" y="34" textAnchor="middle" fill="#fff" fontSize="16" fontWeight="700" fontFamily="var(--font-poppins), sans-serif">72%</text>
-            <text x="36" y="46" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="8" fontFamily="var(--font-poppins), sans-serif">Budget used</text>
+            <text x="36" y="46" textAnchor="middle" fill="rgba(255,255,255,0.65)" fontSize="9" fontFamily="var(--font-poppins), sans-serif">Budget used</text>
           </svg>
           <div>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem" }}>Monthly Budget</p>
-            <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.45)", fontSize: "0.8rem" }}>₦94,000 of ₦150,000 · 12 days left</p>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: "1rem", color: "#fff" }}>Monthly Budget</p>
+            <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.7)", fontSize: "0.85rem" }}>₦94,000 of ₦150,000 · 12 days left</p>
             <a href="/budget" style={{ color: "#5BB5E0", fontSize: "0.8rem", textDecoration: "none", fontWeight: 600, marginTop: 6, display: "inline-block" }}>View Budget →</a>
           </div>
         </div>
 
         {/* Recent Transactions */}
-        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 12, color: "rgba(255,255,255,0.8)" }}>Recent Transactions</h2>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12, color: "#fff" }}>Recent Transactions</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
           {recentItems.map((item, i) => (
             <div
@@ -225,8 +225,8 @@ function DashboardContent() {
               }}
             >
               <div>
-                <p style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem" }}>{item.label}</p>
-                <p style={{ margin: "2px 0 0", color: "rgba(255,255,255,0.35)", fontSize: "0.75rem" }}>{item.sub}</p>
+                <p style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{item.label}</p>
+                <p style={{ margin: "2px 0 0", color: "rgba(255,255,255,0.6)", fontSize: "0.8rem" }}>{item.sub}</p>
               </div>
               <span style={{ fontWeight: 700, fontSize: "0.95rem", color: item.color }}>{item.amount}</span>
             </div>
@@ -235,13 +235,13 @@ function DashboardContent() {
 
         {/* Quick Actions */}
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/report-fraud" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 18px", color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}>
+          <a href="/report-fraud" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "12px 20px", color: "#fff", fontWeight: 600, fontSize: "0.85rem", textDecoration: "none" }}>
             🚨 Report Fraud
           </a>
-          <a href="/contact-support" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 18px", color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}>
+          <a href="/contact-support" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "12px 20px", color: "#fff", fontWeight: 600, fontSize: "0.85rem", textDecoration: "none" }}>
             💬 Support
           </a>
-          <a href="/settings" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 18px", color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}>
+          <a href="/settings" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "12px 20px", color: "#fff", fontWeight: 600, fontSize: "0.85rem", textDecoration: "none" }}>
             ⚙️ Settings
           </a>
         </div>
