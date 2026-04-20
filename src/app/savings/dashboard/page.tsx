@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-
-const initialGoals: any[] = [];
+import { useSession } from "next-auth/react";
+import { DEMO_EMAIL, DEMO_SAVINGS_GOALS } from "@/lib/demo-data";
 
 const DAILY_INTEREST = 0.03; // 3% daily
 
@@ -16,24 +16,31 @@ function daysSince(date: string) {
 }
 
 export default function SavingsDashboard() {
-  const [goals, setGoals] = useState<any[]>(initialGoals);
+  const { data: session } = useSession();
+  const [goals, setGoals] = useState<any[]>([]);
   const [lastUpdate, setLastUpdate] = useState<string>("");
   const [showAdd, setShowAdd] = useState<number | null>(null);
   const [showWithdraw, setShowWithdraw] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch savings goals from backend
+    const isDemo = session?.user?.email === DEMO_EMAIL;
     const userId = localStorage.getItem("user_id");
-    if (!userId) return;
+    if (!userId) {
+      setGoals(isDemo ? DEMO_SAVINGS_GOALS : []);
+      setLoading(false);
+      return;
+    }
     fetch(`/api/savings?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => {
-        setGoals(data || []);
-        setLastUpdate(data?.[0]?.lastInterestCalculationDate || "");
+        const fetched = data || [];
+        setGoals(fetched.length === 0 && isDemo ? DEMO_SAVINGS_GOALS : fetched);
+        setLastUpdate(fetched?.[0]?.lastInterestCalculationDate || "");
       })
+      .catch(() => setGoals(isDemo ? DEMO_SAVINGS_GOALS : []))
       .finally(() => setLoading(false));
-  }, []);
+  }, [session]);
 
   // Calculate total saved and interest
   const totalSaved = goals.reduce((sum, g) => sum + (g.currentAmount || 0), 0);

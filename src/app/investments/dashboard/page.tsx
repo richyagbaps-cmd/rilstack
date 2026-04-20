@@ -1,28 +1,37 @@
 "use client";
 import { useState } from "react";
-
 import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { DEMO_EMAIL, DEMO_INVESTMENTS } from "@/lib/demo-data";
 
 export default function InvestmentsDashboard() {
+  const { data: session } = useSession();
   const [products, setProducts] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInvest, setShowInvest] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  // Fetch products and user investments on mount
   useEffect(() => {
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => setProducts(data || []));
+    const isDemo = session?.user?.email === DEMO_EMAIL;
     const userId = localStorage.getItem("user_id");
-    if (!userId) return;
+    if (!userId) {
+      setInvestments(isDemo ? DEMO_INVESTMENTS : []);
+      setLoading(false);
+      return;
+    }
     fetch(`/api/investment?userId=${userId}`)
       .then((res) => res.json())
-      .then((data) => setInvestments(data || []))
-      .catch(() => setError("Failed to load investments"))
+      .then((data) => {
+        const fetched = data || [];
+        setInvestments(fetched.length === 0 && isDemo ? DEMO_INVESTMENTS : fetched);
+      })
+      .catch(() => setInvestments(isDemo ? DEMO_INVESTMENTS : []))
       .finally(() => setLoading(false));
-  }, []);
+  }, [session]);
 
 
 
