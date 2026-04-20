@@ -5,10 +5,35 @@
  * Table names must match exactly what you create in SeaTable.
  */
 
-const SEATABLE_SERVER = "https://cloud.seatable.io";
-const SEATABLE_API_TOKEN  = process.env.SEATABLE_API_TOKEN!;
-const SEATABLE_WORKSPACE_ID = process.env.SEATABLE_WORKSPACE_ID!;
-const SEATABLE_BASE_NAME    = process.env.SEATABLE_BASE_NAME!;
+const SEATABLE_SERVER = (
+  process.env.SEATABLE_SERVER ||
+  process.env.SEATABLE_BASE_URL ||
+  "https://cloud.seatable.io"
+).replace(/\/+$/, "");
+const SEATABLE_API_TOKEN = process.env.SEATABLE_API_TOKEN || "";
+const SEATABLE_WORKSPACE_ID =
+  process.env.SEATABLE_WORKSPACE_ID || process.env.SEATABLE_WORKSPACE || "";
+const SEATABLE_BASE_NAME =
+  process.env.SEATABLE_BASE_NAME || process.env.SEATABLE_DTABLE_NAME || "";
+
+function assertSeatableConfig() {
+  const missing: string[] = [];
+
+  if (!SEATABLE_API_TOKEN) missing.push("SEATABLE_API_TOKEN");
+  if (!SEATABLE_WORKSPACE_ID) {
+    missing.push("SEATABLE_WORKSPACE_ID (or SEATABLE_WORKSPACE)");
+  }
+  if (!SEATABLE_BASE_NAME) {
+    missing.push("SEATABLE_BASE_NAME (or SEATABLE_DTABLE_NAME)");
+  }
+
+  if (missing.length > 0) {
+    throw new Error(
+      `SeaTable configuration missing: ${missing.join(", ")}. ` +
+        "Set these environment variables in Vercel Project Settings.",
+    );
+  }
+}
 
 // Table names — must match your SeaTable base exactly
 export const TABLES = {
@@ -36,6 +61,8 @@ export async function getBaseToken(
   workspaceId = SEATABLE_WORKSPACE_ID,
   baseName = SEATABLE_BASE_NAME,
 ): Promise<{ token: string; dtable: string }> {
+  assertSeatableConfig();
+
   const now = Date.now();
   if (_token && _dtable && now < _tokenExpiry) {
     return { token: _token, dtable: _dtable };
@@ -50,7 +77,12 @@ export async function getBaseToken(
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`SeaTable auth failed (${res.status}): ${text}`);
+    const looksLikeHtml = /<!doctype html|<html/i.test(text);
+    const trimmed = text.replace(/\s+/g, " ").slice(0, 240);
+    const detail = looksLikeHtml
+      ? "Received HTML instead of JSON from SeaTable auth endpoint. Check workspace/base env values."
+      : trimmed;
+    throw new Error(`SeaTable auth failed (${res.status}): ${detail}`);
   }
 
   const data = await res.json();
