@@ -33,9 +33,9 @@ export default function AdminProductsPage() {
     tenorDays: 90,
     isFlexible: false,
     returnRatePercent: 8,
-    returnType: "fixed_at_maturity" as const,
+    returnType: "fixed_at_maturity" as "fixed_at_maturity" | "daily_interest",
     penaltyPercent: 5,
-    riskLevel: "Low" as const,
+    riskLevel: "Low" as "Low" | "Medium" | "High",
   });
   const fetchProducts = async () => {
     try {
@@ -62,13 +62,16 @@ export default function AdminProductsPage() {
       tenorDays: 90,
       isFlexible: false,
       returnRatePercent: 8,
-      returnType: "fixed_at_maturity",
+      returnType: "fixed_at_maturity" as "fixed_at_maturity" | "daily_interest",
       penaltyPercent: 5,
-      riskLevel: "Low",
+      riskLevel: "Low" as "Low" | "Medium" | "High",
     });
+  };
+
   const handleEditClick = (product: Product) => {
     setFormMode("edit");
     setEditingProduct(product);
+    setFormData({
       name: product.Name,
       description: product.Description || "",
       unitAmount: product.Unit_Amount / 100,
@@ -76,9 +79,12 @@ export default function AdminProductsPage() {
       tenorDays: product.Tenor_Days,
       isFlexible: product.Is_Flexible || false,
       returnRatePercent: product.Return_Rate_Percent,
-      returnType: product.Return_Type,
+      returnType: product.Return_Type as "fixed_at_maturity" | "daily_interest",
       penaltyPercent: product.Early_Withdrawal_Penalty_Percent || 5,
-      riskLevel: product.Risk_Level || "Low",
+      riskLevel: (product.Risk_Level || "Low") as "Low" | "Medium" | "High",
+    });
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -425,3 +431,5 @@ export default function AdminProductsPage() {
           {loading ? "Saving..." : "Save"}
         </button>
       </form>
+
+

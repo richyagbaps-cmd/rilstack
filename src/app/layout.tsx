@@ -1,7 +1,8 @@
 "use client";
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
-import { Inter, Poppins } from "next/font/google";
+// Commented out Google fonts to fix Turbopack build blocker
+// import { Inter, Poppins } from "next/font/google";
 import AuthProvider from "@/components/AuthProvider";
 import { PrivacyProvider } from "@/components/PrivacyContext";
 import OnboardingModal from "@/components/OnboardingModal";
@@ -14,16 +15,17 @@ import { useSession, signOut } from "next-auth/react";
 import React from "react";
 import "../styles/globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-});
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
-});
+// Commented out Google fonts to fix Turbopack build blocker
+// const inter = Inter({
+//   subsets: ["latin"],
+//   weight: ["300", "400", "500", "600", "700", "800"],
+// });
+//
+// const poppins = Poppins({
+//   subsets: ["latin"],
+//   weight: ["300", "400", "500", "600", "700", "800"],
+//   variable: "--font-poppins",
+// });
 
 function AuthContentWrapper({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -103,7 +105,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#0B1120" />
         <meta name="msapplication-TileImage" content="/icons/rilstack-logo.png" />
       </head>
-      <body className={`${inter.className} ${poppins.variable}`}>
+      <body className="">
         {/* SplashScreen removed for faster load */}
         {/* ThemeToggle removed: app is always light mode */}
         <PrivacyProvider>
