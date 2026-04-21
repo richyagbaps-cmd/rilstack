@@ -77,7 +77,11 @@ const handler = NextAuth({
           }
         } catch (error) {
           console.error("Google sign-in provisioning failed", error);
-          return "/login?error=google_setup";
+          // Fallback: allow OAuth session even when SeaTable provisioning is temporarily unavailable.
+          (user as any).id = account.providerAccountId;
+          (user as any).kycLevel = 0;
+          (user as any).profileComplete = true;
+          return true;
         }
       }
 
