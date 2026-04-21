@@ -2,37 +2,155 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const featureCards = [
   {
-    title: "Smart Budgeting",
-    desc: "Adaptive planning across 50/30/20, zero-based, and custom modes.",
-    metric: "3 plans",
-    icon: "Budget",
+    title: "AI Budgeting",
+    desc: "Strict or relaxed budgets with spending pockets. AI allocates your income using 50/30/20, zero-based, or custom rules.",
     href: "/budgets",
+    badge: "New",
   },
   {
-    title: "Safe Lock Savings",
-    desc: "Lock amounts for milestones and track growth with clear timelines.",
-    metric: "18% p.a.",
-    icon: "Save",
+    title: "Daily Interest + Safe Locks",
+    desc: "Earn daily interest. Lock money away until a future date - no early access.",
     href: "/savings/dashboard",
+    badge: "Popular",
   },
   {
-    title: "Auto Investments",
-    desc: "Structured products with transparent expected returns and status.",
-    metric: "Live",
-    icon: "Invest",
+    title: "Auto-Investments",
+    desc: "Admin-managed investment products. Your returns are calculated and paid automatically at maturity.",
     href: "/investments/dashboard",
+    badge: "Live",
   },
 ];
+
+const steps = [
+  {
+    title: "Sign up fast",
+    text: "Sign up with email or Google - complete KYC in 3 minutes.",
+  },
+  {
+    title: "Choose your path",
+    text: "Choose Budget, Savings, or Investments - AI guides you.",
+  },
+  {
+    title: "Start stacking",
+    text: "Start stacking - watch your money grow daily.",
+  },
+];
+
+function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 40 40" className={className} aria-hidden="true">
+      <rect x="6" y="10" width="22" height="10" rx="4" fill="#1A5F7A" />
+      <rect x="10" y="15" width="22" height="10" rx="4" fill="#15506A" />
+      <rect x="14" y="20" width="22" height="10" rx="4" fill="#F4A261" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function UserPlusIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path d="M16 19a5 5 0 0 0-10 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="11" cy="8" r="3" stroke="currentColor" strokeWidth="2" />
+      <path d="M19 8v6M16 11h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CalculatorBrainIcon() {
+  return (
+    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
+      <rect x="10" y="7" width="30" height="50" rx="8" stroke="#1A5F7A" strokeWidth="2.5" />
+      <rect x="16" y="13" width="18" height="9" rx="3" fill="#1A5F7A" opacity="0.2" />
+      <circle cx="20" cy="31" r="3" fill="#1A5F7A" />
+      <circle cx="30" cy="31" r="3" fill="#1A5F7A" />
+      <circle cx="20" cy="41" r="3" fill="#1A5F7A" />
+      <circle cx="30" cy="41" r="3" fill="#1A5F7A" />
+      <path d="M43 24c4-6 14-3 14 5 0 6-5 8-8 8h-6c-4 0-7-2-7-6 0-4 3-7 7-7z" stroke="#1A5F7A" strokeWidth="2.5" />
+      <path d="M46 27v7M50 27v7" stroke="#1A5F7A" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PiggyLockIcon() {
+  return (
+    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
+      <path d="M11 34c0-9 7-16 16-16h10c9 0 16 7 16 16 0 8-5 14-13 16v4H24v-5c-8-2-13-8-13-15z" stroke="#F4A261" strokeWidth="2.5" />
+      <circle cx="41" cy="28" r="1.8" fill="#F4A261" />
+      <path d="M18 34h7" stroke="#F4A261" strokeWidth="2.5" strokeLinecap="round" />
+      <rect x="34" y="36" width="14" height="10" rx="2.5" stroke="#F4A261" strokeWidth="2" />
+      <path d="M38 36v-2a3 3 0 1 1 6 0v2" stroke="#F4A261" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CoinsArrowIcon() {
+  return (
+    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
+      <ellipse cx="22" cy="44" rx="10" ry="4" stroke="#1A5F7A" strokeWidth="2.5" />
+      <ellipse cx="22" cy="36" rx="10" ry="4" stroke="#1A5F7A" strokeWidth="2.5" />
+      <ellipse cx="22" cy="28" rx="10" ry="4" stroke="#1A5F7A" strokeWidth="2.5" />
+      <path d="M35 42l8-8 5 5 8-8" stroke="#1A5F7A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M56 24v7h-7" stroke="#1A5F7A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ClipboardCheckIcon() {
+  return (
+    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
+      <rect x="16" y="10" width="32" height="44" rx="6" stroke="#1A5F7A" strokeWidth="2.5" />
+      <rect x="24" y="6" width="16" height="8" rx="3" fill="#1A5F7A" opacity="0.2" stroke="#1A5F7A" strokeWidth="2" />
+      <path d="M23 34l6 6 12-12" stroke="#1A5F7A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SparklesIcon() {
+  return (
+    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
+      <path d="M20 42l-5 12 12-5 21-21-7-7-21 21z" stroke="#F4A261" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M41 14l2-6 2 6 6 2-6 2-2 6-2-6-6-2 6-2zM12 18l1-4 1 4 4 1-4 1-1 4-1-4-4-1 4-1z" fill="#F4A261" />
+    </svg>
+  );
+}
+
+function RocketStackIcon() {
+  return (
+    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
+      <path d="M36 14c7 0 13 6 13 13-7 0-13-6-13-13z" fill="#1A5F7A" />
+      <path d="M24 38l14-14c4-4 10-4 14 0-1 5-3 9-7 12L31 50l-7-1 1-11z" stroke="#1A5F7A" strokeWidth="2.5" strokeLinejoin="round" />
+      <circle cx="42" cy="22" r="2.2" fill="#F4A261" />
+      <ellipse cx="17" cy="50" rx="8" ry="3" stroke="#1A5F7A" strokeWidth="2" />
+      <ellipse cx="17" cy="44" rx="8" ry="3" stroke="#1A5F7A" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function StackedLoading() {
+  return (
+    <div className="stack-loader" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+    </div>
+  );
+}
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [riskLevel, setRiskLevel] = useState(45);
-  const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -42,227 +160,224 @@ export default function Home() {
 
   if (status === "loading" || status === "authenticated") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0A1222]">
-        <p className="text-sm font-semibold tracking-wide text-[#86D4F8]">Loading...</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gradient-to-b from-[#F8F9FA] to-white">
+        <StackedLoading />
+        <p className="text-sm font-semibold tracking-wide text-[#1A5F7A]">Loading rilstack...</p>
       </div>
     );
   }
 
-  const estimatedMonthlyGrowth = Math.round((riskLevel / 100) * 85000);
-
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#081126] text-white">
-      <div className="pointer-events-none absolute inset-0 opacity-80">
-        <div className="absolute -left-24 top-[-120px] h-80 w-80 rounded-full bg-[#15A3B8]/40 blur-3xl" />
-        <div className="absolute right-[-120px] top-[220px] h-[24rem] w-[24rem] rounded-full bg-[#F28F3B]/25 blur-3xl" />
-        <div className="absolute bottom-[-140px] left-1/3 h-[22rem] w-[22rem] rounded-full bg-[#1A5F7A]/40 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-8 md:px-8 md:pt-12">
-        <header className="mb-10 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur">
-          <div className="flex items-center gap-3">
-            <img src="/images/rilstack-logo.png" alt="Rilstack" className="h-10 w-10 rounded-full" />
-            <div>
-              <p className="text-sm font-semibold tracking-wide text-[#BCE9FF]">RILSTACK</p>
-              <p className="text-xs text-white/60">Personal finance stack for modern Nigerians</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <a href="/login" className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:border-white/40">
-              Login
-            </a>
-            <a href="/signup" className="rounded-xl bg-[#F16952] px-4 py-2 text-sm font-bold text-white shadow-[0_10px_30px_rgba(241,105,82,0.35)] transition hover:translate-y-[-1px]">
-              Open Account
-            </a>
-          </div>
+    <main className="min-h-screen overflow-x-hidden bg-gradient-to-b from-[#F8F9FA] to-white text-[#212529]">
+      <header className="sticky top-0 z-40 h-14 border-b border-black/5 bg-white/95 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur">
+        <div className="mx-auto flex h-full max-w-6xl items-center justify-center px-6">
+          <a href="/" className="inline-flex items-center gap-2" aria-label="rilstack home">
+            <LogoMark className="logo-intro h-8 w-8" />
+            <span className="text-lg font-bold tracking-[-0.2px] text-[#1A5F7A]">rilstack</span>
+          </a>
+        </div>
         </header>
 
-        <section className="grid items-center gap-8 md:grid-cols-2">
-          <div>
-            <p className="mb-3 inline-flex rounded-full border border-[#89E3FF]/40 bg-[#0F2845] px-4 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[#89E3FF]">
-              Finance Interface, Reimagined
-            </p>
-            <h1 className="mb-4 text-4xl font-extrabold leading-tight text-white md:text-6xl">
-              Designed like a premium product, not a template.
+      <div className="mx-auto w-full max-w-6xl px-6 pb-16 pt-8 md:px-8">
+        <section className="relative rounded-[2rem] bg-white px-0 py-8 md:py-12">
+          <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+            <div className="logo-pulse mb-5 inline-flex rounded-2xl bg-[#1A5F7A]/10 p-4">
+              <LogoMark className="h-12 w-12" />
+            </div>
+            <h1 className="mb-3 text-[32px] font-extrabold leading-[1.14] tracking-[-0.2px] text-[#1A5F7A] md:text-[42px]">
+              Stack Your Finances, One Layer at a Time
             </h1>
-            <p className="mb-6 max-w-xl text-base leading-7 text-white/75 md:text-lg">
-              Run budgets, savings, and investments from one interactive command center with high-clarity insights and motion-rich visuals.
+            <p className="mb-7 max-w-2xl text-base leading-7 text-[#6C757D] md:text-lg">
+              AI budgets, daily interest savings, automated investments - all in one place.
             </p>
 
-            <div className="mb-8 flex flex-wrap gap-3">
-              <a href="/signup" className="rounded-2xl bg-[#F16952] px-6 py-3 text-sm font-bold text-white shadow-[0_14px_28px_rgba(241,105,82,0.32)] transition hover:translate-y-[-1px]">
-                Start Stacking
+            <div className="flex w-full max-w-md flex-wrap justify-center gap-3">
+              <a
+                href="/login"
+                className="inline-flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-full bg-[#1A5F7A] px-6 text-[15px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.05)] transition hover:bg-[#0E4A63] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261] active:scale-[0.98]"
+              >
+                <span>Login</span>
+                <ArrowRightIcon />
               </a>
-              <a href="/dashboard" className="rounded-2xl border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-                See Dashboard
+              <a
+                href="/signup"
+                className="inline-flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-full border-2 border-[#1A5F7A] bg-white px-6 text-[15px] font-semibold text-[#1A5F7A] transition hover:bg-[rgba(26,95,122,0.05)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261] active:scale-[0.98]"
+              >
+                <span>Sign Up</span>
+                <UserPlusIcon />
               </a>
             </div>
-
-            <div className="rounded-2xl border border-white/10 bg-[#0D1F3A]/80 p-4 backdrop-blur">
-              <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="font-semibold text-[#BCE9FF]">Growth Simulation</span>
-                <span className="text-white/70">Risk Mix: {riskLevel}%</span>
-              </div>
-              <input
-                type="range"
-                min={10}
-                max={90}
-                value={riskLevel}
-                onChange={(e) => setRiskLevel(Number(e.target.value))}
-                className="w-full accent-[#F16952]"
-              />
-              <p className="mt-3 text-sm text-white/75">
-                Estimated monthly growth projection: <span className="font-bold text-[#8EF6A3]">N{estimatedMonthlyGrowth.toLocaleString()}</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="float-card relative rounded-[2rem] border border-white/15 bg-gradient-to-b from-[#18345A] to-[#0D1F39] p-4 shadow-[0_40px_80px_rgba(0,0,0,0.45)]">
-              <img src="/images/investment-grid.svg" alt="Investment board" className="h-52 w-full rounded-2xl object-cover" />
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <img src="/images/budget-map.svg" alt="Budget planning" className="h-28 w-full rounded-xl border border-white/10 bg-white/5 p-2" />
-                <img src="/images/savings-orbit.svg" alt="Savings orbit" className="h-28 w-full rounded-xl border border-white/10 bg-white/5 p-2" />
-              </div>
-            </div>
-
-            <a
-              href="/history"
-              className="floating-widget absolute -left-8 top-8 rounded-xl border border-[#89E3FF]/40 bg-[#0E2748] px-4 py-3 text-sm shadow-xl"
-            >
-              <p className="text-white/65">Today</p>
-              <p className="font-bold text-[#8EF6A3]">+N24,500</p>
-            </a>
-            <a
-              href="/savings/dashboard"
-              className="floating-widget-delayed absolute -right-6 bottom-8 rounded-xl border border-[#F9C07A]/40 bg-[#382515] px-4 py-3 text-sm shadow-xl"
-            >
-              <p className="text-white/65">Savings Streak</p>
-              <p className="font-bold text-[#FFD38D]">31 days</p>
-            </a>
           </div>
         </section>
 
-        <section className="mt-14 grid gap-5 md:grid-cols-3">
-          {featureCards.map((feature, index) => (
-            <a
-              key={feature.title}
-              href={feature.href}
-              onMouseEnter={() => setHoveredFeature(index)}
-              onMouseLeave={() => setHoveredFeature(null)}
-              className="group rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur transition duration-300 hover:border-[#89E3FF]/40 hover:bg-[#102644]"
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <div className="icon-orb">
-                  <span>{feature.icon}</span>
-                </div>
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-[#CFF2FF]">
-                  {feature.metric}
-                </span>
-              </div>
-              <h3 className="mb-2 text-xl font-bold text-white">{feature.title}</h3>
-              <p className="text-sm leading-6 text-white/70">{feature.desc}</p>
-              <p className="mt-4 text-sm font-semibold text-[#89E3FF]">
-                {hoveredFeature === index ? "Explore module ->" : "Ready when you are"}
-              </p>
-            </a>
-          ))}
-        </section>
-
-        <section className="mt-14 rounded-3xl border border-white/10 bg-[#0D1F39]/90 p-6 md:p-10">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-[#89E3FF]">Inside the product</p>
-              <h2 className="mb-3 text-3xl font-extrabold leading-tight">A dashboard that feels alive.</h2>
-              <p className="mb-6 max-w-lg text-sm leading-7 text-white/75">
-                Floating balance snapshots, dynamic savings widgets, and visual decision aids reduce friction and make every action clear.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs text-white/65">Budget Health</p>
-                  <p className="text-lg font-bold text-[#8EF6A3]">Strong</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs text-white/65">Lock Savings</p>
-                  <p className="text-lg font-bold text-[#FFD38D]">Active</p>
-                </div>
-              </div>
+        <section className="mt-10">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-[22px] font-bold tracking-[-0.2px] text-black">Feature Highlights</h2>
+            <div className="flex gap-2" aria-hidden="true">
+              <span className="h-2 w-2 rounded-full bg-[#1A5F7A]/30" />
+              <span className="h-2 w-2 rounded-full bg-[#1A5F7A]/60" />
+              <span className="h-2 w-2 rounded-full bg-[#1A5F7A]" />
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <img src="/images/investment-grid.svg" alt="Portfolio image" className="h-40 w-full rounded-xl border border-white/15 bg-white/5 p-2" />
-              <img src="/images/savings-orbit.svg" alt="Savings image" className="h-40 w-full rounded-xl border border-white/15 bg-white/5 p-2" />
-              <img src="/images/budget-map.svg" alt="Budget image" className="col-span-2 h-44 w-full rounded-xl border border-white/15 bg-white/5 p-2" />
-            </div>
+          <div className="feature-scroll flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
+            {featureCards.map((feature, index) => (
+              <a
+                key={feature.title}
+                href={feature.href}
+                className="feature-card min-w-[280px] snap-start rounded-[20px] border border-black/5 bg-white p-5 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.05),0_8px_10px_-6px_rgba(0,0,0,0.02)] transition hover:-translate-y-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261]"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="inline-flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[rgba(26,95,122,0.10)]">
+                    {index === 0 && <CalculatorBrainIcon />}
+                    {index === 1 && <PiggyLockIcon />}
+                    {index === 2 && <CoinsArrowIcon />}
+                  </div>
+                  <span className="rounded-full bg-[#F4A261] px-3 py-1 text-xs font-semibold text-white">{feature.badge}</span>
+                </div>
+                <h3 className="mb-2 text-[18px] font-bold text-black">{feature.title}</h3>
+                <p className="text-sm leading-6 text-[#6C757D]">{feature.desc}</p>
+              </a>
+            ))}
           </div>
         </section>
 
-        <footer className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-sm text-white/65">
-          <p>© 2026 Rilstack.xyz. Stack your finances with clarity.</p>
-          <div className="flex flex-wrap items-center gap-5">
-            <a href="/terms" className="hover:text-white">Terms</a>
-            <a href="/privacy" className="hover:text-white">Privacy</a>
-            <a href="/contact-support" className="hover:text-white">Support</a>
+        <section className="mt-12 rounded-[20px] bg-[#F8F9FA] px-5 py-10 md:px-8">
+          <h2 className="mb-8 text-center text-[22px] font-bold tracking-[-0.2px] text-black">How rilstack works</h2>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {steps.map((step, index) => (
+              <article
+                key={step.title}
+                className="step-card rounded-2xl bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)]"
+                style={{ animationDelay: `${index * 160}ms` }}
+              >
+                <div className="mb-3 inline-flex h-[56px] w-[56px] items-center justify-center rounded-full bg-[#1A5F7A]/10">
+                  {index === 0 && <ClipboardCheckIcon />}
+                  {index === 1 && <SparklesIcon />}
+                  {index === 2 && <RocketStackIcon />}
+                </div>
+                <h3 className="mb-2 text-base font-semibold text-[#1A5F7A]">{step.title}</h3>
+                <p className="text-sm leading-6 text-[#6C757D]">{step.text}</p>
+              </article>
+            ))}
           </div>
-        </footer>
+        </section>
       </div>
 
+      <footer className="mt-10 bg-[#212529] px-6 py-6 text-white md:px-10">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <a href="/terms" className="underline decoration-transparent underline-offset-4 transition hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261]">Terms & Conditions</a>
+            <a href="/privacy" className="underline decoration-transparent underline-offset-4 transition hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261]">Privacy Policy</a>
+            <a href="/contact-support" className="underline decoration-transparent underline-offset-4 transition hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261]">Contact Support</a>
+          </div>
+          <div className="flex items-center justify-between text-xs text-[#ADB5BD]">
+            <p>© 2027 rilstack. All rights reserved.</p>
+            <p>v1.0.0</p>
+          </div>
+        </div>
+      </footer>
+
       <style jsx>{`
-        .float-card {
-          animation: bob 5.5s ease-in-out infinite;
+        .logo-intro {
+          animation: logoStackIn 800ms cubic-bezier(0.2, 1, 0.3, 1) both;
         }
 
-        .floating-widget {
-          animation: drift 6.4s ease-in-out infinite;
+        .logo-pulse {
+          animation: pulseSoft 2400ms ease-in-out infinite;
         }
 
-        .floating-widget-delayed {
-          animation: drift 6.4s ease-in-out infinite 1.4s;
+        .stack-loader {
+          position: relative;
+          width: 44px;
+          height: 36px;
         }
 
-        .icon-orb {
-          width: 52px;
-          height: 52px;
-          border-radius: 9999px;
-          background: radial-gradient(circle at 30% 30%, #9be5ff 0%, #2c7eb2 45%, #183f61 100%);
-          box-shadow:
-            inset -8px -10px 16px rgba(0, 0, 0, 0.22),
-            inset 8px 10px 16px rgba(255, 255, 255, 0.18),
-            0 12px 22px rgba(0, 0, 0, 0.28);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+        .stack-loader span {
+          position: absolute;
+          width: 28px;
+          height: 12px;
+          border-radius: 6px;
+          left: 8px;
+          background: #1a5f7a;
+          animation: stackPulse 1100ms ease-in-out infinite;
         }
 
-        .icon-orb span {
-          font-size: 0.68rem;
-          font-weight: 800;
-          letter-spacing: 0.03em;
-          color: #f4fcff;
-          text-transform: uppercase;
+        .stack-loader span:nth-child(1) {
+          top: 0;
+          animation-delay: 0ms;
         }
 
-        @keyframes drift {
+        .stack-loader span:nth-child(2) {
+          top: 10px;
+          left: 11px;
+          opacity: 0.9;
+          animation-delay: 120ms;
+        }
+
+        .stack-loader span:nth-child(3) {
+          top: 20px;
+          left: 14px;
+          background: #f4a261;
+          animation-delay: 240ms;
+        }
+
+        .feature-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #1a5f7a22 transparent;
+        }
+
+        .feature-card {
+          animation: fadeUp 520ms ease both;
+        }
+
+        .step-card {
+          opacity: 0;
+          animation: fadeUp 520ms ease forwards;
+        }
+
+        @keyframes logoStackIn {
           0% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-11px);
+            opacity: 0;
+            transform: translateY(10px) scale(0.9);
           }
           100% {
-            transform: translateY(0px);
+            opacity: 1;
+            transform: translateY(0) scale(1);
           }
         }
 
-        @keyframes bob {
-          0% {
-            transform: translateY(0px) rotate(-0.5deg);
+        @keyframes pulseSoft {
+          0%,
+          100% {
+            transform: scale(1);
           }
           50% {
-            transform: translateY(-8px) rotate(0.5deg);
+            transform: scale(1.035);
+          }
+        }
+
+        @keyframes stackPulse {
+          0%,
+          100% {
+            transform: scale(1);
+            opacity: 0.8;
+          }
+          50% {
+            transform: scale(1.08);
+            opacity: 1;
+          }
+        }
+
+        @keyframes fadeUp {
+          0% {
+            opacity: 0;
+            transform: translateY(14px);
           }
           100% {
-            transform: translateY(0px) rotate(-0.5deg);
+            opacity: 1;
+            transform: translateY(0);
           }
         }
       `}</style>
