@@ -92,6 +92,16 @@ function ClipboardCheckIcon() {
   );
 }
 
+function StackedLoading() {
+  return (
+    <div className="stack-loader" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+    </div>
+  );
+}
+
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
