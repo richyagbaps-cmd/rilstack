@@ -3,7 +3,7 @@
 import { signIn } from "next-auth/react";
 
 export default function GoogleSignInButton({
-  callbackUrl = "/signup?provider=google",
+  callbackUrl = "/dashboard",
   label = "Continue with Google",
 }: {
   callbackUrl?: string;

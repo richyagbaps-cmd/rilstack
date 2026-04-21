@@ -308,7 +308,7 @@ export default function AuthModal({ mode, onClose }: AuthModalProps) {
 
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/signup?provider=google" })}
+            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
             className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:bg-slate-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">

@@ -110,7 +110,7 @@ export default function LoginPage() {
             className="w-full border border-[#e0e6f7] bg-white text-[#23263a] font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#f5f5f5] transition shadow-sm focus:outline-none"
             aria-label="Sign in with Google"
             onClick={async () => {
-              await signIn("google", { callbackUrl: "/signup?provider=google" });
+              await signIn("google", { callbackUrl: "/dashboard" });
             }}
           >
             <img src="/icons/google.svg" alt="Google" className="w-5 h-5" />
