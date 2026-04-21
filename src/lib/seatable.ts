@@ -264,7 +264,7 @@ export type STSavingsGoal = {
   Target_Amount: number;
   Current_Amount: number;
   Due_Date?: string;
-  Type: "personal" | "team";
+  Type: "personal" | "team" | "retirement";
   Safe_Locks?: string; // JSON string
   Interest_Accrued_Total?: number;
   Last_Interest_Date?: string;
