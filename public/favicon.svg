@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <circle cx="256" cy="256" r="256" fill="#fff"/>
-  <image href="/images/rilstack-logo.png" x="96" y="96" height="320" width="320"/>
+  <image href="/icons/rilstack-logo.png" x="96" y="96" height="320" width="320"/>
 </svg>

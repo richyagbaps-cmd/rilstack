@@ -8,47 +8,22 @@ const featureCards = [
   {
     title: "AI Budgeting",
     desc: "Strict or relaxed budgets with spending pockets. AI allocates your income using 50/30/20, zero-based, or custom rules.",
-    href: "/budgets",
+    href: "/login",
     badge: "New",
   },
   {
     title: "Daily Interest + Safe Locks",
     desc: "Earn daily interest. Lock money away until a future date - no early access.",
-    href: "/savings/dashboard",
+    href: "/signup",
     badge: "Popular",
   },
   {
     title: "Auto-Investments",
     desc: "Admin-managed investment products. Your returns are calculated and paid automatically at maturity.",
-    href: "/investments/dashboard",
+    href: "/login",
     badge: "Live",
   },
 ];
-
-const steps = [
-  {
-    title: "Sign up fast",
-    text: "Sign up with email or Google - complete KYC in 3 minutes.",
-  },
-  {
-    title: "Choose your path",
-    text: "Choose Budget, Savings, or Investments - AI guides you.",
-  },
-  {
-    title: "Start stacking",
-    text: "Start stacking - watch your money grow daily.",
-  },
-];
-
-function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 40 40" className={className} aria-hidden="true">
-      <rect x="6" y="10" width="22" height="10" rx="4" fill="#1A5F7A" />
-      <rect x="10" y="15" width="22" height="10" rx="4" fill="#15506A" />
-      <rect x="14" y="20" width="22" height="10" rx="4" fill="#F4A261" />
-    </svg>
-  );
-}
 
 function ArrowRightIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -117,37 +92,6 @@ function ClipboardCheckIcon() {
   );
 }
 
-function SparklesIcon() {
-  return (
-    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
-      <path d="M20 42l-5 12 12-5 21-21-7-7-21 21z" stroke="#F4A261" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M41 14l2-6 2 6 6 2-6 2-2 6-2-6-6-2 6-2zM12 18l1-4 1 4 4 1-4 1-1 4-1-4-4-1 4-1z" fill="#F4A261" />
-    </svg>
-  );
-}
-
-function RocketStackIcon() {
-  return (
-    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
-      <path d="M36 14c7 0 13 6 13 13-7 0-13-6-13-13z" fill="#1A5F7A" />
-      <path d="M24 38l14-14c4-4 10-4 14 0-1 5-3 9-7 12L31 50l-7-1 1-11z" stroke="#1A5F7A" strokeWidth="2.5" strokeLinejoin="round" />
-      <circle cx="42" cy="22" r="2.2" fill="#F4A261" />
-      <ellipse cx="17" cy="50" rx="8" ry="3" stroke="#1A5F7A" strokeWidth="2" />
-      <ellipse cx="17" cy="44" rx="8" ry="3" stroke="#1A5F7A" strokeWidth="2" />
-    </svg>
-  );
-}
-
-function StackedLoading() {
-  return (
-    <div className="stack-loader" aria-hidden="true">
-      <span />
-      <span />
-      <span />
-    </div>
-  );
-}
-
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -172,7 +116,7 @@ export default function Home() {
       <header className="sticky top-0 z-40 h-14 border-b border-black/5 bg-white/95 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur">
         <div className="mx-auto flex h-full max-w-6xl items-center justify-center px-6">
           <a href="/" className="inline-flex items-center gap-2" aria-label="rilstack home">
-            <LogoMark className="logo-intro h-8 w-8" />
+            <img src="/icons/rilstack-logo.png" alt="Rilstack" className="logo-intro h-8 w-8 rounded-md object-contain" />
             <span className="text-lg font-bold tracking-[-0.2px] text-[#1A5F7A]">rilstack</span>
           </a>
         </div>
@@ -182,7 +126,7 @@ export default function Home() {
         <section className="relative rounded-[2rem] bg-white px-0 py-8 md:py-12">
           <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
             <div className="logo-pulse mb-5 inline-flex rounded-2xl bg-[#1A5F7A]/10 p-4">
-              <LogoMark className="h-12 w-12" />
+              <img src="/icons/rilstack-logo.png" alt="Rilstack official logo" className="h-12 w-12 rounded-lg object-contain" />
             </div>
             <h1 className="mb-3 text-[32px] font-extrabold leading-[1.14] tracking-[-0.2px] text-[#1A5F7A] md:text-[42px]">
               Stack Your Finances, One Layer at a Time
@@ -237,30 +181,27 @@ export default function Home() {
                 </div>
                 <h3 className="mb-2 text-[18px] font-bold text-black">{feature.title}</h3>
                 <p className="text-sm leading-6 text-[#6C757D]">{feature.desc}</p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#1A5F7A]">Login or register to continue</p>
               </a>
             ))}
           </div>
         </section>
 
         <section className="mt-12 rounded-[20px] bg-[#F8F9FA] px-5 py-10 md:px-8">
-          <h2 className="mb-8 text-center text-[22px] font-bold tracking-[-0.2px] text-black">How rilstack works</h2>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <article
-                key={step.title}
-                className="step-card rounded-2xl bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)]"
-                style={{ animationDelay: `${index * 160}ms` }}
-              >
-                <div className="mb-3 inline-flex h-[56px] w-[56px] items-center justify-center rounded-full bg-[#1A5F7A]/10">
-                  {index === 0 && <ClipboardCheckIcon />}
-                  {index === 1 && <SparklesIcon />}
-                  {index === 2 && <RocketStackIcon />}
-                </div>
-                <h3 className="mb-2 text-base font-semibold text-[#1A5F7A]">{step.title}</h3>
-                <p className="text-sm leading-6 text-[#6C757D]">{step.text}</p>
-              </article>
-            ))}
+          <h2 className="mb-6 text-center text-[22px] font-bold tracking-[-0.2px] text-black">Explore rilstack</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            <a href="/about" className="rounded-2xl bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] transition hover:-translate-y-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261]">
+              <h3 className="mb-2 text-base font-semibold text-[#1A5F7A]">About Us</h3>
+              <p className="text-sm leading-6 text-[#6C757D]">Learn our mission, values, and why rilstack exists.</p>
+            </a>
+            <a href="/contact-support" className="rounded-2xl bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] transition hover:-translate-y-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261]">
+              <h3 className="mb-2 text-base font-semibold text-[#1A5F7A]">Contact Us</h3>
+              <p className="text-sm leading-6 text-[#6C757D]">Reach support quickly for account and payment help.</p>
+            </a>
+            <a href="/contact-support#faq" className="rounded-2xl bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] transition hover:-translate-y-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261]">
+              <h3 className="mb-2 text-base font-semibold text-[#1A5F7A]">FAQ</h3>
+              <p className="text-sm leading-6 text-[#6C757D]">Read answers to common questions about using rilstack.</p>
+            </a>
           </div>
         </section>
       </div>
@@ -330,11 +271,6 @@ export default function Home() {
 
         .feature-card {
           animation: fadeUp 520ms ease both;
-        }
-
-        .step-card {
-          opacity: 0;
-          animation: fadeUp 520ms ease forwards;
         }
 
         @keyframes logoStackIn {
