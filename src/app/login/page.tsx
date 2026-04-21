@@ -25,7 +25,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid credentials. Please try again.");
       } else {
-        router.push("/app");
+        router.push("/dashboard");
       }
     } catch (err: any) {
       setError("Unable to login. Please try again.");

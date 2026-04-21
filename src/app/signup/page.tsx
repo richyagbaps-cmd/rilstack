@@ -74,7 +74,7 @@ function SignupPageInner() {
     }
 
     if ((session?.user as any)?.profileComplete) {
-      router.replace("/app");
+      router.replace("/dashboard");
       return;
     }
 
@@ -211,7 +211,7 @@ function SignupPageInner() {
 
       setSuccess("Profile saved successfully.");
       setStep("done");
-      setTimeout(() => router.push("/app"), 1200);
+      setTimeout(() => router.push("/dashboard"), 1200);
     } catch (e: any) {
       setError(e.message || "Registration failed");
     }
