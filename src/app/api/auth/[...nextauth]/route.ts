@@ -56,22 +56,28 @@ const handler = NextAuth({
   ],
   pages: {
     signIn: "/",
+    error: "/login",
   },
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google" && user.email && account.providerAccountId) {
-        const storedUser = await upsertGoogleUser({
-          name: user.name || "",
-          email: user.email,
-          googleId: account.providerAccountId,
-        });
+        try {
+          const storedUser = await upsertGoogleUser({
+            name: user.name || "",
+            email: user.email,
+            googleId: account.providerAccountId,
+          });
 
-        (user as any).id = storedUser.id;
-        (user as any).kycLevel = storedUser.kycLevel ?? 0;
-        (user as any).profileComplete = isStoredUserProfileComplete(storedUser);
+          (user as any).id = storedUser.id;
+          (user as any).kycLevel = storedUser.kycLevel ?? 0;
+          (user as any).profileComplete = isStoredUserProfileComplete(storedUser);
 
-        if (!isStoredUserProfileComplete(storedUser)) {
-          return "/signup?provider=google";
+          if (!isStoredUserProfileComplete(storedUser)) {
+            return "/signup?provider=google";
+          }
+        } catch (error) {
+          console.error("Google sign-in provisioning failed", error);
+          return "/login?error=google_setup";
         }
       }
 
