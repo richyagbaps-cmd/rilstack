@@ -2,24 +2,37 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-const features = [
-  { icon: "📊", title: "Smart Budgeting", desc: "AI allocates your income with 50/30/20, zero-based, or custom rules." },
-  { icon: "🔒", title: "Safe Lock Savings", desc: "Earn daily interest. Lock money until a target date — no early access." },
-  { icon: "📈", title: "Auto Investments", desc: "Admin-managed products. Returns calculated and paid at maturity." },
-  { icon: "🛡️", title: "Bank-Level Security", desc: "Full KYC, biometric login, fraud reporting, and encryption." },
-];
-
-const steps = [
-  { num: "1", text: "Sign up with email or Google — complete KYC in 3 minutes." },
-  { num: "2", text: "Pick Budget, Savings, or Investments — AI guides you." },
-  { num: "3", text: "Start stacking — watch your money grow daily." },
+const featureCards = [
+  {
+    title: "Smart Budgeting",
+    desc: "Adaptive planning across 50/30/20, zero-based, and custom modes.",
+    metric: "3 plans",
+    icon: "Budget",
+    href: "/budgets",
+  },
+  {
+    title: "Safe Lock Savings",
+    desc: "Lock amounts for milestones and track growth with clear timelines.",
+    metric: "18% p.a.",
+    icon: "Save",
+    href: "/savings/dashboard",
+  },
+  {
+    title: "Auto Investments",
+    desc: "Structured products with transparent expected returns and status.",
+    metric: "Live",
+    icon: "Invest",
+    href: "/investments/dashboard",
+  },
 ];
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [riskLevel, setRiskLevel] = useState(45);
+  const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -29,157 +42,230 @@ export default function Home() {
 
   if (status === "loading" || status === "authenticated") {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0B1120" }}>
-        <p style={{ color: "#5BB5E0", fontSize: "1.1rem", fontFamily: "var(--font-poppins), sans-serif" }}>Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#0A1222]">
+        <p className="text-sm font-semibold tracking-wide text-[#86D4F8]">Loading...</p>
       </div>
     );
   }
 
+  const estimatedMonthlyGrowth = Math.round((riskLevel / 100) * 85000);
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#0B1120",
-        fontFamily: "var(--font-poppins), sans-serif",
-        color: "#fff",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Gradient blob shapes */}
-      <div style={{ position: "absolute", top: -80, left: -60, width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle, #1A5F7A 0%, #0B1120 70%)", opacity: 0.7, filter: "blur(40px)", zIndex: 0 }} />
-      <div style={{ position: "absolute", top: 200, right: -80, width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, #5BB5E0 0%, #0B1120 70%)", opacity: 0.45, filter: "blur(50px)", zIndex: 0 }} />
-      <div style={{ position: "absolute", bottom: 100, left: "30%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, #1A5F7A 0%, #0B1120 70%)", opacity: 0.35, filter: "blur(60px)", zIndex: 0 }} />
+    <main className="relative min-h-screen overflow-hidden bg-[#081126] text-white">
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-24 top-[-120px] h-80 w-80 rounded-full bg-[#15A3B8]/40 blur-3xl" />
+        <div className="absolute right-[-120px] top-[220px] h-[24rem] w-[24rem] rounded-full bg-[#F28F3B]/25 blur-3xl" />
+        <div className="absolute bottom-[-140px] left-1/3 h-[22rem] w-[22rem] rounded-full bg-[#1A5F7A]/40 blur-3xl" />
+      </div>
 
-      {/* All content */}
-      <div style={{ position: "relative", zIndex: 1 }}>
-
-        {/* Hero */}
-        <section style={{ textAlign: "center", padding: "60px 24px 40px", maxWidth: 600, margin: "0 auto" }}>
-          <h1 style={{ fontSize: "clamp(2rem, 6vw, 3rem)", fontWeight: 800, lineHeight: 1.15, marginBottom: 16, color: "#fff" }}>
-            Stack Your Finances,<br />One Layer at a Time.
-          </h1>
-          <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.75)", lineHeight: 1.7, marginBottom: 36, maxWidth: 420, margin: "0 auto 36px" }}>
-            AI budgets, daily interest savings, automated investments — all in one place.
-          </p>
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <a
-              href="/signup"
-              style={{
-                background: "#E74C3C",
-                color: "#fff",
-                padding: "15px 40px",
-                borderRadius: 14,
-                fontWeight: 700,
-                fontSize: "1.05rem",
-                textDecoration: "none",
-                boxShadow: "0 4px 16px rgba(231,76,60,0.35)",
-              }}
-            >
-              Get Started
-            </a>
-            <a
-              href="/login"
-              style={{
-                background: "transparent",
-                color: "#fff",
-                padding: "15px 40px",
-                borderRadius: 14,
-                fontWeight: 700,
-                fontSize: "1.05rem",
-                textDecoration: "none",
-                border: "2px solid rgba(255,255,255,0.3)",
-              }}
-            >
+      <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-8 md:px-8 md:pt-12">
+        <header className="mb-10 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <img src="/images/rilstack-logo.png" alt="Rilstack" className="h-10 w-10 rounded-full" />
+            <div>
+              <p className="text-sm font-semibold tracking-wide text-[#BCE9FF]">RILSTACK</p>
+              <p className="text-xs text-white/60">Personal finance stack for modern Nigerians</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <a href="/login" className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:border-white/40">
               Login
             </a>
+            <a href="/signup" className="rounded-xl bg-[#F16952] px-4 py-2 text-sm font-bold text-white shadow-[0_10px_30px_rgba(241,105,82,0.35)] transition hover:translate-y-[-1px]">
+              Open Account
+            </a>
           </div>
-        </section>
+        </header>
 
-        {/* Feature Cards */}
-        <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 20px 48px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-            {features.map((f, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  borderRadius: 16,
-                  padding: "24px 20px",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: "2.2rem", marginBottom: 10 }}>{f.icon}</div>
-                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", marginBottom: 8 }}>{f.title}</h3>
-                <p style={{ fontSize: "0.88rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.5, margin: 0 }}>{f.desc}</p>
+        <section className="grid items-center gap-8 md:grid-cols-2">
+          <div>
+            <p className="mb-3 inline-flex rounded-full border border-[#89E3FF]/40 bg-[#0F2845] px-4 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[#89E3FF]">
+              Finance Interface, Reimagined
+            </p>
+            <h1 className="mb-4 text-4xl font-extrabold leading-tight text-white md:text-6xl">
+              Designed like a premium product, not a template.
+            </h1>
+            <p className="mb-6 max-w-xl text-base leading-7 text-white/75 md:text-lg">
+              Run budgets, savings, and investments from one interactive command center with high-clarity insights and motion-rich visuals.
+            </p>
+
+            <div className="mb-8 flex flex-wrap gap-3">
+              <a href="/signup" className="rounded-2xl bg-[#F16952] px-6 py-3 text-sm font-bold text-white shadow-[0_14px_28px_rgba(241,105,82,0.32)] transition hover:translate-y-[-1px]">
+                Start Stacking
+              </a>
+              <a href="/dashboard" className="rounded-2xl border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                See Dashboard
+              </a>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-[#0D1F3A]/80 p-4 backdrop-blur">
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="font-semibold text-[#BCE9FF]">Growth Simulation</span>
+                <span className="text-white/70">Risk Mix: {riskLevel}%</span>
               </div>
-            ))}
+              <input
+                type="range"
+                min={10}
+                max={90}
+                value={riskLevel}
+                onChange={(e) => setRiskLevel(Number(e.target.value))}
+                className="w-full accent-[#F16952]"
+              />
+              <p className="mt-3 text-sm text-white/75">
+                Estimated monthly growth projection: <span className="font-bold text-[#8EF6A3]">N{estimatedMonthlyGrowth.toLocaleString()}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="float-card relative rounded-[2rem] border border-white/15 bg-gradient-to-b from-[#18345A] to-[#0D1F39] p-4 shadow-[0_40px_80px_rgba(0,0,0,0.45)]">
+              <img src="/images/investment-grid.svg" alt="Investment board" className="h-52 w-full rounded-2xl object-cover" />
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <img src="/images/budget-map.svg" alt="Budget planning" className="h-28 w-full rounded-xl border border-white/10 bg-white/5 p-2" />
+                <img src="/images/savings-orbit.svg" alt="Savings orbit" className="h-28 w-full rounded-xl border border-white/10 bg-white/5 p-2" />
+              </div>
+            </div>
+
+            <a
+              href="/history"
+              className="floating-widget absolute -left-8 top-8 rounded-xl border border-[#89E3FF]/40 bg-[#0E2748] px-4 py-3 text-sm shadow-xl"
+            >
+              <p className="text-white/65">Today</p>
+              <p className="font-bold text-[#8EF6A3]">+N24,500</p>
+            </a>
+            <a
+              href="/savings/dashboard"
+              className="floating-widget-delayed absolute -right-6 bottom-8 rounded-xl border border-[#F9C07A]/40 bg-[#382515] px-4 py-3 text-sm shadow-xl"
+            >
+              <p className="text-white/65">Savings Streak</p>
+              <p className="font-bold text-[#FFD38D]">31 days</p>
+            </a>
           </div>
         </section>
 
-        {/* How It Works */}
-        <section style={{ maxWidth: 560, margin: "0 auto", padding: "0 20px 56px" }}>
-          <h2 style={{ textAlign: "center", fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: 28 }}>How It Works</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {steps.map((s) => (
-              <div key={s.num} style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                <div
-                  style={{
-                    minWidth: 42,
-                    height: 42,
-                    borderRadius: "50%",
-                    background: "#E74C3C",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: 800,
-                    fontSize: "1.1rem",
-                    flexShrink: 0,
-                  }}
-                >
-                  {s.num}
+        <section className="mt-14 grid gap-5 md:grid-cols-3">
+          {featureCards.map((feature, index) => (
+            <a
+              key={feature.title}
+              href={feature.href}
+              onMouseEnter={() => setHoveredFeature(index)}
+              onMouseLeave={() => setHoveredFeature(null)}
+              className="group rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur transition duration-300 hover:border-[#89E3FF]/40 hover:bg-[#102644]"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div className="icon-orb">
+                  <span>{feature.icon}</span>
                 </div>
-                <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.8)", lineHeight: 1.5, margin: 0, paddingTop: 8 }}>{s.text}</p>
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-[#CFF2FF]">
+                  {feature.metric}
+                </span>
               </div>
-            ))}
+              <h3 className="mb-2 text-xl font-bold text-white">{feature.title}</h3>
+              <p className="text-sm leading-6 text-white/70">{feature.desc}</p>
+              <p className="mt-4 text-sm font-semibold text-[#89E3FF]">
+                {hoveredFeature === index ? "Explore module ->" : "Ready when you are"}
+              </p>
+            </a>
+          ))}
+        </section>
+
+        <section className="mt-14 rounded-3xl border border-white/10 bg-[#0D1F39]/90 p-6 md:p-10">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-[#89E3FF]">Inside the product</p>
+              <h2 className="mb-3 text-3xl font-extrabold leading-tight">A dashboard that feels alive.</h2>
+              <p className="mb-6 max-w-lg text-sm leading-7 text-white/75">
+                Floating balance snapshots, dynamic savings widgets, and visual decision aids reduce friction and make every action clear.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs text-white/65">Budget Health</p>
+                  <p className="text-lg font-bold text-[#8EF6A3]">Strong</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs text-white/65">Lock Savings</p>
+                  <p className="text-lg font-bold text-[#FFD38D]">Active</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <img src="/images/investment-grid.svg" alt="Portfolio image" className="h-40 w-full rounded-xl border border-white/15 bg-white/5 p-2" />
+              <img src="/images/savings-orbit.svg" alt="Savings image" className="h-40 w-full rounded-xl border border-white/15 bg-white/5 p-2" />
+              <img src="/images/budget-map.svg" alt="Budget image" className="col-span-2 h-44 w-full rounded-xl border border-white/15 bg-white/5 p-2" />
+            </div>
           </div>
         </section>
 
-        {/* CTA Banner */}
-        <section style={{ textAlign: "center", padding: "32px 24px 48px" }}>
-          <p style={{ fontSize: "1.15rem", fontWeight: 600, color: "#fff", marginBottom: 20 }}>
-            Ready to take control of your money?
-          </p>
-          <a
-            href="/signup"
-            style={{
-              background: "#E74C3C",
-              color: "#fff",
-              padding: "15px 48px",
-              borderRadius: 14,
-              fontWeight: 700,
-              fontSize: "1.05rem",
-              textDecoration: "none",
-              boxShadow: "0 4px 16px rgba(231,76,60,0.35)",
-            }}
-          >
-            Create Free Account
-          </a>
-        </section>
-
-        {/* Footer */}
-        <footer style={{ textAlign: "center", padding: "20px 16px 28px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", marginBottom: 10 }}>
-            <a href="/terms" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.85rem", textDecoration: "none" }}>Terms</a>
-            <a href="/privacy" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.85rem", textDecoration: "none" }}>Privacy</a>
-            <a href="tel:+2348000000000" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.85rem", textDecoration: "none" }}>Call our helpline</a>
-            <a href="mailto:support@rilstack.xyz?subject=Support%20Request" style={{ color: "#5BB5E0", fontSize: "0.85rem", textDecoration: "none", fontWeight: 700, marginLeft: 12, border: "1px solid #5BB5E0", borderRadius: 8, padding: "4px 14px", background: "rgba(91,181,224,0.08)" }}>Submit a request</a>
+        <footer className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-sm text-white/65">
+          <p>© 2026 Rilstack.xyz. Stack your finances with clarity.</p>
+          <div className="flex flex-wrap items-center gap-5">
+            <a href="/terms" className="hover:text-white">Terms</a>
+            <a href="/privacy" className="hover:text-white">Privacy</a>
+            <a href="/contact-support" className="hover:text-white">Support</a>
           </div>
-          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.8rem", margin: 0 }}>© 2026 Rilstack.xyz — Stack your finances.</p>
         </footer>
       </div>
+
+      <style jsx>{`
+        .float-card {
+          animation: bob 5.5s ease-in-out infinite;
+        }
+
+        .floating-widget {
+          animation: drift 6.4s ease-in-out infinite;
+        }
+
+        .floating-widget-delayed {
+          animation: drift 6.4s ease-in-out infinite 1.4s;
+        }
+
+        .icon-orb {
+          width: 52px;
+          height: 52px;
+          border-radius: 9999px;
+          background: radial-gradient(circle at 30% 30%, #9be5ff 0%, #2c7eb2 45%, #183f61 100%);
+          box-shadow:
+            inset -8px -10px 16px rgba(0, 0, 0, 0.22),
+            inset 8px 10px 16px rgba(255, 255, 255, 0.18),
+            0 12px 22px rgba(0, 0, 0, 0.28);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .icon-orb span {
+          font-size: 0.68rem;
+          font-weight: 800;
+          letter-spacing: 0.03em;
+          color: #f4fcff;
+          text-transform: uppercase;
+        }
+
+        @keyframes drift {
+          0% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-11px);
+          }
+          100% {
+            transform: translateY(0px);
+          }
+        }
+
+        @keyframes bob {
+          0% {
+            transform: translateY(0px) rotate(-0.5deg);
+          }
+          50% {
+            transform: translateY(-8px) rotate(0.5deg);
+          }
+          100% {
+            transform: translateY(0px) rotate(-0.5deg);
+          }
+        }
+      `}</style>
     </main>
   );
 }
