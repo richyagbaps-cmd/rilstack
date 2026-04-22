@@ -8,19 +8,19 @@ const featureCards = [
   {
     title: "AI Budgeting",
     desc: "Strict or relaxed budgets with spending pockets. AI allocates your income using 50/30/20, zero-based, or custom rules.",
-    href: "/login",
+    href: "/budgets",
     badge: "New",
   },
   {
     title: "Daily Interest + Safe Locks",
     desc: "Earn daily interest. Lock money away until a future date - no early access.",
-    href: "/signup",
+    href: "/savings",
     badge: "Popular",
   },
   {
     title: "Auto-Investments",
     desc: "Admin-managed investment products. Your returns are calculated and paid automatically at maturity.",
-    href: "/login",
+    href: "/investments",
     badge: "Live",
   },
 ];
@@ -191,7 +191,6 @@ export default function Home() {
                 </div>
                 <h3 className="mb-2 text-[18px] font-bold text-black">{feature.title}</h3>
                 <p className="text-sm leading-6 text-[#6C757D]">{feature.desc}</p>
-                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#1A5F7A]">Login or register to continue</p>
               </a>
             ))}
           </div>
