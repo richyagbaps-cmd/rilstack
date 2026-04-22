@@ -26,7 +26,7 @@ const BRAND_COLORS = {
   textMuted: "#4A5B6E",
 };
 
-const SUPPORT_PHONE = "+1-800-555-1234";
+const SUPPORT_PHONE = "08116883025";
 const FAQ_TOPICS = [
   { q: "How do I set up a budget?", a: "Go to Budgets, tap +, and follow the guided steps." },
   { q: "What is a Safe Lock?", a: "A Safe Lock is a savings feature that locks funds for a set period to earn higher interest." },
