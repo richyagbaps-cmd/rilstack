@@ -21,7 +21,7 @@ export default function KYCCompactTab({
             <div className="text-sm font-bold text-[#2c3e5f] mb-1">
               Complete your KYC
             </div>
-            <div className="text-xs text-[#4A5B6E] mb-2">
+            <div className="text-xs text-[#334155] mb-2">
               Verify your identity to unlock all features.
             </div>
             <button
@@ -31,7 +31,7 @@ export default function KYCCompactTab({
               Start KYC
             </button>
             <button
-              className="ml-2 text-[#4A5B6E] underline text-xs"
+              className="ml-2 text-[#334155] underline text-xs"
               onClick={() => setOpen(false)}
             >
               Dismiss
@@ -54,7 +54,7 @@ export default function KYCCompactTab({
             }}
           />
           <button
-            className="mt-4 text-[#4A5B6E] underline text-xs"
+            className="mt-4 text-[#334155] underline text-xs"
             onClick={() => setShowForm(false)}
           >
             Back

@@ -22,7 +22,7 @@ export default function KYCFloatingTab({
             <div className="font-bold text-[#2c3e5f] text-base">
               Complete your KYC
             </div>
-            <div className="text-xs text-[#4A5B6E]">
+            <div className="text-xs text-[#334155]">
               Verify your identity to unlock all features.
             </div>
           </div>

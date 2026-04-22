@@ -255,7 +255,7 @@ export default function KYCVerification({
               <span className="text-2xl md:text-3xl font-extrabold text-[#2c3e5f]">
                 Rilstack
               </span>
-              <span className="text-xs font-medium text-[#4A5B6E]">
+              <span className="text-xs font-medium text-[#334155]">
                 Hi, {status.name?.split(" ")[0]}
               </span>
             </div>
@@ -278,13 +278,13 @@ export default function KYCVerification({
           <h2 className="text-2xl font-bold text-[#1E2A3A] md:text-3xl">
             Complete Your KYC
           </h2>
-          <p className="mt-2 text-[#4A5B6E]">
+          <p className="mt-2 text-[#334155]">
             Verify your identity to unlock all features. You can skip steps and
             complete them later.
           </p>
           <button
             onClick={onComplete}
-            className="mt-4 rounded-[40px] border border-[#b9c2cc] bg-transparent px-6 py-2.5 text-sm font-medium text-[#4A5B6E] hover:border-[#2c3e5f] hover:bg-[#eef1f6] transition-all"
+            className="mt-4 rounded-[40px] border border-[#94a3b8] bg-transparent px-6 py-2.5 text-sm font-medium text-[#334155] hover:border-[#2c3e5f] hover:bg-[#eef1f6] transition-all"
           >
             Skip for now — I&apos;ll verify later
           </button>
@@ -332,7 +332,7 @@ export default function KYCVerification({
                     ? "text-[#2c3e5f]"
                     : i === currentStep
                       ? "text-[#1E2A3A]"
-                      : "text-[#b9c2cc]"
+                      : "text-[#64748b]"
                 }`}
               >
                 {s.label}
