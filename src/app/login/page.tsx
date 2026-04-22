@@ -52,11 +52,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#181A20] to-[#23263a] px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center">
-        <img
-          src="/icons/rilstack-logo.png"
-          alt="Rilstack Logo"
-          className="h-16 w-16 mb-4"
-        />
+        <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1A5F7A] text-2xl font-extrabold uppercase text-white">
+          r
+        </div>
         <h1 className="text-2xl font-bold text-[#2c3e5f] mb-2">
           Sign in to continue
         </h1>

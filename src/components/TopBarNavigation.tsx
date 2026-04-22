@@ -40,12 +40,25 @@ export default function TopBarNavigation() {
             tabIndex={0}
             className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]"
           >
-            <img
-              src="/images/rilstack-logo.png"
-              alt="Rilstack Logo"
-              style={{ height: 32, width: 32, borderRadius: 8, background: "#fff", boxShadow: "0 2px 8px #1A5F7A22" }}
-              draggable={false}
-            />
+            <span
+              style={{
+                height: 32,
+                width: 32,
+                borderRadius: 8,
+                background: "#1A5F7A",
+                boxShadow: "0 2px 8px #1A5F7A22",
+                color: "#fff",
+                fontSize: "0.875rem",
+                fontWeight: 800,
+                textTransform: "uppercase",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                userSelect: "none",
+              }}
+            >
+              r
+            </span>
             <span style={{
               fontSize: "1.5rem",
               fontWeight: 800,

@@ -3,17 +3,17 @@ import React from "react";
 export default function EmptyStatePiggy({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 relative w-full">
-      {/* Subtle logo watermark */}
-      <img
-        src="/images/rilstack-logo.png"
-        alt="Rilstack Logo Watermark"
+      <div
+        aria-hidden="true"
         style={{
           position: "absolute",
           left: "50%",
           top: "50%",
           transform: "translate(-50%, -50%)",
           width: 220,
-          opacity: 0.03,
+          height: 220,
+          borderRadius: "9999px",
+          background: "radial-gradient(circle, rgba(26,95,122,0.07), rgba(26,95,122,0.01) 60%, transparent 70%)",
           pointerEvents: "none",
           zIndex: 0,
         }}

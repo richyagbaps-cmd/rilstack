@@ -11,6 +11,7 @@ import AppFooter from "@/components/AppFooter";
 import Navigation from "@/components/Navigation";
 import TopBarNavigation from "@/components/TopBarNavigation";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import SplashScreen from "@/components/SplashScreen";
 import { useSession, signOut } from "next-auth/react";
 import React from "react";
 import "../styles/globals.css";
@@ -47,6 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const [showOnboarding, setShowOnboarding] = React.useState(false);
+  const [showSplash, setShowSplash] = React.useState(true);
 
   // Onboarding check
   React.useEffect(() => {
@@ -64,6 +66,11 @@ export default function RootLayout({
     };
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
+  }, []);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 900);
+    return () => clearTimeout(timer);
   }, []);
 
   // Auto-logout after 10 minutes of inactivity
@@ -106,7 +113,7 @@ export default function RootLayout({
         <meta name="msapplication-TileImage" content="/icons/rilstack-logo.png" />
       </head>
       <body className="">
-        {/* SplashScreen removed for faster load */}
+        {showSplash ? <SplashScreen /> : null}
         {/* ThemeToggle removed: app is always light mode */}
         <PrivacyProvider>
           <AuthProvider>

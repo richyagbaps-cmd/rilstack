@@ -88,13 +88,24 @@ export default function PWAInstallBanner() {
         fontFamily: "var(--font-poppins), sans-serif",
       }}
     >
-      {/* Logo */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/icons/rilstack-logo.png"
-        alt="Rilstack"
-        style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0 }}
-      />
+      <div
+        aria-hidden="true"
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 10,
+          flexShrink: 0,
+          background: "#1A5F7A",
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 800,
+          textTransform: "uppercase",
+        }}
+      >
+        r
+      </div>
       {/* Text */}
       <div style={{ flex: 1 }}>
         <p style={{ margin: 0, fontWeight: 700, fontSize: "0.88rem", color: "#fff" }}>
