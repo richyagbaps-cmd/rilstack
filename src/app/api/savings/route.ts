@@ -18,6 +18,8 @@ type RetirementClaimReason = "retirement_age" | "incapacitation" | "early";
 const RETIREMENT_RATE = 0.18;
 const EARLY_WITHDRAWAL_PENALTY = 0.075;
 const OFFICIAL_RETIREMENT_AGE = 60;
+const MIN_RETIREMENT_DURATION_YEARS = 5;
+const MAX_RETIREMENT_DURATION_YEARS = 30;
 
 interface RetirementPolicyMeta {
   kind: "retirement_policy";
@@ -33,6 +35,18 @@ function quarterKey(date = new Date()) {
   const year = date.getUTCFullYear();
   const quarter = Math.floor(date.getUTCMonth() / 3) + 1;
   return `${year}-Q${quarter}`;
+}
+
+function addUtcYears(date: Date, years: number) {
+  const next = new Date(date);
+  next.setUTCHours(0, 0, 0, 0);
+  next.setUTCFullYear(next.getUTCFullYear() + years);
+  return next;
+}
+
+function parseIsoDateOnly(value: string) {
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function parseSafeLocks(raw: string | undefined): Record<string, unknown>[] {
@@ -153,6 +167,35 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: "Retirement plan already exists." },
           { status: 409 },
+        );
+      }
+
+      if (!dueDate) {
+        return NextResponse.json(
+          {
+            error: `Retirement plan duration must be between ${MIN_RETIREMENT_DURATION_YEARS} and ${MAX_RETIREMENT_DURATION_YEARS} years.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      const parsedDueDate = parseIsoDateOnly(dueDate);
+      if (!parsedDueDate) {
+        return NextResponse.json(
+          { error: "Invalid dueDate provided." },
+          { status: 400 },
+        );
+      }
+
+      const now = new Date();
+      const minAllowedDueDate = addUtcYears(now, MIN_RETIREMENT_DURATION_YEARS);
+      const maxAllowedDueDate = addUtcYears(now, MAX_RETIREMENT_DURATION_YEARS);
+      if (parsedDueDate < minAllowedDueDate || parsedDueDate > maxAllowedDueDate) {
+        return NextResponse.json(
+          {
+            error: `Retirement plan duration must be between ${MIN_RETIREMENT_DURATION_YEARS} and ${MAX_RETIREMENT_DURATION_YEARS} years.`,
+          },
+          { status: 400 },
         );
       }
 

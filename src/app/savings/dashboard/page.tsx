@@ -6,6 +6,8 @@ import { DEMO_EMAIL, DEMO_SAVINGS_GOALS } from "@/lib/demo-data";
 const DAILY_INTEREST = 0.03; // 3% daily
 const RETIREMENT_RATE = 0.18;
 const RETIREMENT_PENALTY = 0.075;
+const MIN_RETIREMENT_DURATION_YEARS = 5;
+const MAX_RETIREMENT_DURATION_YEARS = 30;
 
 function getInterest(saved: number, days: number) {
   return Math.round(saved * (Math.pow(1 + DAILY_INTEREST, days) - 1));
@@ -15,6 +17,12 @@ function daysSince(date: string) {
   const d = new Date(date);
   const now = new Date();
   return Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function addYearsToDateInput(base: Date, years: number) {
+  const next = new Date(base);
+  next.setFullYear(next.getFullYear() + years);
+  return next.toISOString().slice(0, 10);
 }
 
 export default function SavingsDashboard() {
@@ -112,10 +120,27 @@ export default function SavingsDashboard() {
   };
 
   const retirementGoal = goals.find((goal) => goal.type === "retirement");
+  const minRetirementDueDate = addYearsToDateInput(new Date(), MIN_RETIREMENT_DURATION_YEARS);
+  const maxRetirementDueDate = addYearsToDateInput(new Date(), MAX_RETIREMENT_DURATION_YEARS);
 
   const handleCreateRetirementPlan = async () => {
     if (!userId) return alert("User not logged in");
     setRetireNotice("");
+
+    if (!retireDueDate) {
+      setRetireNotice(
+        `Please select a maturity date between ${MIN_RETIREMENT_DURATION_YEARS} and ${MAX_RETIREMENT_DURATION_YEARS} years from today.`,
+      );
+      return;
+    }
+
+    if (retireDueDate < minRetirementDueDate || retireDueDate > maxRetirementDueDate) {
+      setRetireNotice(
+        `Retirement plan duration must be between ${MIN_RETIREMENT_DURATION_YEARS} and ${MAX_RETIREMENT_DURATION_YEARS} years.`,
+      );
+      return;
+    }
+
     const payload = {
       action: "create_retirement_plan",
       userId,
@@ -205,6 +230,9 @@ export default function SavingsDashboard() {
         <p className="mb-3 text-sm text-slate-700">
           Lock funds for long-term growth. One free withdrawal per calendar quarter, otherwise 7.5% early withdrawal penalty applies before retirement age or approved permanent incapacity.
         </p>
+        <p className="mb-3 text-sm font-medium text-[#1d3766]">
+          Duration: minimum {MIN_RETIREMENT_DURATION_YEARS} years, maximum {MAX_RETIREMENT_DURATION_YEARS} years.
+        </p>
 
         {!retirementGoal ? (
           <div className="grid gap-3 md:grid-cols-2">
@@ -228,6 +256,8 @@ export default function SavingsDashboard() {
               type="date"
               className="rounded border p-2"
               value={retireDueDate}
+              min={minRetirementDueDate}
+              max={maxRetirementDueDate}
               onChange={(e) => setRetireDueDate(e.target.value)}
             />
             <select
