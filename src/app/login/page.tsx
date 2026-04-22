@@ -79,9 +79,9 @@ export default function LoginPage() {
         <Image
           src="/icons/rilstack-logo.png"
           alt="rilstack logo"
-          width={64}
-          height={64}
-          className="mb-4 h-16 w-16 rounded-2xl object-contain"
+          width={88}
+          height={88}
+          className="mb-4 h-[88px] w-[88px] object-contain"
           priority
         />
         <h1 className="text-2xl font-bold text-[#2c3e5f] mb-2">

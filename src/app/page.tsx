@@ -130,9 +130,9 @@ export default function Home() {
             <Image
               src="/icons/rilstack-logo.png"
               alt="rilstack logo"
-              width={32}
-              height={32}
-              className="logo-intro h-8 w-8 rounded-md object-contain"
+              width={40}
+              height={40}
+              className="logo-intro h-10 w-10 object-contain"
               priority
             />
             <span className="text-lg font-bold tracking-[-0.2px] text-[#1A5F7A]">rilstack</span>
@@ -147,9 +147,9 @@ export default function Home() {
               <Image
                 src="/icons/rilstack-logo.png"
                 alt="rilstack logo"
-                width={48}
-                height={48}
-                className="h-12 w-12 rounded-lg object-contain"
+                width={64}
+                height={64}
+                className="h-16 w-16 object-contain"
                 priority
               />
             </div>

@@ -44,11 +44,9 @@ export default function TopBarNavigation() {
             <Image
               src="/icons/rilstack-logo.png"
               alt="rilstack logo"
-              width={32}
-              height={32}
+              width={40}
+              height={40}
               style={{
-                borderRadius: 8,
-                boxShadow: "0 2px 8px #1A5F7A22",
                 objectFit: "contain",
                 userSelect: "none",
               }}

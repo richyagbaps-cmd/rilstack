@@ -33,13 +33,13 @@ export default function DashboardTopBar({ onMenuClick }: DashboardTopBarProps) {
         </button>
 
         {/* Logo / Branding */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <Image
             src="/icons/rilstack-logo.png"
             alt="rilstack logo"
-            width={24}
-            height={24}
-            className="h-6 w-6 rounded-md object-contain"
+            width={32}
+            height={32}
+            className="h-8 w-8 object-contain"
             priority
           />
           <span className="text-sm font-bold text-[#1A5F7A]">rilstack</span>
