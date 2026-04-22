@@ -25,6 +25,64 @@ function assertSeatableConfig() {
   }
 }
 
+function isUuidLikeToken(token: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token);
+}
+
+async function getBaseTokenFromDtableApiToken(apiToken: string): Promise<{ token: string; dtable: string; server: string }> {
+  const url = `${SEATABLE_SERVER}/api/v2.1/dtable/app-access-token/`;
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Token ${apiToken}` },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`dtable-token auth failed (${res.status}): ${text.replace(/\s+/g, " ").slice(0, 240)}`);
+  }
+
+  const data = await res.json();
+  const server = (data.use_api_gateway && data.dtable_server)
+    ? (data.dtable_server as string).replace(/\/+$/, "")
+    : SEATABLE_SERVER;
+
+  return {
+    token: data.access_token as string,
+    dtable: data.dtable_uuid as string,
+    server,
+  };
+}
+
+async function getBaseTokenFromAccountToken(
+  apiToken: string,
+  workspaceId: string,
+  baseName: string,
+): Promise<{ token: string; dtable: string; server: string }> {
+  if (!workspaceId || !baseName) {
+    throw new Error("account-token auth requires SEATABLE_WORKSPACE_ID and SEATABLE_BASE_NAME");
+  }
+
+  const url =
+    `${SEATABLE_SERVER}/api/v2.1/workspace/${encodeURIComponent(workspaceId)}` +
+    `/dtable/${encodeURIComponent(baseName)}/access-token/?exp=3d`;
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${apiToken}` },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`account-token auth failed (${res.status}): ${text.replace(/\s+/g, " ").slice(0, 240)}`);
+  }
+
+  const data = await res.json();
+  return {
+    token: data.access_token as string,
+    dtable: data.dtable_uuid as string,
+    server: SEATABLE_SERVER,
+  };
+}
+
 // Table names  must match your SeaTable base exactly
 export const TABLES = {
   USERS:               "Users",
@@ -56,28 +114,29 @@ export async function getBaseToken(
     return { token: _token, dtable: _dtable };
   }
 
-  const url = `${SEATABLE_SERVER}/api/v2.1/dtable/app-access-token/`;
+  const first = isUuidLikeToken(apiToken)
+    ? () => getBaseTokenFromAccountToken(apiToken, SEATABLE_WORKSPACE_ID, SEATABLE_BASE_NAME)
+    : () => getBaseTokenFromDtableApiToken(apiToken);
+  const second = isUuidLikeToken(apiToken)
+    ? () => getBaseTokenFromDtableApiToken(apiToken)
+    : () => getBaseTokenFromAccountToken(apiToken, SEATABLE_WORKSPACE_ID, SEATABLE_BASE_NAME);
 
-  const res = await fetch(url, {
-    headers: { Authorization: `Token ${apiToken}` },
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    const looksLikeHtml = /<!doctype html|<html/i.test(text);
-    const trimmed = text.replace(/\s+/g, " ").slice(0, 240);
-    const detail = looksLikeHtml
-      ? "Received HTML instead of JSON from SeaTable auth endpoint."
-      : trimmed;
-    throw new Error(`SeaTable auth failed (${res.status}): ${detail}`);
+  let auth: { token: string; dtable: string; server: string };
+  try {
+    auth = await first();
+  } catch (firstErr) {
+    try {
+      auth = await second();
+    } catch (secondErr) {
+      const firstMsg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+      const secondMsg = secondErr instanceof Error ? secondErr.message : String(secondErr);
+      throw new Error(`SeaTable auth failed. Tried both token modes. First: ${firstMsg}. Second: ${secondMsg}`);
+    }
   }
 
-  const data = await res.json();
-  _token  = data.access_token as string;
-  _dtable = data.dtable_uuid  as string;
-  // Use API gateway URL if indicated by the token response
-  _dtableServer = (data.use_api_gateway && data.dtable_server)
-    ? (data.dtable_server as string).replace(/\/+$/, "")
-    : SEATABLE_SERVER;
+  _token = auth.token;
+  _dtable = auth.dtable;
+  _dtableServer = auth.server;
   // Cache for slightly less than 3 days so the token is always fresh
   _tokenExpiry = now + (3 * 24 * 60 - 5) * 60 * 1000;
   return { token: _token, dtable: _dtable };
