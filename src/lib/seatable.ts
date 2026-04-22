@@ -167,7 +167,7 @@ export async function query<T = Record<string, unknown>>(
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Token ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ sql }),
@@ -195,7 +195,7 @@ export async function insertRow(
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Token ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ table_name: tableName, rows: [row] }),
@@ -223,7 +223,7 @@ export async function updateRow(
       {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Token ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -251,7 +251,7 @@ export async function deleteRow(tableName: string, rowId: string): Promise<void>
       {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Token ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ table_name: tableName, row_ids: [rowId] }),
