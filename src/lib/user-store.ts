@@ -28,6 +28,9 @@ export interface KycData {
   source?: string;
   selfieName?: string;
   idPhotoName?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountName?: string;
 }
 
 export interface StoredUser {
@@ -332,7 +335,7 @@ export async function upsertGoogleUser(input: {
 
 export async function updateUserKyc(
   email: string,
-  updates: Partial<StoredUser>,
+  updates: Partial<Omit<StoredUser, "kycData">> & { kycData?: Partial<KycData> },
 ) {
   const existing = await findStoredUserByEmail(email);
   if (!existing) {
