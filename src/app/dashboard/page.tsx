@@ -1,23 +1,44 @@
 ﻿"use client";
 
-import { Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import {
-  DEMO_EMAIL,
-  DEMO_TOTAL_BALANCE,
-  DEMO_BUDGET_ALLOCATED,
-  DEMO_BUDGET_SPENT,
-  DEMO_SAVINGS_GOALS,
-  DEMO_INVESTMENTS,
-  DEMO_TRANSACTIONS,
-  fmt,
-} from "@/lib/demo-data";
+import { useEffect, useState, Suspense } from "react";
+import DashboardTopBar from "@/components/DashboardTopBar";
+import DashboardTabBar from "@/components/DashboardTabBar";
+import MetricsCards, { MetricsData } from "@/components/MetricsCards";
+import ActiveBudgetSnapshot, {
+  type ActiveBudgetData,
+} from "@/components/ActiveBudgetSnapshot";
+import InvestmentsSnapshot, {
+  type InvestmentsSnapshotData,
+} from "@/components/InvestmentsSnapshot";
+import DashboardFab from "@/components/DashboardFab";
+import DashboardQuickActions from "@/components/DashboardQuickActions";
+import RecentTransactionsCard, {
+  type RecentTransactionItem,
+} from "@/components/RecentTransactionsCard";
+import SavingsGoalsSnapshot, {
+  type SavingsSnapshotData,
+} from "@/components/SavingsGoalsSnapshot";
 
 function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
+  const [activeBudget, setActiveBudget] = useState<ActiveBudgetData | null>(null);
+  const [savingsSnapshot, setSavingsSnapshot] = useState<SavingsSnapshotData>({
+    topGoal: null,
+    retirement: null,
+    safeLockCount: 0,
+    dailyInterestEarned: 0,
+  });
+  const [investmentsSnapshot, setInvestmentsSnapshot] = useState<InvestmentsSnapshotData>({
+    totalInvested: 0,
+    totalExpectedReturns: 0,
+    items: [],
+  });
+  const [recentTransactions, setRecentTransactions] = useState<RecentTransactionItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -25,127 +46,193 @@ function DashboardContent() {
     }
   }, [status, router]);
 
+  useEffect(() => {
+    if (status === "authenticated") {
+      loadDashboardData();
+    }
+  }, [status]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      // Placeholder: fetch real data from API
+      // For now, use mock data
+      setMetricsData({
+        netWorth: 2500000,
+        netWorthChange: 12.5,
+        budgetLeft: 450000,
+        budgetTotal: 1000000,
+        totalSavings: 750000,
+        interestEarned: 25000,
+        totalInvested: 1200000,
+        expectedReturns: 180000,
+      });
+
+      setActiveBudget({
+        dateRange: "Apr 1 - Apr 30",
+        spentPercent: 70,
+        style: "strict",
+        categories: [
+          { name: "Food", spent: 12000, allocated: 20000, icon: "food" },
+          {
+            name: "Transport",
+            spent: 8000,
+            allocated: 10000,
+            icon: "transport",
+          },
+          {
+            name: "Entertainment",
+            spent: 5000,
+            allocated: 6000,
+            icon: "entertainment",
+          },
+        ],
+      });
+
+      setSavingsSnapshot({
+        topGoal: {
+          id: "goal_1",
+          name: "Emergency Fund",
+          currentAmount: 350000,
+          targetAmount: 500000,
+          daysLeft: 120,
+        },
+        retirement: {
+          name: "Retirement Plan",
+          annualRate: 18,
+          lockedAmount: 240000,
+          unlockDate: "May 12, 2032",
+        },
+        safeLockCount: 2,
+        dailyInterestEarned: 1500,
+      });
+
+      setInvestmentsSnapshot({
+        totalInvested: 1200000,
+        totalExpectedReturns: 180000,
+        items: [
+          {
+            id: "inv_1",
+            name: "Treasury Note Plan",
+            amountInvested: 650000,
+            maturityDate: "Aug 30, 2026",
+            expectedReturnPercent: 15,
+            progressPercent: 62,
+          },
+          {
+            id: "inv_2",
+            name: "Growth Bond Basket",
+            amountInvested: 550000,
+            maturityDate: "Nov 18, 2026",
+            expectedReturnPercent: 18,
+            progressPercent: 41,
+          },
+        ],
+      });
+
+      setRecentTransactions([
+        {
+          id: "tx_1",
+          type: "budget",
+          description: "Withdrawal: Food",
+          amount: -12000,
+          timestamp: "2h ago",
+        },
+        {
+          id: "tx_2",
+          type: "savings",
+          description: "Deposit: Emergency Fund",
+          amount: 50000,
+          timestamp: "5h ago",
+        },
+        {
+          id: "tx_3",
+          type: "investment",
+          description: "Investment: Treasury Note Plan",
+          amount: -150000,
+          timestamp: "1d ago",
+        },
+        {
+          id: "tx_4",
+          type: "penalty",
+          description: "Safe Lock early withdrawal fee",
+          amount: -2500,
+          fee: 2500,
+          timestamp: "2d ago",
+        },
+        {
+          id: "tx_5",
+          type: "savings",
+          description: "Interest payout: Retirement Plan",
+          amount: 4500,
+          timestamp: "Today",
+        },
+      ]);
+    } catch (error) {
+      console.error("Failed to load dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (status === "loading") {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0B1120" }}>
-        <p style={{ color: "#5BB5E0", fontFamily: "var(--font-poppins), sans-serif" }}>Loading...</p>
+      <div className="flex items-center justify-center min-h-screen bg-[#F8F9FA]">
+        <p className="text-slate-600">Loading...</p>
       </div>
     );
   }
 
   if (!session) return null;
 
-  const isDemo = session.user?.email === DEMO_EMAIL;
   const firstName = session.user?.name?.split(" ")[0] || "there";
-
-  // Balances
-  const totalBalance = isDemo ? DEMO_TOTAL_BALANCE : 0;
-  const savingsTotal = isDemo ? DEMO_SAVINGS_GOALS.reduce((s, g) => s + g.saved, 0) : 0;
-  const investTotal  = isDemo ? DEMO_INVESTMENTS.reduce((s, i) => s + i.amountInvested, 0) : 0;
-  const budgetAlloc  = isDemo ? DEMO_BUDGET_ALLOCATED : 0;
-  const budgetSpent  = isDemo ? DEMO_BUDGET_SPENT : 0;
-  const availableBalance = Math.max(totalBalance - budgetSpent, 0);
+  const today = new Date();
+  const dateStr = today.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <main
-      style={{
-        height: "100vh",
-        maxHeight: "100vh",
-        overflow: "hidden",
-        background: "#0B1120",
-        fontFamily: "var(--font-poppins), sans-serif",
-        color: "#fff",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 16px", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", width: "100%" }}>
-        {/* Top bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14, marginBottom: 12 }}>
-          <a
-            href="/settings"
-            aria-label="Open settings"
-            style={{ width: 24, height: 18, display: "flex", flexDirection: "column", justifyContent: "space-between", cursor: "pointer" }}
-          >
-            <div style={{ height: 2, background: "#fff", borderRadius: 2 }} />  
-            <div style={{ height: 2, background: "#fff", borderRadius: 2, width: "70%" }} />
-            <div style={{ height: 2, background: "#fff", borderRadius: 2 }} />
-          </a>
-          <a
-            href="/profile"
-            aria-label="Open profile"
-            style={{
-              width: 34, height: 34, borderRadius: "50%", background: "#1A5F7A",
-              display: "flex", alignItems: "center", justifyContent: "center",  
-              fontSize: "0.9rem", fontWeight: 700, color: "#fff", textDecoration: "none",
-            }}
-          >
-            {firstName.charAt(0).toUpperCase()}
-          </a>
-        </div>
+    <div className="bg-[#F8F9FA] min-h-screen pb-24">
+      <DashboardTopBar />
 
-        {/* Greeting + Balance */}
-        <div style={{ marginBottom: 10 }}>
-          <p style={{ fontSize: "0.85rem", color: "#D1D5DB", margin: "0 0 2px" }}>Hi, {firstName}! </p>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>    
-            <span style={{ fontSize: "2rem", fontWeight: 800, letterSpacing: -1, color: "#fff" }}>{fmt(totalBalance)}</span>
-          </div>
-          <div style={{ width: 36, height: 3, borderRadius: 2, background: "#5BB5E0", marginTop: 5 }} />
-        </div>
-
-        {/* Balance Widgets (no charts/graphs) */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10, marginBottom: 12 }}>
-          <div style={{ background: "linear-gradient(135deg, #173A66 0%, #102845 100%)", borderRadius: 14, padding: "14px", border: "1px solid rgba(255,255,255,0.12)" }}>
-            <p style={{ margin: 0, fontSize: "0.72rem", color: "#BFD8ED", textTransform: "uppercase", letterSpacing: 1 }}>Total Balance</p>
-            <p style={{ margin: "6px 0 0", fontSize: "1.3rem", fontWeight: 800, color: "#fff" }}>{fmt(totalBalance)}</p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <a href="/budgets" style={{ textDecoration: "none", background: "rgba(255,255,255,0.06)", borderRadius: 14, padding: "12px", border: "1px solid rgba(255,255,255,0.1)" }}>
-              <p style={{ margin: 0, fontSize: "0.7rem", color: "#9FB8CC", textTransform: "uppercase", letterSpacing: 0.8 }}>Budget Wallet</p>
-              <p style={{ margin: "6px 0 0", fontSize: "1rem", fontWeight: 700, color: "#5BB5E0" }}>{fmt(budgetAlloc)}</p>
-            </a>
-
-            <a href="/savings/dashboard" style={{ textDecoration: "none", background: "rgba(255,255,255,0.06)", borderRadius: 14, padding: "12px", border: "1px solid rgba(255,255,255,0.1)" }}>
-              <p style={{ margin: 0, fontSize: "0.7rem", color: "#9FB8CC", textTransform: "uppercase", letterSpacing: 0.8 }}>Savings Balance</p>
-              <p style={{ margin: "6px 0 0", fontSize: "1rem", fontWeight: 700, color: "#22C55E" }}>{fmt(savingsTotal)}</p>
-            </a>
-
-            <a href="/investments/dashboard" style={{ textDecoration: "none", background: "rgba(255,255,255,0.06)", borderRadius: 14, padding: "12px", border: "1px solid rgba(255,255,255,0.1)" }}>
-              <p style={{ margin: 0, fontSize: "0.7rem", color: "#9FB8CC", textTransform: "uppercase", letterSpacing: 0.8 }}>Investments</p>
-              <p style={{ margin: "6px 0 0", fontSize: "1rem", fontWeight: 700, color: "#A78BFA" }}>{fmt(investTotal)}</p>
-            </a>
-
-            <a href="/account" style={{ textDecoration: "none", background: "rgba(255,255,255,0.06)", borderRadius: 14, padding: "12px", border: "1px solid rgba(255,255,255,0.1)" }}>
-              <p style={{ margin: 0, fontSize: "0.7rem", color: "#9FB8CC", textTransform: "uppercase", letterSpacing: 0.8 }}>Available Balance</p>
-              <p style={{ margin: "6px 0 0", fontSize: "1rem", fontWeight: 700, color: "#F59E0B" }}>{fmt(availableBalance)}</p>
-            </a>
-          </div>
-        </div>
+      {/* Welcome Area */}
+      <div className="px-4 pt-6 pb-4">
+        <h1 className="text-2xl font-bold text-slate-900">
+          Hello, {firstName}!
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">{dateStr}</p>
       </div>
 
-      {/* Bottom Widget Nav */}
-      <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#131A2E", borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-around", padding: "10px 0 14px", zIndex: 50 }}>
-        <a href="/budgets" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textDecoration: "none", color: "#9CA3AF", fontSize: "0.7rem", fontWeight: 600, fontFamily: "var(--font-poppins), sans-serif" }}>    
-          <span style={{ fontSize: "1.4rem" }}></span>Budget
-        </a>
-        <a href="/savings" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textDecoration: "none", color: "#9CA3AF", fontSize: "0.7rem", fontWeight: 600, fontFamily: "var(--font-poppins), sans-serif" }}>    
-          <span style={{ fontSize: "1.4rem" }}></span>Save
-        </a>
-        <a href="/investments" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textDecoration: "none", color: "#9CA3AF", fontSize: "0.7rem", fontWeight: 600, fontFamily: "var(--font-poppins), sans-serif" }}>
-          <span style={{ fontSize: "1.4rem" }}></span>Invest
-        </a>
-        <a href="/account" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textDecoration: "none", color: "#9CA3AF", fontSize: "0.7rem", fontWeight: 600, fontFamily: "var(--font-poppins), sans-serif" }}>    
-          <span style={{ fontSize: "1.4rem" }}></span>Account
-        </a>
-      </nav>
-    </main>
+      {/* Metrics Cards */}
+      <MetricsCards data={metricsData!} loading={loading} />
+
+      {/* Main Content Areas (Coming next) */}
+      <div className="px-4 space-y-4 pb-8">
+        <ActiveBudgetSnapshot budget={activeBudget} />
+        <SavingsGoalsSnapshot data={savingsSnapshot} />
+        <InvestmentsSnapshot data={investmentsSnapshot} />
+        <RecentTransactionsCard items={recentTransactions} />
+        <DashboardQuickActions />
+      </div>
+
+      <DashboardFab />
+      <DashboardTabBar />
+    </div>
   );
 }
 
 export default function Dashboard() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0B1120" }}><p style={{ color: "#5BB5E0" }}>Loading...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-[#F8F9FA]">
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      }
+    >
       <DashboardContent />
     </Suspense>
   );
