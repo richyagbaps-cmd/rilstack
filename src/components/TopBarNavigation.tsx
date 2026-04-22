@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -40,25 +41,19 @@ export default function TopBarNavigation() {
             tabIndex={0}
             className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]"
           >
-            <span
+            <Image
+              src="/icons/rilstack-logo.png"
+              alt="rilstack logo"
+              width={32}
+              height={32}
               style={{
-                height: 32,
-                width: 32,
                 borderRadius: 8,
-                background: "#1A5F7A",
                 boxShadow: "0 2px 8px #1A5F7A22",
-                color: "#fff",
-                fontSize: "0.875rem",
-                fontWeight: 800,
-                textTransform: "uppercase",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
+                objectFit: "contain",
                 userSelect: "none",
               }}
-            >
-              r
-            </span>
+              priority
+            />
             <span style={{
               fontSize: "1.5rem",
               fontWeight: 800,

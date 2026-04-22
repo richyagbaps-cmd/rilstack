@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
@@ -33,7 +34,14 @@ export default function DashboardTopBar({ onMenuClick }: DashboardTopBarProps) {
 
         {/* Logo / Branding */}
         <div className="flex items-center gap-1">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#1A5F7A] text-[10px] font-bold uppercase text-white">r</span>
+          <Image
+            src="/icons/rilstack-logo.png"
+            alt="rilstack logo"
+            width={24}
+            height={24}
+            className="h-6 w-6 rounded-md object-contain"
+            priority
+          />
           <span className="text-sm font-bold text-[#1A5F7A]">rilstack</span>
         </div>
 

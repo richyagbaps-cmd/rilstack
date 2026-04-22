@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -126,7 +127,14 @@ export default function Home() {
       <header className="sticky top-0 z-40 h-14 border-b border-black/5 bg-white/95 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur">
         <div className="mx-auto flex h-full max-w-6xl items-center justify-center px-6">
           <a href="/" className="inline-flex items-center gap-2" aria-label="rilstack home">
-            <span className="logo-intro inline-flex h-8 w-8 items-center justify-center rounded-md bg-[#1A5F7A] text-xs font-bold uppercase text-white">r</span>
+            <Image
+              src="/icons/rilstack-logo.png"
+              alt="rilstack logo"
+              width={32}
+              height={32}
+              className="logo-intro h-8 w-8 rounded-md object-contain"
+              priority
+            />
             <span className="text-lg font-bold tracking-[-0.2px] text-[#1A5F7A]">rilstack</span>
           </a>
         </div>
@@ -136,7 +144,14 @@ export default function Home() {
         <section className="relative rounded-[2rem] bg-white px-0 py-8 md:py-12">
           <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
             <div className="logo-pulse mb-5 inline-flex rounded-2xl bg-[#1A5F7A]/10 p-4">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#1A5F7A] text-xl font-extrabold uppercase text-white">r</span>
+              <Image
+                src="/icons/rilstack-logo.png"
+                alt="rilstack logo"
+                width={48}
+                height={48}
+                className="h-12 w-12 rounded-lg object-contain"
+                priority
+              />
             </div>
             <h1 className="mb-3 text-[32px] font-extrabold leading-[1.14] tracking-[-0.2px] text-[#1A5F7A] md:text-[42px]">
               Stack Your Finances, One Layer at a Time
