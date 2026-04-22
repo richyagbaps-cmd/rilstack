@@ -17,20 +17,10 @@ const SEATABLE_BASE_NAME =
   process.env.SEATABLE_BASE_NAME || process.env.SEATABLE_DTABLE_NAME || "";
 
 function assertSeatableConfig() {
-  const missing: string[] = [];
-
-  if (!SEATABLE_API_TOKEN) missing.push("SEATABLE_API_TOKEN");
-  if (!SEATABLE_WORKSPACE_ID) {
-    missing.push("SEATABLE_WORKSPACE_ID (or SEATABLE_WORKSPACE)");
-  }
-  if (!SEATABLE_BASE_NAME) {
-    missing.push("SEATABLE_BASE_NAME (or SEATABLE_DTABLE_NAME)");
-  }
-
-  if (missing.length > 0) {
+  if (!SEATABLE_API_TOKEN) {
     throw new Error(
-      `SeaTable configuration missing: ${missing.join(", ")}. ` +
-        "Set these environment variables in Vercel Project Settings.",
+      "SeaTable configuration missing: SEATABLE_API_TOKEN. " +
+        "Set this environment variable in Vercel Project Settings.",
     );
   }
 }
@@ -52,14 +42,11 @@ let _dtable: string | null = null;
 let _tokenExpiry = 0;
 
 /**
- * Obtain a Base Token via the workspace endpoint.
- * Token is requested with exp=3d but cached locally for 2 days 23 hours
- * to avoid using an expired token.
+ * Obtain a Base Access Token via the base API token endpoint.
+ * Cached locally for 2 days 23 hours to avoid using an expired token.
  */
 export async function getBaseToken(
   apiToken = SEATABLE_API_TOKEN,
-  workspaceId = SEATABLE_WORKSPACE_ID,
-  baseName = SEATABLE_BASE_NAME,
 ): Promise<{ token: string; dtable: string }> {
   assertSeatableConfig();
 
@@ -68,26 +55,24 @@ export async function getBaseToken(
     return { token: _token, dtable: _dtable };
   }
 
-  const url =
-    `${SEATABLE_SERVER}/api/v2.1/workspace/${encodeURIComponent(workspaceId)}` +
-    `/dtable/${encodeURIComponent(baseName)}/access-token/?exp=3d`;
+  const url = `${SEATABLE_SERVER}/api/v2.1/dtable/app-access-token/`;
 
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${apiToken}` },
+    headers: { Authorization: `Token ${apiToken}` },
   });
   if (!res.ok) {
     const text = await res.text();
     const looksLikeHtml = /<!doctype html|<html/i.test(text);
     const trimmed = text.replace(/\s+/g, " ").slice(0, 240);
     const detail = looksLikeHtml
-      ? "Received HTML instead of JSON from SeaTable auth endpoint. Check workspace/base env values."
+      ? "Received HTML instead of JSON from SeaTable auth endpoint."
       : trimmed;
     throw new Error(`SeaTable auth failed (${res.status}): ${detail}`);
   }
 
   const data = await res.json();
-  _token  = data.access_token  as string;
-  _dtable = data.dtable_uuid   as string;
+  _token  = data.access_token as string;
+  _dtable = data.dtable_uuid  as string;
   // Cache for slightly less than 3 days so the token is always fresh
   _tokenExpiry = now + (3 * 24 * 60 - 5) * 60 * 1000;
   return { token: _token, dtable: _dtable };
