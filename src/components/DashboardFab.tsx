@@ -23,7 +23,7 @@ export default function DashboardFab() {
         />
       )}
 
-      <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end gap-3">
+      <div className="fixed bottom-[72px] right-4 z-50 flex flex-col items-end gap-3">
         {open && (
           <div className="w-[min(20rem,calc(100vw-2rem))] rounded-[24px] bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.16)]">
             <p className="mb-3 text-sm font-semibold text-slate-900">Quick Actions</p>
@@ -45,7 +45,7 @@ export default function DashboardFab() {
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F4A261] text-3xl font-light text-white shadow-[0_8px_24px_rgba(244,162,97,0.45)] transition hover:scale-[1.03]"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F4A261] text-[28px] font-light text-white shadow-[0_8px_24px_rgba(244,162,97,0.45)] transition hover:scale-[1.03]"
           aria-label="Open quick action menu"
         >
           +

@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { Bell } from "lucide-react";
 
 interface DashboardTopBarProps {
   onMenuClick?: () => void;
@@ -42,7 +43,7 @@ export default function DashboardTopBar({ onMenuClick }: DashboardTopBarProps) {
             className="relative p-1 text-[#1A5F7A] hover:bg-slate-100 rounded-full transition"
             aria-label="Notifications"
           >
-            <span className="text-xl">🔔</span>
+            <Bell className="h-5 w-5" aria-hidden="true" strokeWidth={2} />
             <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
           </button>
 
