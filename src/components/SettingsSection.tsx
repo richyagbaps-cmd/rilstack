@@ -188,23 +188,23 @@ export default function SettingsSection() {
           <form onSubmit={handleSubmit(onSubmit)} className="flex-1 grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">Full Name</label>
-              <input type="text" {...register("fullName", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" />
+              <input type="text" {...register("fullName", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">Email</label>
-              <input type="email" {...register("email", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" />
+              <input type="email" {...register("email", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">Phone Number</label>
-              <input type="tel" {...register("phone", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" />
+              <input type="tel" {...register("phone", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">Date of Birth</label>
-              <input type="date" {...register("dateOfBirth", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" />
+              <input type="date" {...register("dateOfBirth", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">Gender</label>
-              <select {...register("gender", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500">
+              <select {...register("gender", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500">
                 <option value="M">Male</option>
                 <option value="F">Female</option>
                 <option value="other">Other</option>
@@ -212,15 +212,15 @@ export default function SettingsSection() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">State of Origin</label>
-              <input type="text" {...register("stateOfOrigin", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" />
+              <input type="text" {...register("stateOfOrigin", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
             </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-semibold text-slate-700">Residential Address</label>
-              <input type="text" {...register("address", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" />
+              <input type="text" {...register("address", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">KYC ID Type</label>
-              <select {...register("idType", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500">
+              <select {...register("idType", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500">
                 <option value="nin">NIN</option>
                 <option value="bvn">BVN</option>
                 <option value="passport">International Passport</option>
@@ -230,7 +230,7 @@ export default function SettingsSection() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">ID Number</label>
-              <input type="text" {...register("idNumber", { required: true })} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" />
+              <input type="text" {...register("idNumber", { required: true })} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
             </div>
             <div className="md:col-span-2 flex gap-2 items-center mt-2">
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#2E7D32] text-white text-xs font-semibold">✔️ Verified</span>
