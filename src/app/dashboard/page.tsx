@@ -27,6 +27,14 @@ import {
 
 type TxType = "budget" | "savings" | "investment" | "penalty";
 
+const BANK_CODES: Record<string, string> = {
+  "Access Bank": "044",
+  GTBank: "058",
+  "First Bank": "011",
+  UBA: "033",
+  "Zenith Bank": "057",
+};
+
 type DashboardData = {
   netWorth: number;
   netWorthChangePct: number;
@@ -132,6 +140,12 @@ function DashboardContent() {
   const [loading, setLoading] = useState(false);
   const [privacyMode, setPrivacyMode] = useState(true);
   const [revealUntil, setRevealUntil] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [walletAvailable, setWalletAvailable] = useState(0);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletActionLoading, setWalletActionLoading] = useState<"deposit" | "withdraw" | null>(null);
+  const [walletError, setWalletError] = useState("");
+  const [walletMessage, setWalletMessage] = useState("");
 
   const amountsHidden = privacyMode && Date.now() > revealUntil;
 
@@ -144,8 +158,165 @@ function DashboardContent() {
   useEffect(() => {
     if (status === "authenticated") {
       loadDashboardData();
+      void loadWallet();
     }
   }, [status]);
+
+  const loadWallet = async () => {
+    if (!session?.user?.email) return;
+
+    setWalletLoading(true);
+    setWalletError("");
+
+    try {
+      const res = await fetch(
+        `/api/payment/account?email=${encodeURIComponent(session.user.email)}`,
+        { cache: "no-store" },
+      );
+      const payload = await res.json();
+
+      if (!res.ok) {
+        throw new Error(payload?.error || "Unable to load wallet balance.");
+      }
+
+      const checking = (payload?.accounts || []).find(
+        (acc: { type?: string }) => acc.type === "checking",
+      );
+      const primary = checking || payload?.accounts?.[0];
+
+      setWalletBalance(Number(primary?.balance || 0));
+      setWalletAvailable(Number(primary?.availableBalance || 0));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unable to load wallet balance.";
+      setWalletError(message);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  const handleDeposit = async () => {
+    if (!session?.user?.email) return;
+
+    const input = window.prompt("Enter deposit amount in Naira", "1000");
+    if (!input) return;
+
+    const amount = Number(input.replace(/,/g, ""));
+    if (!Number.isFinite(amount) || amount < 100) {
+      setWalletError("Minimum deposit amount is N100.");
+      return;
+    }
+
+    setWalletActionLoading("deposit");
+    setWalletError("");
+    setWalletMessage("");
+
+    try {
+      const res = await fetch("/api/payment/deposit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          method: "card",
+          description: "Dashboard deposit",
+          userEmail: session.user.email,
+          callbackUrl: `${window.location.origin}/dashboard`,
+        }),
+      });
+
+      const payload = await res.json();
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || "Unable to start deposit.");
+      }
+
+      if (payload.paymentUrl) {
+        window.location.href = payload.paymentUrl as string;
+        return;
+      }
+
+      setWalletMessage("Deposit initialized successfully.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unable to start deposit.";
+      setWalletError(message);
+    } finally {
+      setWalletActionLoading(null);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!session?.user?.email) return;
+
+    const savedBank = localStorage.getItem("rilstack_bank");
+    if (!savedBank) {
+      setWalletError("Set your withdrawal bank first in Settings > Bank.");
+      return;
+    }
+
+    let bankName = "";
+    let accountNumber = "";
+    let accountName = "";
+
+    try {
+      const parsed = JSON.parse(savedBank) as {
+        bankName?: string;
+        accountNumber?: string;
+        accountName?: string;
+      };
+      bankName = parsed.bankName || "";
+      accountNumber = parsed.accountNumber || "";
+      accountName = parsed.accountName || "";
+    } catch {
+      setWalletError("Saved bank details are invalid. Re-add them in Settings > Bank.");
+      return;
+    }
+
+    if (!bankName || !accountNumber || !accountName) {
+      setWalletError("Complete your bank details in Settings > Bank before withdrawal.");
+      return;
+    }
+
+    const input = window.prompt("Enter withdrawal amount in Naira", "5000");
+    if (!input) return;
+
+    const amount = Number(input.replace(/,/g, ""));
+    if (!Number.isFinite(amount) || amount < 5000) {
+      setWalletError("Minimum withdrawal amount is N5,000.");
+      return;
+    }
+
+    const bankCode = BANK_CODES[bankName] || bankName;
+
+    setWalletActionLoading("withdraw");
+    setWalletError("");
+    setWalletMessage("");
+
+    try {
+      const res = await fetch("/api/payment/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          accountNumber,
+          bankCode,
+          recipientName: accountName,
+          narration: "Dashboard withdrawal",
+          userEmail: session.user.email,
+        }),
+      });
+
+      const payload = await res.json();
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || "Unable to process withdrawal.");
+      }
+
+      setWalletMessage(payload?.message || "Withdrawal initiated successfully.");
+      await loadWallet();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unable to process withdrawal.";
+      setWalletError(message);
+    } finally {
+      setWalletActionLoading(null);
+    }
+  };
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -230,6 +401,39 @@ function DashboardContent() {
             </button>
           </div>
         </div>
+
+        <section className="mb-3 rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-sm font-bold text-[#000000]">Wallet</p>
+            {walletLoading ? <span className="text-[11px] text-[#6C757D]">Syncing...</span> : null}
+          </div>
+          <p className="text-xl font-bold text-[#212529]">
+            {hiddenAmount(amountsHidden, walletBalance)}
+          </p>
+          <p className="mt-1 text-[11px] text-[#6C757D]">
+            Available: {hiddenAmount(amountsHidden, walletAvailable)}
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleDeposit}
+              disabled={walletActionLoading !== null}
+              className="h-9 rounded-lg bg-[#1A5F7A] text-xs font-semibold text-white disabled:opacity-60"
+            >
+              {walletActionLoading === "deposit" ? "Processing..." : "Deposit"}
+            </button>
+            <button
+              type="button"
+              onClick={handleWithdraw}
+              disabled={walletActionLoading !== null}
+              className="h-9 rounded-lg border border-[#1A5F7A] text-xs font-semibold text-[#1A5F7A] disabled:opacity-60"
+            >
+              {walletActionLoading === "withdraw" ? "Processing..." : "Withdraw"}
+            </button>
+          </div>
+          {walletError ? <p className="mt-2 text-[11px] text-[#D32F2F]">{walletError}</p> : null}
+          {walletMessage ? <p className="mt-2 text-[11px] text-[#2E7D32]">{walletMessage}</p> : null}
+        </section>
 
         <div className="grid grid-cols-2 gap-2">
           {metrics.map((m) => (
