@@ -56,16 +56,6 @@ const SAVINGS_CATEGORIES = [
     borderColor: "border-purple-200",
   },
   {
-    id: "retirement",
-    label: "Retirement Fund",
-    icon: "👴",
-    description:
-      "Long-term retirement savings with a locked timeline and growth target.",
-    color: "text-indigo-700",
-    bgColor: "bg-indigo-50",
-    borderColor: "border-indigo-200",
-  },
-  {
     id: "other",
     label: "Other",
     icon: "🎯",
@@ -194,20 +184,6 @@ export default function SavingsGoals() {
                 {goals.length} active
               </span>
             )}
-          </button>
-          <button
-            onClick={() => router.push("/savings/dashboard")}
-            className="group rounded-[24px] border border-indigo-200 bg-indigo-50 p-6 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
-          >
-            <div className="mb-4 mt-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-2xl">
-              👴
-            </div>
-            <h3 className="text-lg font-bold text-indigo-900">
-              Retirement Fund
-            </h3>
-            <p className="mt-1 text-sm text-indigo-700">
-              Open retirement savings and manage long-term plan settings.
-            </p>
           </button>
         </div>
       </div>
