@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import PinConfirmModal from "./PinConfirmModal";
 
 interface SavingsGoal {
@@ -55,6 +56,16 @@ const SAVINGS_CATEGORIES = [
     borderColor: "border-purple-200",
   },
   {
+    id: "retirement",
+    label: "Retirement Fund",
+    icon: "👴",
+    description:
+      "Long-term retirement savings with a locked timeline and growth target.",
+    color: "text-indigo-700",
+    bgColor: "bg-indigo-50",
+    borderColor: "border-indigo-200",
+  },
+  {
     id: "other",
     label: "Other",
     icon: "🎯",
@@ -66,6 +77,7 @@ const SAVINGS_CATEGORIES = [
 ];
 
 export default function SavingsGoals() {
+  const router = useRouter();
   const [view, setView] = useState<SavingsView>("menu");
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -183,6 +195,20 @@ export default function SavingsGoals() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => router.push("/savings/dashboard")}
+            className="group rounded-[24px] border border-indigo-200 bg-indigo-50 p-6 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+          >
+            <div className="mb-4 mt-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-2xl">
+              👴
+            </div>
+            <h3 className="text-lg font-bold text-indigo-900">
+              Retirement Fund
+            </h3>
+            <p className="mt-1 text-sm text-indigo-700">
+              Open retirement savings and manage long-term plan settings.
+            </p>
+          </button>
         </div>
       </div>
     );
@@ -216,7 +242,7 @@ export default function SavingsGoals() {
               onClick={() => setSelectedCategory(cat.id)}
               className={`group rounded-[24px] border ${cat.borderColor} ${cat.bgColor} p-5 text-left transition hover:shadow-md`}
             >
-              <div className="mb-3 text-3xl">{cat.icon}</div>
+              <div className="mb-3 mt-2 text-center text-3xl leading-none">{cat.icon}</div>
               <h3 className={`text-lg font-bold ${cat.color}`}>{cat.label}</h3>
               <p className="mt-1 text-xs text-slate-600 leading-relaxed">
                 {cat.description}
