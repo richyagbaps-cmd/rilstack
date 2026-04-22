@@ -25,7 +25,7 @@ function assertSeatableConfig() {
   }
 }
 
-// Table names — must match your SeaTable base exactly
+// Table names  must match your SeaTable base exactly
 export const TABLES = {
   USERS:               "Users",
   BUDGETS:             "Budgets",
@@ -39,6 +39,7 @@ export const TABLES = {
 
 let _token: string | null = null;
 let _dtable: string | null = null;
+let _dtableServer: string | null = null;
 let _tokenExpiry = 0;
 
 /**
@@ -73,6 +74,10 @@ export async function getBaseToken(
   const data = await res.json();
   _token  = data.access_token as string;
   _dtable = data.dtable_uuid  as string;
+  // Use API gateway URL if indicated by the token response
+  _dtableServer = (data.use_api_gateway && data.dtable_server)
+    ? (data.dtable_server as string).replace(/\/+$/, "")
+    : SEATABLE_SERVER;
   // Cache for slightly less than 3 days so the token is always fresh
   _tokenExpiry = now + (3 * 24 * 60 - 5) * 60 * 1000;
   return { token: _token, dtable: _dtable };
@@ -81,10 +86,15 @@ export async function getBaseToken(
 /** Internal alias kept for all existing callers inside this file */
 const getAccessToken = getBaseToken;
 
+/** Returns the server base URL to use for API calls (may be the API gateway) */
+function apiServer(): string {
+  return _dtableServer ?? SEATABLE_SERVER;
+}
+
 /** Build base URL for the dtable-db SQL endpoint */
 async function baseUrl(): Promise<string> {
   const { dtable } = await getAccessToken();
-  return `${SEATABLE_SERVER}/dtable-db/api/v1/query/${dtable}/`;
+  return `${apiServer()}/dtable-db/api/v1/query/${dtable}/`;
 }
 
 /** Execute a SQL query against SeaTable */
@@ -122,7 +132,7 @@ export async function insertRow(
   try {
     const { token, dtable } = await getAccessToken();
     const res = await fetch(
-      `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
+      `${apiServer()}/dtable-server/api/v1/dtables/${dtable}/rows/`,
       {
         method: "POST",
         headers: {
@@ -150,7 +160,7 @@ export async function updateRow(
   try {
     const { token, dtable } = await getAccessToken();
     const res = await fetch(
-      `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
+      `${apiServer()}/dtable-server/api/v1/dtables/${dtable}/rows/`,
       {
         method: "PUT",
         headers: {
@@ -175,7 +185,7 @@ export async function deleteRow(tableName: string, rowId: string): Promise<void>
   try {
     const { token, dtable } = await getAccessToken();
     const res = await fetch(
-      `${SEATABLE_SERVER}/dtable-server/api/v1/dtables/${dtable}/rows/`,
+      `${apiServer()}/dtable-server/api/v1/dtables/${dtable}/rows/`,
       {
         method: "DELETE",
         headers: {
@@ -315,9 +325,9 @@ export type STTicket = {
 // Convenience query helpers
 // ---------------------------------------------------------------------------
 
-/** kobo → naira (2 decimal places) */
+/** kobo -> naira (2 decimal places) */
 export const koboToNaira = (k: number) => k / 100;
-/** naira → kobo */
+/** naira -> kobo */
 export const nairaToKobo = (n: number) => Math.round(n * 100);
 
 export async function getUserByEmail(email: string): Promise<STUser | null> {
