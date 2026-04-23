@@ -41,7 +41,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const wallet = await ensurePaystackWalletForEmail(userEmail);
+    let wallet: Awaited<ReturnType<typeof ensurePaystackWalletForEmail>> | null = null;
+
+    // Wallet provisioning should not block deposits. If this fails, we still
+    // initialize the payment and complete metadata with the fields we have.
+    try {
+      wallet = await ensurePaystackWalletForEmail(userEmail);
+    } catch (walletError) {
+      console.warn("Wallet provisioning failed during deposit init:", walletError);
+    }
+
     const reference = `RIL_${Date.now()}`;
     const response = await paystackRequest<{
       reference: string;
@@ -62,8 +71,8 @@ export async function POST(request: NextRequest) {
           platform: "rilstack",
           userEmail,
           depositMethod: method,
-          walletAccountNumber: wallet.accountNumber,
-          walletBankName: wallet.bankName,
+          walletAccountNumber: wallet?.accountNumber,
+          walletBankName: wallet?.bankName,
         },
       }),
     });
