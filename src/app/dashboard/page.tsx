@@ -27,13 +27,32 @@ import {
 
 type TxType = "budget" | "savings" | "investment" | "penalty";
 
-const BANK_CODES: Record<string, string> = {
-  "Access Bank": "044",
-  GTBank: "058",
-  "First Bank": "011",
-  UBA: "033",
-  "Zenith Bank": "057",
-};
+const POPULAR_BANKS = [
+  { name: "Access Bank", code: "044" },
+  { name: "First Bank", code: "011" },
+  { name: "GTBank", code: "058" },
+  { name: "Keystone Bank", code: "082" },
+  { name: "Kuda Bank", code: "090267" },
+  { name: "OPay", code: "100004" },
+  { name: "Palmpay", code: "100033" },
+  { name: "Polaris Bank", code: "076" },
+  { name: "Stanbic IBTC", code: "221" },
+  { name: "Sterling Bank", code: "232" },
+  { name: "UBA", code: "033" },
+  { name: "Union Bank", code: "032" },
+  { name: "Unity Bank", code: "215" },
+  { name: "VFD Microfinance Bank", code: "090110" },
+  { name: "Wema Bank", code: "035" },
+  { name: "Zenith Bank", code: "057" },
+];
+
+type DepositMethod = "card" | "transfer" | "ussd";
+
+type ModalState =
+  | { type: "none" }
+  | { type: "deposit_method" }
+  | { type: "deposit_amount"; method: DepositMethod }
+  | { type: "withdraw" };
 
 type DashboardData = {
   netWorth: number;
@@ -142,6 +161,13 @@ function DashboardContent() {
   const [walletActionLoading, setWalletActionLoading] = useState<"deposit" | "withdraw" | null>(null);
   const [walletError, setWalletError] = useState("");
   const [walletMessage, setWalletMessage] = useState("");
+  const [modal, setModal] = useState<ModalState>({ type: "none" });
+  const [depositAmount, setDepositAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawBankName, setWithdrawBankName] = useState("");
+  const [withdrawBankCode, setWithdrawBankCode] = useState("");
+  const [withdrawAccountNumber, setWithdrawAccountNumber] = useState("");
+  const [withdrawAccountName, setWithdrawAccountName] = useState("");
 
   const amountsHidden = privacyMode && Date.now() > revealUntil;
 
@@ -192,45 +218,44 @@ function DashboardContent() {
     }
   };
 
-  const handleDeposit = async () => {
+  const openDeposit = () => {
+    setWalletError("");
+    setWalletMessage("");
+    setDepositAmount("");
+    setModal({ type: "deposit_method" });
+  };
+
+  const submitDeposit = async (method: DepositMethod) => {
     if (!session?.user?.email) return;
-
-    const input = window.prompt("Enter deposit amount in Naira", "1000");
-    if (!input) return;
-
-    const amount = Number(input.replace(/,/g, ""));
+    const amount = Number(depositAmount.replace(/,/g, ""));
     if (!Number.isFinite(amount) || amount < 100) {
-      setWalletError("Minimum deposit amount is N100.");
+      setWalletError("Minimum deposit amount is ₦100.");
       return;
     }
-
+    setModal({ type: "none" });
     setWalletActionLoading("deposit");
     setWalletError("");
     setWalletMessage("");
-
     try {
       const res = await fetch("/api/payment/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount,
-          method: "card",
+          method,
           description: "Dashboard deposit",
           userEmail: session.user.email,
           callbackUrl: `${window.location.origin}/dashboard`,
         }),
       });
-
       const payload = await res.json();
       if (!res.ok || !payload?.success) {
         throw new Error(payload?.error || "Unable to start deposit.");
       }
-
       if (payload.paymentUrl) {
         window.location.href = payload.paymentUrl as string;
         return;
       }
-
       setWalletMessage("Deposit initialized successfully.");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unable to start deposit.";
@@ -240,72 +265,70 @@ function DashboardContent() {
     }
   };
 
-  const handleWithdraw = async () => {
-    if (!session?.user?.email) return;
-
-    const savedBank = localStorage.getItem("rilstack_bank");
-    if (!savedBank) {
-      setWalletError("Set your withdrawal bank first in Settings > Bank.");
-      return;
-    }
-
-    let bankName = "";
-    let accountNumber = "";
-    let accountName = "";
-
+  const openWithdraw = () => {
+    setWalletError("");
+    setWalletMessage("");
+    setWithdrawAmount("");
+    // Pre-fill from saved bank details if available
     try {
-      const parsed = JSON.parse(savedBank) as {
-        bankName?: string;
-        accountNumber?: string;
-        accountName?: string;
-      };
-      bankName = parsed.bankName || "";
-      accountNumber = parsed.accountNumber || "";
-      accountName = parsed.accountName || "";
+      const saved = localStorage.getItem("rilstack_bank");
+      if (saved) {
+        const parsed = JSON.parse(saved) as { bankName?: string; bankCode?: string; accountNumber?: string; accountName?: string };
+        setWithdrawBankName(parsed.bankName || "");
+        setWithdrawBankCode(parsed.bankCode || POPULAR_BANKS.find((b) => b.name === parsed.bankName)?.code || "");
+        setWithdrawAccountNumber(parsed.accountNumber || "");
+        setWithdrawAccountName(parsed.accountName || "");
+      } else {
+        setWithdrawBankName("");
+        setWithdrawBankCode("");
+        setWithdrawAccountNumber("");
+        setWithdrawAccountName("");
+      }
     } catch {
-      setWalletError("Saved bank details are invalid. Re-add them in Settings > Bank.");
+      setWithdrawBankName(""); setWithdrawBankCode(""); setWithdrawAccountNumber(""); setWithdrawAccountName("");
+    }
+    setModal({ type: "withdraw" });
+  };
+
+  const submitWithdraw = async () => {
+    if (!session?.user?.email) return;
+    if (!withdrawBankCode || !withdrawAccountNumber || !withdrawAccountName) {
+      setWalletError("Please fill in all bank details.");
       return;
     }
-
-    if (!bankName || !accountNumber || !accountName) {
-      setWalletError("Complete your bank details in Settings > Bank before withdrawal.");
+    const amount = Number(withdrawAmount.replace(/,/g, ""));
+    if (!Number.isFinite(amount) || amount < 1000) {
+      setWalletError("Minimum withdrawal amount is ₦1,000.");
       return;
     }
-
-    const input = window.prompt("Enter withdrawal amount in Naira", "5000");
-    if (!input) return;
-
-    const amount = Number(input.replace(/,/g, ""));
-    if (!Number.isFinite(amount) || amount < 5000) {
-      setWalletError("Minimum withdrawal amount is N5,000.");
-      return;
-    }
-
-    const bankCode = BANK_CODES[bankName] || bankName;
-
+    // Save bank details for next time
+    localStorage.setItem("rilstack_bank", JSON.stringify({
+      bankName: withdrawBankName,
+      bankCode: withdrawBankCode,
+      accountNumber: withdrawAccountNumber,
+      accountName: withdrawAccountName,
+    }));
+    setModal({ type: "none" });
     setWalletActionLoading("withdraw");
     setWalletError("");
     setWalletMessage("");
-
     try {
       const res = await fetch("/api/payment/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount,
-          accountNumber,
-          bankCode,
-          recipientName: accountName,
+          accountNumber: withdrawAccountNumber,
+          bankCode: withdrawBankCode,
+          recipientName: withdrawAccountName,
           narration: "Dashboard withdrawal",
           userEmail: session.user.email,
         }),
       });
-
       const payload = await res.json();
       if (!res.ok || !payload?.success) {
         throw new Error(payload?.error || "Unable to process withdrawal.");
       }
-
       setWalletMessage(payload?.message || "Withdrawal initiated successfully.");
       await loadWallet();
     } catch (err: unknown) {
@@ -414,7 +437,7 @@ function DashboardContent() {
           <div className="mt-3 grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={handleDeposit}
+              onClick={openDeposit}
               disabled={walletActionLoading !== null}
               className="h-9 rounded-lg bg-[#1A5F7A] text-xs font-semibold text-white disabled:opacity-60"
             >
@@ -422,7 +445,7 @@ function DashboardContent() {
             </button>
             <button
               type="button"
-              onClick={handleWithdraw}
+              onClick={openWithdraw}
               disabled={walletActionLoading !== null}
               className="h-9 rounded-lg border border-[#1A5F7A] text-xs font-semibold text-[#1A5F7A] disabled:opacity-60"
             >
@@ -576,6 +599,129 @@ function DashboardContent() {
           </div>
         </section>
       </div>
+
+      {/* Deposit method modal */}
+      {modal.type === "deposit_method" && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setModal({ type: "none" })}>
+          <div className="w-full max-w-md rounded-t-2xl bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+            <p className="mb-4 text-sm font-bold text-[#212529]">Deposit – Choose Method</p>
+            <div className="mb-4">
+              <label className="mb-1 block text-xs font-semibold text-[#4A5B6E]">Amount (₦)</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm text-[#212529] focus:border-[#1A5F7A] focus:outline-none"
+                placeholder="Minimum ₦100"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {(["card", "transfer", "ussd"] as DepositMethod[]).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => submitDeposit(m)}
+                  className="h-12 rounded-xl border border-[#1A5F7A] text-xs font-semibold capitalize text-[#1A5F7A] hover:bg-[#1A5F7A]/5"
+                >
+                  {m === "ussd" ? "USSD" : m.charAt(0).toUpperCase() + m.slice(1)}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setModal({ type: "none" })}
+              className="mt-4 w-full text-center text-xs text-[#6C757D]"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Withdraw modal */}
+      {modal.type === "withdraw" && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setModal({ type: "none" })}>
+          <div className="w-full max-w-md rounded-t-2xl bg-white p-5 pb-8 overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <p className="mb-4 text-sm font-bold text-[#212529]">Withdraw Funds</p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#4A5B6E]">Bank</label>
+                <select
+                  className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm text-[#212529] focus:border-[#1A5F7A] focus:outline-none bg-white"
+                  value={withdrawBankName}
+                  onChange={(e) => {
+                    const bank = POPULAR_BANKS.find((b) => b.name === e.target.value);
+                    setWithdrawBankName(e.target.value);
+                    setWithdrawBankCode(bank?.code || "");
+                  }}
+                >
+                  <option value="">Select bank…</option>
+                  {POPULAR_BANKS.map((b) => (
+                    <option key={b.code} value={b.name}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#4A5B6E]">Account Number</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={10}
+                  className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm text-[#212529] focus:border-[#1A5F7A] focus:outline-none"
+                  placeholder="10-digit account number"
+                  value={withdrawAccountNumber}
+                  onChange={(e) => setWithdrawAccountNumber(e.target.value.replace(/\D/g, ""))}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#4A5B6E]">Account Name</label>
+                <input
+                  type="text"
+                  className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm text-[#212529] focus:border-[#1A5F7A] focus:outline-none"
+                  placeholder="Account holder name"
+                  value={withdrawAccountName}
+                  onChange={(e) => setWithdrawAccountName(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#4A5B6E]">Amount (₦)</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm text-[#212529] focus:border-[#1A5F7A] focus:outline-none"
+                  placeholder="Minimum ₦1,000"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {walletError ? <p className="mt-2 text-[11px] text-[#D32F2F]">{walletError}</p> : null}
+
+            <button
+              type="button"
+              onClick={submitWithdraw}
+              disabled={walletActionLoading !== null}
+              className="mt-4 h-11 w-full rounded-xl bg-[#1A5F7A] text-sm font-semibold text-white disabled:opacity-60"
+            >
+              Confirm Withdrawal
+            </button>
+            <button
+              type="button"
+              onClick={() => setModal({ type: "none" })}
+              className="mt-3 w-full text-center text-xs text-[#6C757D]"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <DashboardFab />
       <DashboardTabBar />
