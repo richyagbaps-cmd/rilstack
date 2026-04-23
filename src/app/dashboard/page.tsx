@@ -54,30 +54,26 @@ type DashboardData = {
   tx: Array<{ id: string; type: TxType; desc: string; amount: number; time: string }>;
 };
 
-const SAMPLE_DATA: DashboardData = {
-  netWorth: 2500000,
-  netWorthChangePct: 12.4,
-  budgetLeft: 450000,
-  budgetTotal: 1000000,
-  totalSavings: 750000,
-  interestToday: 68,
-  totalInvested: 1200000,
-  estReturns: 180000,
+const DEFAULT_DASHBOARD_DATA: DashboardData = {
+  netWorth: 0,
+  netWorthChangePct: 0,
+  budgetLeft: 0,
+  budgetTotal: 0,
+  totalSavings: 0,
+  interestToday: 0,
+  totalInvested: 0,
+  estReturns: 0,
   budgetMode: "strict",
-  budgetSpentPct: 70,
-  budgetRange: "Apr 1 - Apr 30",
+  budgetSpentPct: 0,
+  budgetRange: "",
   categories: [
-    { name: "Food", spent: 12000, total: 20000 },
-    { name: "Transport", spent: 8000, total: 10000 },
+    { name: "Food", spent: 0, total: 0 },
+    { name: "Transport", spent: 0, total: 0 },
   ],
-  savingsGoal: { name: "Emergency Fund", current: 50000, target: 100000 },
-  retirement: { name: "Retirement", locked: 200000, apy: 18 },
-  fixedIncome: { amount: 500000, returnPct: 8, daysLeft: 45, progress: 50 },
-  tx: [
-    { id: "1", type: "budget", desc: "Food budget spend", amount: -12000, time: "2h ago" },
-    { id: "2", type: "savings", desc: "Savings deposit", amount: 50000, time: "5h ago" },
-    { id: "3", type: "investment", desc: "Fixed Income funding", amount: -150000, time: "1d ago" },
-  ],
+  savingsGoal: { name: "Emergency Fund", current: 0, target: 0 },
+  retirement: { name: "Retirement", locked: 0, apy: 18 },
+  fixedIncome: { amount: 0, returnPct: 0, daysLeft: 0, progress: 0 },
+  tx: [],
 };
 
 function money(value: number) {
@@ -136,7 +132,7 @@ function Ring({ percent }: { percent: number }) {
 function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [data, setData] = useState<DashboardData>(SAMPLE_DATA);
+  const [data, setData] = useState<DashboardData>(DEFAULT_DASHBOARD_DATA);
   const [loading, setLoading] = useState(false);
   const [privacyMode, setPrivacyMode] = useState(true);
   const [revealUntil, setRevealUntil] = useState(0);
@@ -187,6 +183,8 @@ function DashboardContent() {
       setWalletBalance(Number(primary?.balance || 0));
       setWalletAvailable(Number(primary?.availableBalance || 0));
     } catch (err: unknown) {
+      setWalletBalance(0);
+      setWalletAvailable(0);
       const message = err instanceof Error ? err.message : "Unable to load wallet balance.";
       setWalletError(message);
     } finally {
@@ -320,7 +318,7 @@ function DashboardContent() {
 
   const loadDashboardData = async () => {
     setLoading(true);
-    setData(SAMPLE_DATA);
+    setData(DEFAULT_DASHBOARD_DATA);
     setLoading(false);
   };
 
