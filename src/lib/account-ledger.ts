@@ -96,7 +96,7 @@ export async function getPaystackLedgerForEmail(
 
   const transferResponse = await paystackRequest<PaystackTransfer[]>(
     "/transfer?perPage=100&page=1",
-  );
+  ).catch(() => ({ status: true, message: "", data: [] }));
 
   const allTransactions = transactionResponses.flatMap((res) => res.data || []);
 

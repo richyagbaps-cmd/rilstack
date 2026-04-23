@@ -18,7 +18,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const wallet = await ensurePaystackWalletForEmail(email);
+    let wallet: Awaited<ReturnType<typeof ensurePaystackWalletForEmail>> | null = null;
+    try {
+      wallet = await ensurePaystackWalletForEmail(email);
+    } catch (walletError) {
+      console.warn("Wallet provisioning failed while fetching account ledger:", walletError);
+    }
+
     const ledger = await getPaystackLedgerForEmail(email, { wallet });
     return NextResponse.json(ledger);
   } catch (error: any) {
