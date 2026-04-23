@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
       userEmail,
     } = body;
 
-    if (!amount || amount < 1000) {
+    if (!amount || amount < 100) {
       return NextResponse.json(
-        { error: "Minimum withdrawal amount is ₦1,000." },
+        { error: "Minimum withdrawal amount is ₦100." },
         { status: 400 },
       );
     }

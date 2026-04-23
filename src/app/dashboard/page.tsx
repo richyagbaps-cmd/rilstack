@@ -257,6 +257,7 @@ function DashboardContent() {
         return;
       }
       setWalletMessage("Deposit initialized successfully.");
+      router.replace("/dashboard");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unable to start deposit.";
       setWalletError(message);
@@ -297,8 +298,8 @@ function DashboardContent() {
       return;
     }
     const amount = Number(withdrawAmount.replace(/,/g, ""));
-    if (!Number.isFinite(amount) || amount < 1000) {
-      setWalletError("Minimum withdrawal amount is ₦1,000.");
+    if (!Number.isFinite(amount) || amount < 100) {
+      setWalletError("Minimum withdrawal amount is ₦100.");
       return;
     }
     // Save bank details for next time
@@ -331,6 +332,7 @@ function DashboardContent() {
       }
       setWalletMessage(payload?.message || "Withdrawal initiated successfully.");
       await loadWallet();
+      router.replace("/dashboard");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unable to process withdrawal.";
       setWalletError(message);
@@ -602,8 +604,8 @@ function DashboardContent() {
 
       {/* Deposit method modal */}
       {modal.type === "deposit_method" && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setModal({ type: "none" })}>
-          <div className="w-full max-w-md rounded-t-2xl bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setModal({ type: "none" })}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 pb-8 shadow-[0_16px_48px_rgba(0,0,0,0.18)]" onClick={(e) => e.stopPropagation()}>
             <p className="mb-4 text-sm font-bold text-[#212529]">Deposit – Choose Method</p>
             <div className="mb-4">
               <label className="mb-1 block text-xs font-semibold text-[#4A5B6E]">Amount (₦)</label>
@@ -695,7 +697,7 @@ function DashboardContent() {
                   type="number"
                   inputMode="numeric"
                   className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm text-[#212529] focus:border-[#1A5F7A] focus:outline-none"
-                  placeholder="Minimum ₦1,000"
+                  placeholder="Minimum ₦100"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                 />
