@@ -20,6 +20,7 @@ interface PaystackTransaction {
     type?: string;
     platform?: string;
     description?: string;
+    userEmail?: string;
   };
 }
 
@@ -81,17 +82,39 @@ export async function getPaystackLedgerForEmail(
   options?: { wallet?: PaystackWalletDetails | null },
 ): Promise<AccountLedger> {
   const normalizedEmail = email.trim().toLowerCase();
-  const [transactionResponse, transferResponse] = await Promise.all([
-    paystackRequest<PaystackTransaction[]>("/transaction?perPage=100&page=1"),
-    paystackRequest<PaystackTransfer[]>("/transfer?perPage=100&page=1"),
-  ]);
 
-  const deposits: LedgerTransaction[] = transactionResponse.data
+  // Query multiple pages so users with older or less recent deposits still
+  // have accurate wallet balances reflected on dashboard.
+  const txPages = [1, 2, 3, 4, 5];
+  const transactionResponses = await Promise.all(
+    txPages.map((page) =>
+      paystackRequest<PaystackTransaction[]>(
+        `/transaction?perPage=100&page=${page}`,
+      ).catch(() => ({ status: true, message: "", data: [] })),
+    ),
+  );
+
+  const transferResponse = await paystackRequest<PaystackTransfer[]>(
+    "/transfer?perPage=100&page=1",
+  );
+
+  const allTransactions = transactionResponses.flatMap((res) => res.data || []);
+
+  const deposits: LedgerTransaction[] = allTransactions
     .filter(
-      (transaction) =>
-        transaction.customer?.email?.trim().toLowerCase() === normalizedEmail &&
-        transaction.metadata?.platform === "rilstack" &&
-        transaction.metadata?.type === "deposit",
+      (transaction) => {
+        const customerEmail = transaction.customer?.email?.trim().toLowerCase();
+        const metadataEmail = transaction.metadata?.userEmail?.trim().toLowerCase();
+        const isUserTx =
+          customerEmail === normalizedEmail || metadataEmail === normalizedEmail;
+
+        const isDepositTx =
+          (transaction.metadata?.platform === "rilstack" &&
+            transaction.metadata?.type === "deposit") ||
+          transaction.reference?.startsWith("RIL_");
+
+        return isUserTx && isDepositTx;
+      },
     )
     .map((transaction) => ({
       id: String(transaction.id),

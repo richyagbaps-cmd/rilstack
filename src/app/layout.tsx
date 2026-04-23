@@ -58,16 +58,6 @@ export default function RootLayout({
     }
   }, []);
 
-  // Auto-logout on tab/window close
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handleUnload = () => {
-      signOut({ redirect: false });
-    };
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
-  }, []);
-
   React.useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 900);
     return () => clearTimeout(timer);
