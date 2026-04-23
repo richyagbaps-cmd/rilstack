@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, Suspense } from "react";
 import DashboardTopBar from "@/components/DashboardTopBar";
 import DashboardTabBar from "@/components/DashboardTabBar";
@@ -151,6 +151,7 @@ function Ring({ percent }: { percent: number }) {
 function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [data, setData] = useState<DashboardData>(DEFAULT_DASHBOARD_DATA);
   const [loading, setLoading] = useState(false);
   const [privacyMode, setPrivacyMode] = useState(true);
@@ -183,6 +184,58 @@ function DashboardContent() {
       void loadWallet();
     }
   }, [status]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    const reference =
+      searchParams.get("reference") ||
+      searchParams.get("trxref") ||
+      searchParams.get("trxRef");
+    const statusParam = searchParams.get("status");
+
+    if (!reference) return;
+
+    const processedKey = `rilstack_verified_${reference}`;
+    if (typeof window !== "undefined" && sessionStorage.getItem(processedKey)) {
+      return;
+    }
+
+    const verifyDeposit = async () => {
+      try {
+        const res = await fetch("/api/payment/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reference }),
+        });
+
+        const payload = await res.json();
+        if (!res.ok || !payload?.success) {
+          if (statusParam && statusParam !== "success") {
+            setWalletError("Deposit was not completed.");
+          }
+          return;
+        }
+
+        sessionStorage.setItem(processedKey, "1");
+        const verifiedAmount = Number(payload?.amount || 0);
+
+        if (verifiedAmount > 0) {
+          setWalletBalance((current) => current + verifiedAmount);
+          setWalletAvailable((current) => current + verifiedAmount);
+        }
+
+        setWalletMessage(`Deposit of ${money(verifiedAmount)} confirmed.`);
+        await loadWallet();
+        router.replace("/dashboard");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unable to verify deposit.";
+        setWalletError(message);
+      }
+    };
+
+    void verifyDeposit();
+  }, [router, searchParams, status]);
 
   const loadWallet = async () => {
     if (!session?.user?.email) return;
