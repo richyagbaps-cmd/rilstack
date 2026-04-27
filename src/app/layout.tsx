@@ -13,6 +13,7 @@ import TopBarNavigation from "@/components/TopBarNavigation";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import SplashScreen from "@/components/SplashScreen";
 import { useSession, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import React from "react";
 import "../styles/globals.css";
 
@@ -47,6 +48,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isDashboardRoute = pathname?.startsWith("/dashboard");
+
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [showSplash, setShowSplash] = React.useState(true);
 
@@ -102,7 +106,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#0B1120" />
         <meta name="msapplication-TileImage" content="/icons/rilstack-logo.png" />
       </head>
-      <body className="">
+      <body className={isDashboardRoute ? "theme-dashboard" : "theme-home-aligned"}>
         {showSplash ? <SplashScreen /> : null}
         {/* ThemeToggle removed: app is always light mode */}
         <PrivacyProvider>
