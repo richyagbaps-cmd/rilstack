@@ -97,6 +97,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Withdrawal error:", error);
+
+    const rawMessage = String(error?.message || "");
+    if (/balance is not enough to fulfil this request|insufficient balance/i.test(rawMessage)) {
+      return NextResponse.json(
+        { error: "Insufficient wallet balance for this withdrawal." },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(
       { error: error.message || "Withdrawal processing failed." },
       { status: 500 },

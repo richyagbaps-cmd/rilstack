@@ -355,6 +355,10 @@ function DashboardContent() {
       setWalletError("Minimum withdrawal amount is ₦100.");
       return;
     }
+    if (amount > walletAvailable) {
+      setWalletError("Insufficient wallet balance for this withdrawal.");
+      return;
+    }
     // Save bank details for next time
     localStorage.setItem("rilstack_bank", JSON.stringify({
       bankName: withdrawBankName,
@@ -387,7 +391,10 @@ function DashboardContent() {
       await loadWallet();
       router.replace("/dashboard");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unable to process withdrawal.";
+      const rawMessage = err instanceof Error ? err.message : "Unable to process withdrawal.";
+      const message = /balance is not enough to fulfil this request|insufficient balance/i.test(rawMessage)
+        ? "Insufficient wallet balance for this withdrawal."
+        : rawMessage;
       setWalletError(message);
     } finally {
       setWalletActionLoading(null);
