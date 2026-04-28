@@ -1,9 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function GoogleLogo() {
   return (
@@ -28,8 +28,9 @@ function GoogleLogo() {
   );
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const { status } = useSession();
+  const searchParams = useSearchParams();
   const [identifier, setIdentifier] = useState(""); // email or phone
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -42,6 +43,23 @@ export default function LoginPage() {
       router.replace("/dashboard");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    const oauthError = searchParams.get("error");
+    if (!oauthError) {
+      return;
+    }
+
+    const oauthErrorMap: Record<string, string> = {
+      OAuthAccountNotLinked: "This email is already linked to another login method.",
+      OAuthCallback: "Google sign-in callback failed. Please try again.",
+      OAuthSignin: "Unable to start Google sign-in. Please try again.",
+      AccessDenied:
+        "Google blocked access for this account. Ensure your OAuth app is published or this email is added as a test user.",
+    };
+
+    setError(oauthErrorMap[oauthError] || "Google sign-in failed. Please try again.");
+  }, [searchParams]);
 
   if (status === "loading" || status === "authenticated") {
     return (
@@ -152,14 +170,13 @@ export default function LoginPage() {
             className="w-full border border-[#e0e6f7] bg-white text-[#23263a] font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#f5f5f5] transition shadow-sm focus:outline-none"
             aria-label="Sign in with Google"
             onClick={async () => {
-              await signIn("google", { callbackUrl: "/dashboard" });
+              await signIn("google", { callbackUrl: "/dashboard", redirect: true });
             }}
           >
             <GoogleLogo />
             <span>Sign in with Google</span>
           </button>
         </div>
-        {/* ...existing code... (Google sign in remains) */}
         <div className="w-full flex flex-col items-center mt-4 text-xs text-[#4A5B6E]">
           <div className="flex gap-2">
             <Link href="/privacy" className="hover:underline">
@@ -173,5 +190,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#181A20] to-[#23263a]">
+        <p className="text-white text-sm">Loading...</p>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
