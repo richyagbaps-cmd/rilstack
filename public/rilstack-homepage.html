@@ -124,6 +124,22 @@ nav.scrolled {
   transition: color 0.3s;
 }
 .nav-links a:hover { color: var(--white); }
+.nav-login {
+  border: 1.5px solid rgba(108,53,255,0.55);
+  color: var(--white) !important;
+  padding: 9px 22px;
+  border-radius: 100px;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  transition: all 0.3s !important;
+  background: transparent;
+}
+.nav-login:hover {
+  background: rgba(108,53,255,0.15);
+  border-color: var(--violet);
+  transform: translateY(-2px);
+  color: var(--white) !important;
+}
 .nav-cta {
   background: linear-gradient(135deg, var(--violet), var(--emerald));
   color: var(--navy) !important;
@@ -991,7 +1007,8 @@ footer {
     <li><a href="#how">How It Works</a></li>
     <li><a href="#founder">About</a></li>
     <li><a href="#security">Security</a></li>
-    <li><a href="#cta" class="nav-cta">Get Started</a></li>
+    <li><a href="/login" class="nav-login">Login</a></li>
+    <li><a href="/signup" class="nav-cta">Get Started</a></li>
   </ul>
 </nav>
 
@@ -1007,13 +1024,13 @@ footer {
     </h1>
     <p class="hero-sub">Budget smarter. Save harder. Invest bolder. Rilstack is the one financial platform built for every Nigerian's ambition.</p>
     <div class="hero-actions">
-      <a href="#cta" class="btn-primary">
+      <a href="/login" class="btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started Free
+        Login
       </a>
-      <a href="#how" class="btn-ghost">
+      <a href="/signup" class="btn-ghost">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8" fill="currentColor"/></svg>
-        See How It Works
+        Get Started
       </a>
     </div>
   </div>
