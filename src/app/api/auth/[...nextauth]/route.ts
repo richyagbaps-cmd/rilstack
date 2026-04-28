@@ -9,7 +9,13 @@ import {
   upsertGoogleUser,
 } from "@/lib/user-store";
 
+const normalizedNextAuthUrl = process.env.NEXTAUTH_URL?.replace(/\/+$/, "");
+if (normalizedNextAuthUrl) {
+  process.env.NEXTAUTH_URL = normalizedNextAuthUrl;
+}
+
 const handler = NextAuth({
+  trustHost: true,
   session: {
     strategy: "jwt",
   },
