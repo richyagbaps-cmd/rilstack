@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildWithdrawalReference, paystackRequest } from "@/lib/paystack";
+import { getPaystackLedgerForEmail } from "@/lib/account-ledger";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,18 @@ export async function POST(request: NextRequest) {
     if (!userEmail) {
       return NextResponse.json(
         { error: "User email is required." },
+        { status: 400 },
+      );
+    }
+
+    // Enforce withdrawal limits from the user's wallet ledger before hitting Paystack.
+    const ledger = await getPaystackLedgerForEmail(userEmail);
+    const availableBalance = Number(ledger?.summary?.availableBalance || 0);
+    if (amount > availableBalance) {
+      return NextResponse.json(
+        {
+          error: `Insufficient wallet balance for this withdrawal. Available balance is ₦${availableBalance.toLocaleString()}.`,
+        },
         { status: 400 },
       );
     }
