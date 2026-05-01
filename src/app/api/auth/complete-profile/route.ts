@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import {
   findStoredUserByEmail,
   hashPin,
+  upsertGoogleUser,
   updateUserKyc,
 } from "@/lib/user-store";
 
@@ -65,7 +66,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existing = await findStoredUserByEmail(session.user.email);
+    let existing = await findStoredUserByEmail(session.user.email);
+    if (!existing) {
+      const googleId = String((session.user as any).id || "").trim();
+      if (googleId) {
+        existing = await upsertGoogleUser({
+          name: session.user.name || name || "",
+          email: session.user.email,
+          googleId,
+        });
+      }
+    }
     if (!existing) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

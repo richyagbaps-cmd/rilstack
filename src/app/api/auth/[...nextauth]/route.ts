@@ -105,7 +105,12 @@ const handler = NextAuth({
           }
         } catch (error) {
           console.error("Google sign-in provisioning failed", error);
-          return "/login?error=OAuthProvisioning";
+          // Keep OAuth sign-in successful, but force onboarding until SeaTable user is saved.
+          (user as any).id = account.providerAccountId;
+          (user as any).kycLevel = 0;
+          (user as any).profileComplete = false;
+          (user as any).dashboardAccessGranted = false;
+          return true;
         }
       }
 
@@ -116,7 +121,8 @@ const handler = NextAuth({
         token.id = user.id;
         token.kycLevel = (user as any).kycLevel ?? 0;
         token.profileComplete = (user as any).profileComplete ?? true;
-        token.dashboardAccessGranted = (user as any).dashboardAccessGranted ?? true;
+        token.dashboardAccessGranted =
+          (user as any).dashboardAccessGranted ?? ((user as any).profileComplete ?? true);
       }
 
       if (trigger === "update" && token.email) {
@@ -136,7 +142,7 @@ const handler = NextAuth({
         (session.user as any).id = token.id;
         (session.user as any).kycLevel = token.kycLevel ?? 0;
         (session.user as any).profileComplete = token.profileComplete ?? true;
-        (session.user as any).dashboardAccessGranted = token.dashboardAccessGranted ?? true;
+        (session.user as any).dashboardAccessGranted = token.dashboardAccessGranted ?? false;
       }
       return session;
     },
