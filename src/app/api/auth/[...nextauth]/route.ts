@@ -27,6 +27,13 @@ const providers = [
         GoogleProvider({
           clientId: googleClientId,
           clientSecret: googleClientSecret,
+          authorization: {
+            params: {
+              access_type: "online",
+              prompt: "select_account",
+              scope: "openid email profile",
+            },
+          },
         }),
       ]
     : []),
