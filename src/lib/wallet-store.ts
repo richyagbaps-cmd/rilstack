@@ -22,6 +22,24 @@
 import { TABLES, query, insertRow, updateRow } from "@/lib/seatable";
 
 // ---------------------------------------------------------------------------
+// Per-user write queue — serialises concurrent creditWallet / debitWallet
+// calls within a single serverless instance so reads and writes don't race.
+// ---------------------------------------------------------------------------
+const _walletLocks = new Map<string, Promise<void>>();
+
+function withWalletLock<T>(userId: string, fn: () => Promise<T>): Promise<T> {
+  const prev = _walletLocks.get(userId) ?? Promise.resolve();
+  let resolve!: () => void;
+  const next = new Promise<void>((r) => { resolve = r; });
+  _walletLocks.set(userId, next);
+  return prev.then(fn).finally(() => {
+    resolve();
+    // Clean up stale entries so the map doesn't grow forever
+    if (_walletLocks.get(userId) === next) _walletLocks.delete(userId);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -161,36 +179,39 @@ export async function creditWallet(
   reference: string,
   metadata?: Record<string, unknown>,
 ): Promise<STWallet> {
-  const alreadyProcessed = await isReferenceProcessed(reference);
-  if (alreadyProcessed) {
-    // Idempotent — return current wallet without double-crediting
-    return wallet;
-  }
+  return withWalletLock(wallet.User_ID, async () => {
+    const alreadyProcessed = await isReferenceProcessed(reference);
+    if (alreadyProcessed) return wallet;
 
-  const balanceBefore = Number(wallet.Balance ?? 0);
-  const balanceAfter = balanceBefore + amountKobo;
-  const now = new Date().toISOString();
+    // Re-fetch live balance to avoid stale-read race condition
+    const live = await getWalletByUserId(wallet.User_ID);
+    const current = live ?? wallet;
 
-  // Record the transaction first
-  await insertRow(TABLES.WALLET_TRANSACTIONS, {
-    Wallet_Id: wallet._id,
-    User_Id: wallet.User_ID,
-    Type: "deposit",
-    Amount: amountKobo,
-    Balance_Before: balanceBefore,
-    Balance_After: balanceAfter,
-    Reference: reference,
-    Metadata: JSON.stringify(metadata ?? {}),
-    Created_At: now,
+    const balanceBefore = Number(current.Balance ?? 0);
+    const balanceAfter = balanceBefore + amountKobo;
+    const now = new Date().toISOString();
+
+    // Record the transaction first
+    await insertRow(TABLES.WALLET_TRANSACTIONS, {
+      Wallet_Id: current._id,
+      User_Id: current.User_ID,
+      Type: "deposit",
+      Amount: amountKobo,
+      Balance_Before: balanceBefore,
+      Balance_After: balanceAfter,
+      Reference: reference,
+      Metadata: JSON.stringify(metadata ?? {}),
+      Created_At: now,
+    });
+
+    // Update wallet balance
+    await updateRow(TABLES.WALLETS, current._id, {
+      Balance: balanceAfter,
+      Updated_At: now,
+    });
+
+    return { ...current, Balance: balanceAfter, Updated_At: now };
   });
-
-  // Update wallet balance
-  await updateRow(TABLES.WALLETS, wallet._id, {
-    Balance: balanceAfter,
-    Updated_At: now,
-  });
-
-  return { ...wallet, Balance: balanceAfter, Updated_At: now };
 }
 
 /**
@@ -204,39 +225,43 @@ export async function debitWallet(
   type: "withdrawal" | "fee" = "withdrawal",
   metadata?: Record<string, unknown>,
 ): Promise<STWallet> {
-  const alreadyProcessed = await isReferenceProcessed(reference);
-  if (alreadyProcessed) {
-    return wallet;
-  }
+  return withWalletLock(wallet.User_ID, async () => {
+    const alreadyProcessed = await isReferenceProcessed(reference);
+    if (alreadyProcessed) return wallet;
 
-  const balanceBefore = Number(wallet.Balance ?? 0);
-  if (amountKobo > balanceBefore) {
-    throw new Error(
-      `Insufficient wallet balance. Available: ₦${(balanceBefore / 100).toLocaleString("en-NG")}.`,
-    );
-  }
+    // Re-fetch live balance to avoid stale-read race condition
+    const live = await getWalletByUserId(wallet.User_ID);
+    const current = live ?? wallet;
 
-  const balanceAfter = balanceBefore - amountKobo;
-  const now = new Date().toISOString();
+    const balanceBefore = Number(current.Balance ?? 0);
+    if (amountKobo > balanceBefore) {
+      throw new Error(
+        `Insufficient wallet balance. Available: ₦${(balanceBefore / 100).toLocaleString("en-NG")}.`,
+      );
+    }
 
-  await insertRow(TABLES.WALLET_TRANSACTIONS, {
-    Wallet_Id: wallet._id,
-    User_Id: wallet.User_ID,
-    Type: type,
-    Amount: amountKobo,
-    Balance_Before: balanceBefore,
-    Balance_After: balanceAfter,
-    Reference: reference,
-    Metadata: JSON.stringify(metadata ?? {}),
-    Created_At: now,
+    const balanceAfter = balanceBefore - amountKobo;
+    const now = new Date().toISOString();
+
+    await insertRow(TABLES.WALLET_TRANSACTIONS, {
+      Wallet_Id: current._id,
+      User_Id: current.User_ID,
+      Type: type,
+      Amount: amountKobo,
+      Balance_Before: balanceBefore,
+      Balance_After: balanceAfter,
+      Reference: reference,
+      Metadata: JSON.stringify(metadata ?? {}),
+      Created_At: now,
+    });
+
+    await updateRow(TABLES.WALLETS, current._id, {
+      Balance: balanceAfter,
+      Updated_At: now,
+    });
+
+    return { ...current, Balance: balanceAfter, Updated_At: now };
   });
-
-  await updateRow(TABLES.WALLETS, wallet._id, {
-    Balance: balanceAfter,
-    Updated_At: now,
-  });
-
-  return { ...wallet, Balance: balanceAfter, Updated_At: now };
 }
 
 /**

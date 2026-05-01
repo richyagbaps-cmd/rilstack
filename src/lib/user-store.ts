@@ -244,12 +244,30 @@ export async function listStoredUsers() {
   return rows.map(mapSeaTableUser);
 }
 
+// ---------------------------------------------------------------------------
+// Per-email signup lock — prevents duplicate user rows if two signup requests
+// race for the same email (e.g., double-tap or network retry).
+// ---------------------------------------------------------------------------
+const _signupLocks = new Map<string, Promise<void>>();
+
+function withSignupLock<T>(email: string, fn: () => Promise<T>): Promise<T> {
+  const prev = _signupLocks.get(email) ?? Promise.resolve();
+  let resolve!: () => void;
+  const next = new Promise<void>((r) => { resolve = r; });
+  _signupLocks.set(email, next);
+  return prev.then(fn).finally(() => {
+    resolve();
+    if (_signupLocks.get(email) === next) _signupLocks.delete(email);
+  });
+}
+
 export async function createStoredUser(input: CreateStoredUserInput) {
   const normalizedEmail = normalizeEmail(input.email);
-  const existing = await findStoredUserByEmail(normalizedEmail);
-  if (existing) {
-    throw new Error("An account with this email already exists.");
-  }
+  return withSignupLock(normalizedEmail, async () => {
+    const existing = await findStoredUserByEmail(normalizedEmail);
+    if (existing) {
+      throw new Error("An account with this email already exists.");
+    }
 
   const now = new Date().toISOString();
   const mergedKycData: KycData = {
@@ -287,10 +305,11 @@ export async function createStoredUser(input: CreateStoredUserInput) {
     ...buildUserUpdates(user),
   });
 
-  return {
-    ...user,
-    rowId: String((row as { _id?: string })._id || user.id),
-  };
+    return {
+      ...user,
+      rowId: String((row as { _id?: string })._id || user.id),
+    };
+  });
 }
 
 export async function upsertGoogleUser(input: {
