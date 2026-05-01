@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { ensurePaystackWalletForEmail, paystackRequest } from "@/lib/paystack";
 import { upsertWallet, getWalletByUserId } from "@/lib/wallet-store";
-import { findStoredUserByEmail } from "@/lib/user-store";
+import { ensureStoredUserForGoogleSession, findStoredUserByEmail } from "@/lib/user-store";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,14 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.trim().toLowerCase();
 
     // Fetch user record to get ID and name
-    const user = await findStoredUserByEmail(normalizedEmail);
+    const user =
+      (await findStoredUserByEmail(normalizedEmail)) ||
+      (await ensureStoredUserForGoogleSession({
+        email: normalizedEmail,
+        name: session?.user?.name,
+        id: (session?.user as any)?.id,
+      }));
+
     if (!user) {
       return NextResponse.json(
         { error: "User not found." },

@@ -415,3 +415,24 @@ export async function findStoredUserById(id: string) {
   const row = await getUserById(id);
   return row ? mapSeaTableUser(row) : null;
 }
+
+export async function ensureStoredUserForGoogleSession(sessionUser: {
+  email?: string | null;
+  name?: string | null;
+  id?: string | number | null;
+}) {
+  const email = normalizeEmail(sessionUser.email || "");
+  if (!email) return null;
+
+  const existing = await findStoredUserByEmail(email);
+  if (existing) return existing;
+
+  const fallbackGoogleId = `google:${email}`;
+  const googleId = String(sessionUser.id || fallbackGoogleId).trim() || fallbackGoogleId;
+
+  return upsertGoogleUser({
+    name: sessionUser.name || "",
+    email,
+    googleId,
+  });
+}

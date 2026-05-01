@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
+import { ensureStoredUserForGoogleSession, findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
 import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
@@ -10,7 +10,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await findStoredUserByEmail(session.user.email);
+    const user =
+      (await findStoredUserByEmail(session.user.email)) ||
+      (await ensureStoredUserForGoogleSession({
+        email: session.user.email,
+        name: session.user.name,
+        id: (session.user as any).id,
+      }));
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

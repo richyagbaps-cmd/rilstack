@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
+import { ensureStoredUserForGoogleSession, findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
 
 function toResponseProfile(user: Awaited<ReturnType<typeof findStoredUserByEmail>>) {
   if (!user) return null;
@@ -30,7 +30,14 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await findStoredUserByEmail(session.user.email);
+    const user =
+      (await findStoredUserByEmail(session.user.email)) ||
+      (await ensureStoredUserForGoogleSession({
+        email: session.user.email,
+        name: session.user.name,
+        id: (session.user as any).id,
+      }));
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

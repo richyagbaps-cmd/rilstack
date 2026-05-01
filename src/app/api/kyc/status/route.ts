@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { findStoredUserByEmail } from "@/lib/user-store";
+import { ensureStoredUserForGoogleSession, findStoredUserByEmail } from "@/lib/user-store";
 
 export async function GET() {
   try {
@@ -9,7 +9,14 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await findStoredUserByEmail(session.user.email);
+    const user =
+      (await findStoredUserByEmail(session.user.email)) ||
+      (await ensureStoredUserForGoogleSession({
+        email: session.user.email,
+        name: session.user.name,
+        id: (session.user as any).id,
+      }));
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
