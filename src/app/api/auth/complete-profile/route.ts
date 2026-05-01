@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
       kycData: {
         ...existing.kycData,
         emailVerified: true,
+        googleOnboardingSkipped: false,
         detailsComplete: true,
         lga: String(lga).trim(),
         idType: String(idType).trim(),

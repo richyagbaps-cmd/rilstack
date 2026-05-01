@@ -18,6 +18,7 @@ export interface KycData {
   bvnVerified: boolean;
   ninVerified: boolean;
   identityVerified: boolean;
+  googleOnboardingSkipped?: boolean;
   dojahReferenceId?: string;
   detailsComplete: boolean;
   lga?: string;
@@ -116,6 +117,7 @@ function defaultKycData(): KycData {
     bvnVerified: false,
     ninVerified: false,
     identityVerified: false,
+    googleOnboardingSkipped: false,
     detailsComplete: false,
   };
 }
@@ -215,6 +217,14 @@ export function isStoredUserProfileComplete(user: StoredUser) {
       user.termsAccepted &&
       user.kycData.detailsComplete,
   );
+}
+
+export function hasStoredUserDashboardAccess(user: StoredUser) {
+  if (user.authProvider !== "google") {
+    return true;
+  }
+
+  return isStoredUserProfileComplete(user) || Boolean(user.kycData.googleOnboardingSkipped);
 }
 
 export async function findStoredUserByEmail(email: string) {

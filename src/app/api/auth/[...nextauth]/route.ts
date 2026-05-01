@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import {
   findStoredUserByEmail,
   findStoredUserByIdentifier,
+  hasStoredUserDashboardAccess,
   verifyPassword,
   isStoredUserProfileComplete,
   upsertGoogleUser,
@@ -69,6 +70,7 @@ const providers = [
         email: user.email,
         kycLevel: user.kycLevel ?? 0,
         profileComplete: isStoredUserProfileComplete(user),
+        dashboardAccessGranted: true,
       };
     },
   }),
@@ -96,17 +98,14 @@ const handler = NextAuth({
           (user as any).id = storedUser.id;
           (user as any).kycLevel = storedUser.kycLevel ?? 0;
           (user as any).profileComplete = isStoredUserProfileComplete(storedUser);
+          (user as any).dashboardAccessGranted = hasStoredUserDashboardAccess(storedUser);
 
-          if (!isStoredUserProfileComplete(storedUser)) {
+          if (!hasStoredUserDashboardAccess(storedUser)) {
             return "/signup?provider=google";
           }
         } catch (error) {
           console.error("Google sign-in provisioning failed", error);
-          // Fallback: allow OAuth session even when SeaTable provisioning is temporarily unavailable.
-          (user as any).id = account.providerAccountId;
-          (user as any).kycLevel = 0;
-          (user as any).profileComplete = true;
-          return true;
+          return "/login?error=OAuthProvisioning";
         }
       }
 
@@ -117,6 +116,7 @@ const handler = NextAuth({
         token.id = user.id;
         token.kycLevel = (user as any).kycLevel ?? 0;
         token.profileComplete = (user as any).profileComplete ?? true;
+        token.dashboardAccessGranted = (user as any).dashboardAccessGranted ?? true;
       }
 
       if (trigger === "update" && token.email) {
@@ -125,6 +125,7 @@ const handler = NextAuth({
           token.kycLevel = storedUser.kycLevel ?? 0;
           token.id = storedUser.id;
           token.profileComplete = isStoredUserProfileComplete(storedUser);
+          token.dashboardAccessGranted = hasStoredUserDashboardAccess(storedUser);
         }
       }
 
@@ -135,6 +136,7 @@ const handler = NextAuth({
         (session.user as any).id = token.id;
         (session.user as any).kycLevel = token.kycLevel ?? 0;
         (session.user as any).profileComplete = token.profileComplete ?? true;
+        (session.user as any).dashboardAccessGranted = token.dashboardAccessGranted ?? true;
       }
       return session;
     },

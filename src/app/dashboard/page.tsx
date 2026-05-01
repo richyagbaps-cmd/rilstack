@@ -176,15 +176,20 @@ function DashboardContent() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/");
+      return;
     }
-  }, [status, router]);
+
+    if (status === "authenticated" && !(session?.user as any)?.dashboardAccessGranted) {
+      router.replace("/signup?provider=google");
+    }
+  }, [status, router, session]);
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && (session?.user as any)?.dashboardAccessGranted) {
       loadDashboardData();
       void loadWallet();
     }
-  }, [status]);
+  }, [status, session]);
 
   useEffect(() => {
     if (status !== "authenticated") return;

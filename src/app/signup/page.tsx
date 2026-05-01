@@ -43,6 +43,7 @@ function SignupPageInner() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [skipLoading, setSkipLoading] = useState(false);
 
   useEffect(() => {
     const storedDraft = window.sessionStorage.getItem("rilstack-signup-draft");
@@ -73,7 +74,7 @@ function SignupPageInner() {
       return;
     }
 
-    if ((session?.user as any)?.profileComplete) {
+    if ((session?.user as any)?.dashboardAccessGranted) {
       router.replace("/dashboard");
       return;
     }
@@ -217,6 +218,28 @@ function SignupPageInner() {
     }
   };
 
+  const handleSkipGoogleKyc = async () => {
+    setError("");
+    setSkipLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/skip-profile", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Unable to skip KYC right now.");
+      }
+
+      await update();
+      router.replace("/dashboard");
+    } catch (e: any) {
+      setError(e.message || "Unable to skip KYC right now.");
+    } finally {
+      setSkipLoading(false);
+    }
+  };
+
   const steps = ["choose", "details", "kyc", "pin", "terms", "done"];
   const stepIndex =
     step === "choose"
@@ -332,15 +355,41 @@ function SignupPageInner() {
         )}
 
         {step === "kyc" && (
-          <KYCForm
-            mode={signupMethod === "google" ? "google" : "email"}
-            initialData={kycDraft || undefined}
-            onSaveDraft={setKYCDraft}
-            onComplete={handleKYCComplete}
-          />
+          <>
+            <KYCForm
+              mode={signupMethod === "google" ? "google" : "email"}
+              initialData={kycDraft || undefined}
+              onSaveDraft={setKYCDraft}
+              onComplete={handleKYCComplete}
+            />
+            {signupMethod === "google" && (
+              <button
+                className="mt-3 w-full rounded border border-slate-300 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={handleSkipGoogleKyc}
+                disabled={skipLoading}
+                type="button"
+              >
+                {skipLoading ? "Skipping..." : "Skip for now and continue without DVA"}
+              </button>
+            )}
+          </>
         )}
 
-        {step === "pin" && <PinSetup onComplete={handlePinComplete} />}
+        {step === "pin" && (
+          <>
+            <PinSetup onComplete={handlePinComplete} />
+            {signupMethod === "google" && (
+              <button
+                className="mt-3 w-full rounded border border-slate-300 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={handleSkipGoogleKyc}
+                disabled={skipLoading}
+                type="button"
+              >
+                {skipLoading ? "Skipping..." : "Skip for now and continue without DVA"}
+              </button>
+            )}
+          </>
+        )}
 
         {step === "terms" && (
           <div>
@@ -367,6 +416,16 @@ function SignupPageInner() {
             >
               Finish Registration
             </button>
+            {signupMethod === "google" && (
+              <button
+                className="mt-3 w-full rounded border border-slate-300 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={handleSkipGoogleKyc}
+                disabled={skipLoading}
+                type="button"
+              >
+                {skipLoading ? "Skipping..." : "Skip for now and continue without DVA"}
+              </button>
+            )}
           </div>
         )}
 

@@ -29,7 +29,7 @@ function GoogleLogo() {
 }
 
 function LoginContent() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const [identifier, setIdentifier] = useState(""); // email or phone
   const [password, setPassword] = useState("");
@@ -40,9 +40,13 @@ function LoginContent() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.replace(
+        (session?.user as any)?.dashboardAccessGranted
+          ? "/dashboard"
+          : "/signup?provider=google",
+      );
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   useEffect(() => {
     const oauthError = searchParams.get("error");
@@ -54,6 +58,7 @@ function LoginContent() {
       OAuthAccountNotLinked: "This email is already linked to another login method.",
       OAuthCallback: "Google sign-in callback failed. Please try again.",
       OAuthSignin: "Unable to start Google sign-in. Please try again.",
+      OAuthProvisioning: "We could not provision your Google account in SeaTable. Please try again.",
       AccessDenied:
         "Google blocked access for this account. Ensure your OAuth app is published or this email is added as a test user.",
     };

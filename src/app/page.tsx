@@ -5,14 +5,18 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Home() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.replace(
+        (session?.user as any)?.dashboardAccessGranted
+          ? "/dashboard"
+          : "/signup?provider=google",
+      );
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   if (status === "loading" || status === "authenticated") {
     return (
