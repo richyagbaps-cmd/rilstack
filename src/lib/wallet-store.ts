@@ -28,9 +28,9 @@ import { TABLES, query, insertRow, updateRow } from "@/lib/seatable";
 export interface STWallet {
   _id: string;
   User_ID: string;
-  Paystack_Customer_Code: string;
+  Paystack_Customer_code: string;
   Paystack_DVA_Code?: string;
-  Account_Number: string;
+  Account_Number: string | number;
   Account_Name: string;
   Bank_Name: string;
   Balance: number; // in kobo
@@ -40,8 +40,8 @@ export interface STWallet {
 
 export interface STWalletTransaction {
   _id: string;
-  Wallet_ID: string;
-  User_ID: string;
+  Wallet_Id: string;
+  User_Id: string;
   Type: "deposit" | "withdrawal" | "fee";
   Amount: number; // in kobo
   Balance_Before: number;
@@ -53,10 +53,10 @@ export interface STWalletTransaction {
 
 export interface STPayoutRecipient {
   _id: string;
-  User_ID: string;
+  User_Id: string;
   Recipient_Code: string;
   Bank_Name: string;
-  Account_Number: string;
+  Account_Number: string | number;
   Account_Name: string;
   Bank_Code: string;
   Is_Active: boolean;
@@ -83,7 +83,7 @@ export async function getWalletByCustomerCode(customerCode: string): Promise<STW
   if (!customerCode) return null;
   try {
     const rows = await query<STWallet>(
-      `SELECT * FROM ${TABLES.WALLETS} WHERE Paystack_Customer_Code='${customerCode.replace(/'/g, "''")}' LIMIT 1`,
+      `SELECT * FROM ${TABLES.WALLETS} WHERE Paystack_Customer_code='${customerCode.replace(/'/g, "''")}' LIMIT 1`,
     );
     return rows[0] ?? null;
   } catch {
@@ -109,7 +109,7 @@ export async function upsertWallet(data: {
 
   if (existing) {
     await updateRow(TABLES.WALLETS, existing._id, {
-      Paystack_Customer_Code: data.paystackCustomerCode,
+      Paystack_Customer_code: data.paystackCustomerCode,
       ...(data.paystackDvaCode ? { Paystack_DVA_Code: data.paystackDvaCode } : {}),
       Account_Number: data.accountNumber,
       Account_Name: data.accountName,
@@ -121,7 +121,7 @@ export async function upsertWallet(data: {
 
   await insertRow(TABLES.WALLETS, {
     User_ID: data.userId,
-    Paystack_Customer_Code: data.paystackCustomerCode,
+    Paystack_Customer_code: data.paystackCustomerCode,
     Paystack_DVA_Code: data.paystackDvaCode ?? "",
     Account_Number: data.accountNumber,
     Account_Name: data.accountName,
@@ -173,8 +173,8 @@ export async function creditWallet(
 
   // Record the transaction first
   await insertRow(TABLES.WALLET_TRANSACTIONS, {
-    Wallet_ID: wallet._id,
-    User_ID: wallet.User_ID,
+    Wallet_Id: wallet._id,
+    User_Id: wallet.User_ID,
     Type: "deposit",
     Amount: amountKobo,
     Balance_Before: balanceBefore,
@@ -220,8 +220,8 @@ export async function debitWallet(
   const now = new Date().toISOString();
 
   await insertRow(TABLES.WALLET_TRANSACTIONS, {
-    Wallet_ID: wallet._id,
-    User_ID: wallet.User_ID,
+    Wallet_Id: wallet._id,
+    User_Id: wallet.User_ID,
     Type: type,
     Amount: amountKobo,
     Balance_Before: balanceBefore,
@@ -249,7 +249,7 @@ export async function getWalletTransactions(
   if (!userId) return [];
   try {
     return await query<STWalletTransaction>(
-      `SELECT * FROM ${TABLES.WALLET_TRANSACTIONS} WHERE User_ID='${userId.replace(/'/g, "''")}' ORDER BY Created_At DESC LIMIT ${limit}`,
+      `SELECT * FROM ${TABLES.WALLET_TRANSACTIONS} WHERE User_Id='${userId.replace(/'/g, "''")}' ORDER BY Created_At DESC LIMIT ${limit}`,
     );
   } catch {
     return [];
@@ -267,7 +267,7 @@ export async function getPayoutRecipient(
   if (!userId || !accountNumber) return null;
   try {
     const rows = await query<STPayoutRecipient>(
-      `SELECT * FROM ${TABLES.PAYOUT_RECIPIENTS} WHERE User_ID='${userId.replace(/'/g, "''")}' AND Account_Number='${accountNumber.replace(/'/g, "''")}' AND Is_Active=1 LIMIT 1`,
+      `SELECT * FROM ${TABLES.PAYOUT_RECIPIENTS} WHERE User_Id='${userId.replace(/'/g, "''")}' AND Account_Number='${accountNumber.replace(/'/g, "''")}' AND Is_Active=1 LIMIT 1`,
     );
     return rows[0] ?? null;
   } catch {
@@ -285,7 +285,7 @@ export async function savePayoutRecipient(data: {
 }): Promise<void> {
   const now = new Date().toISOString();
   await insertRow(TABLES.PAYOUT_RECIPIENTS, {
-    User_ID: data.userId,
+    User_Id: data.userId,
     Recipient_Code: data.recipientCode,
     Bank_Name: data.bankName,
     Account_Number: data.accountNumber,

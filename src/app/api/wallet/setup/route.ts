@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const existingWallet = await getWalletByUserId(user.id);
     if (
       existingWallet?.Account_Number &&
-      existingWallet?.Paystack_Customer_Code
+      existingWallet?.Paystack_Customer_code
     ) {
       return NextResponse.json({
         success: true,
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
           accountName: existingWallet.Account_Name,
           bankName: existingWallet.Bank_Name,
           balance: existingWallet.Balance / 100,
-          customerCode: existingWallet.Paystack_Customer_Code,
+          customerCode: existingWallet.Paystack_Customer_code,
         },
         message: "Wallet already set up.",
       });
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         accountName: wallet.Account_Name,
         bankName: wallet.Bank_Name,
         balance: wallet.Balance / 100,
-        customerCode: wallet.Paystack_Customer_Code,
+        customerCode: wallet.Paystack_Customer_code,
       },
       message: "Wallet initialized successfully.",
     });
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
       accountName: wallet.Account_Name,
       bankName: wallet.Bank_Name,
       balance: wallet.Balance / 100,
-      customerCode: wallet.Paystack_Customer_Code,
+      customerCode: wallet.Paystack_Customer_code,
     });
   } catch (error: unknown) {
     const message =
