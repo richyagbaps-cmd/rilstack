@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
       amount,
       account: {
         number: accountNumber,
-        name: accountData.data.account_name,
+        name: recipientName,
       },
       status: transfer.data.status,
       message:
