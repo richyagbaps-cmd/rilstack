@@ -153,6 +153,16 @@ function deriveKycStatus(kycData: KycData): "Pending" | "Verified" | "Rejected" 
     : "Pending";
 }
 
+function parseSeatableBool(value: unknown): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+  }
+  return false;
+}
+
 function mapSeaTableUser(row: STUser): StoredUser {
   const kycData = parseKycData(row.KYC_Data_JSON);
   const kycLevel = Number(row.KYC_Level ?? calculateKycLevel(kycData));
@@ -176,7 +186,7 @@ function mapSeaTableUser(row: STUser): StoredUser {
     gender: row.Gender,
     kycLevel,
     kycStatus: row.KYC_Status || deriveKycStatus(kycData),
-    termsAccepted: Boolean(row.Terms_Accepted),
+    termsAccepted: parseSeatableBool(row.Terms_Accepted),
     authProvider: row.Auth_Provider || (row.Google_ID ? "google" : "credentials"),
     kycData,
     createdAt,
@@ -193,8 +203,8 @@ function buildUserUpdates(user: StoredUser): Record<string, unknown> {
     PIN_Hash: user.pinHash || "",
     Google_ID: user.googleId || "",
     KYC_Status: user.kycStatus,
-    Privacy_Mode_Enabled: false,
-    Is_Active: true,
+    Privacy_Mode_Enabled: "false",
+    Is_Active: "true",
     Date_Of_Birth: user.dateOfBirth || "",
     NIN: user.nin || "",
     BVN: user.bvn || "",
@@ -203,7 +213,7 @@ function buildUserUpdates(user: StoredUser): Record<string, unknown> {
     Gender: user.gender || "",
     KYC_Level: user.kycLevel,
     KYC_Data_JSON: JSON.stringify(user.kycData),
-    Terms_Accepted: user.termsAccepted,
+    Terms_Accepted: user.termsAccepted ? "true" : "false",
     Auth_Provider: user.authProvider,
     Created_At: user.createdAt,
     Updated_At: user.updatedAt,
