@@ -126,7 +126,7 @@ export async function getPaystackLedgerForEmail(
               availableBalance: balanceNaira,
               currency: "NGN",
               walletId: dbWallet._id,
-              accountNumber: dbWallet.Account_Number,
+              accountNumber: String(dbWallet.Account_Number ?? ""),
               accountName: dbWallet.Account_Name,
               bankName: dbWallet.Bank_Name,
             },
