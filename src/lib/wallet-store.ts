@@ -68,17 +68,27 @@ export interface STPayoutRecipient {
 // ---------------------------------------------------------------------------
 
 export async function getWalletByUserId(userId: string): Promise<STWallet | null> {
-  const rows = await query<STWallet>(
-    `SELECT * FROM ${TABLES.WALLETS} WHERE User_ID='${userId.replace(/'/g, "''")}' LIMIT 1`,
-  );
-  return rows[0] ?? null;
+  if (!userId) return null;
+  try {
+    const rows = await query<STWallet>(
+      `SELECT * FROM ${TABLES.WALLETS} WHERE User_ID='${userId.replace(/'/g, "''")}' LIMIT 1`,
+    );
+    return rows[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getWalletByCustomerCode(customerCode: string): Promise<STWallet | null> {
-  const rows = await query<STWallet>(
-    `SELECT * FROM ${TABLES.WALLETS} WHERE Paystack_Customer_Code='${customerCode.replace(/'/g, "''")}' LIMIT 1`,
-  );
-  return rows[0] ?? null;
+  if (!customerCode) return null;
+  try {
+    const rows = await query<STWallet>(
+      `SELECT * FROM ${TABLES.WALLETS} WHERE Paystack_Customer_Code='${customerCode.replace(/'/g, "''")}' LIMIT 1`,
+    );
+    return rows[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -93,6 +103,7 @@ export async function upsertWallet(data: {
   accountName: string;
   bankName: string;
 }): Promise<STWallet> {
+  if (!data.userId) throw new Error("userId is required for upsertWallet");
   const existing = await getWalletByUserId(data.userId);
   const now = new Date().toISOString();
 
@@ -129,10 +140,15 @@ export async function upsertWallet(data: {
  * Check if a reference has already been processed (idempotency guard).
  */
 export async function isReferenceProcessed(reference: string): Promise<boolean> {
-  const rows = await query<STWalletTransaction>(
-    `SELECT _id FROM ${TABLES.WALLET_TRANSACTIONS} WHERE Reference='${reference.replace(/'/g, "''")}' LIMIT 1`,
-  );
-  return rows.length > 0;
+  if (!reference) return false;
+  try {
+    const rows = await query<STWalletTransaction>(
+      `SELECT _id FROM ${TABLES.WALLET_TRANSACTIONS} WHERE Reference='${reference.replace(/'/g, "''")}' LIMIT 1`,
+    );
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -230,9 +246,14 @@ export async function getWalletTransactions(
   userId: string,
   limit = 50,
 ): Promise<STWalletTransaction[]> {
-  return query<STWalletTransaction>(
-    `SELECT * FROM ${TABLES.WALLET_TRANSACTIONS} WHERE User_ID='${userId.replace(/'/g, "''")}' ORDER BY Created_At DESC LIMIT ${limit}`,
-  );
+  if (!userId) return [];
+  try {
+    return await query<STWalletTransaction>(
+      `SELECT * FROM ${TABLES.WALLET_TRANSACTIONS} WHERE User_ID='${userId.replace(/'/g, "''")}' ORDER BY Created_At DESC LIMIT ${limit}`,
+    );
+  } catch {
+    return [];
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -243,10 +264,15 @@ export async function getPayoutRecipient(
   userId: string,
   accountNumber: string,
 ): Promise<STPayoutRecipient | null> {
-  const rows = await query<STPayoutRecipient>(
-    `SELECT * FROM ${TABLES.PAYOUT_RECIPIENTS} WHERE User_ID='${userId.replace(/'/g, "''")}' AND Account_Number='${accountNumber.replace(/'/g, "''")}' AND Is_Active=1 LIMIT 1`,
-  );
-  return rows[0] ?? null;
+  if (!userId || !accountNumber) return null;
+  try {
+    const rows = await query<STPayoutRecipient>(
+      `SELECT * FROM ${TABLES.PAYOUT_RECIPIENTS} WHERE User_ID='${userId.replace(/'/g, "''")}' AND Account_Number='${accountNumber.replace(/'/g, "''")}' AND Is_Active=1 LIMIT 1`,
+    );
+    return rows[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function savePayoutRecipient(data: {

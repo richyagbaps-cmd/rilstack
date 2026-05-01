@@ -76,11 +76,11 @@ export interface CreateStoredUserInput {
 }
 
 function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+  return (email ?? "").trim().toLowerCase();
 }
 
 function normalizePhone(phone: string) {
-  return phone.replace(/\s+/g, "").trim();
+  return (phone ?? "").replace(/\s+/g, "").trim();
 }
 
 function hashSecret(secret: string) {
