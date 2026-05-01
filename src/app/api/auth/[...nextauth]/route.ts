@@ -99,10 +99,6 @@ const handler = NextAuth({
           (user as any).kycLevel = storedUser.kycLevel ?? 0;
           (user as any).profileComplete = isStoredUserProfileComplete(storedUser);
           (user as any).dashboardAccessGranted = hasStoredUserDashboardAccess(storedUser);
-
-          if (!hasStoredUserDashboardAccess(storedUser)) {
-            return "/signup?provider=google";
-          }
         } catch (error) {
           console.error("Google sign-in provisioning failed", error);
           // Keep OAuth sign-in successful, but force onboarding until SeaTable user is saved.
