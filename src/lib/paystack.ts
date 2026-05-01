@@ -21,6 +21,10 @@ interface PaystackDedicatedAccount {
   id: number;
   account_name?: string;
   account_number?: string;
+  bank?: {
+    name?: string;
+    slug?: string;
+  };
   assigned_bank?: {
     name?: string;
     slug?: string;
@@ -133,11 +137,16 @@ function mapDedicatedAccountToWallet(
 ): PaystackWalletDetails | null {
   if (!account.account_number) return null;
 
+  const bankName =
+    account.bank?.name ||
+    account.assigned_bank?.name ||
+    "Paystack Bank";
+
   return {
     walletId: String(account.id),
     accountName: account.account_name || "RILSTACK Wallet",
     accountNumber: account.account_number,
-    bankName: account.assigned_bank?.name || "Paystack Bank",
+    bankName,
   };
 }
 
@@ -158,7 +167,7 @@ async function getCustomerByEmail(email: string) {
 
 export async function ensurePaystackWalletForEmail(
   email: string,
-  profile?: { name?: string; phone?: string },
+  profile?: { name?: string; phone?: string; bvn?: string },
 ): Promise<PaystackWalletDetails> {
   const normalizedEmail = email.trim().toLowerCase();
   const { firstName, lastName } = splitName(profile?.name);
@@ -180,6 +189,24 @@ export async function ensurePaystackWalletForEmail(
     );
 
     customer = createdCustomer.data;
+  }
+
+  // If BVN provided, validate customer identity with Paystack (required for live DVA).
+  if (profile?.bvn) {
+    try {
+      await paystackRequest(`/customer/${customer.customer_code}/identification`, {
+        method: "POST",
+        body: JSON.stringify({
+          country: "NG",
+          type: "bvn",
+          value: profile.bvn,
+          first_name: firstName,
+          last_name: lastName,
+        }),
+      });
+    } catch {
+      // Already validated or validation in progress — not fatal
+    }
   }
 
   const dedicatedAccounts = await paystackRequest<PaystackDedicatedAccount[]>(

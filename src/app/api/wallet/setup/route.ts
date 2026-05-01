@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     const dva = await ensurePaystackWalletForEmail(normalizedEmail, {
       name: user.name,
       phone: user.phone,
+      bvn: user.bvn,
     });
 
     // Fetch full customer record to get the customer_code

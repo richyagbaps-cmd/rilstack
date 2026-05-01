@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
           const dva = await ensurePaystackWalletForEmail(email, {
             name: user.name,
             phone: user.phone,
+            bvn: user.bvn,
           });
           // Fetch customer code
           const { paystackRequest } = await import("@/lib/paystack");
