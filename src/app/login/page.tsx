@@ -2,7 +2,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function GoogleLogo() {
