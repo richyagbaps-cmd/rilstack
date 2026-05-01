@@ -68,7 +68,7 @@ function LoginContent() {
 
   if (status === "loading" || status === "authenticated") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#181A20] to-[#23263a]">
+      <div className="min-h-screen flex items-center justify-center bg-[#060B1E]">
         <p className="text-white text-sm">Loading...</p>
       </div>
     );
@@ -97,8 +97,8 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#181A20] to-[#23263a] px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#060B1E] px-4">
+      <div className="w-full max-w-md bg-[#0D1530] border border-[#1e2d50] rounded-2xl shadow-2xl p-8 flex flex-col items-center">
         <Image
           src="/icons/rilstack-logo.png"
           alt="rilstack logo"
@@ -107,15 +107,15 @@ function LoginContent() {
           className="mb-4 h-[88px] w-[88px] object-contain"
           priority
         />
-        <h1 className="text-2xl font-bold text-[#2c3e5f] mb-2">
+        <h1 className="text-2xl font-bold text-white mb-2">
           Sign in to continue
         </h1>
-        <p className="text-[#4A5B6E] mb-6">Jump right in</p>
+        <p className="text-[#8fafd4] mb-6">Jump right in</p>
         <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
           <input
             type="text"
             placeholder="Email or Phone"
-            className="w-full px-4 py-3 rounded-lg border border-[#e0e6f7] focus:outline-none focus:ring-2 focus:ring-[#00e096] text-[#2c3e5f]"
+            className="w-full px-4 py-3 rounded-lg border border-[#1e2d50] bg-[#0a1020] focus:outline-none focus:ring-2 focus:ring-[#00e096] text-white placeholder-[#4a6080]"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             required
@@ -125,7 +125,7 @@ function LoginContent() {
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               aria-label="Password"
-              className="w-full px-4 py-3 rounded-lg border border-[#e0e6f7] focus:outline-none focus:ring-2 focus:ring-[#00e096] text-[#2c3e5f] pr-12"
+              className="w-full px-4 py-3 rounded-lg border border-[#1e2d50] bg-[#0a1020] focus:outline-none focus:ring-2 focus:ring-[#00e096] text-white placeholder-[#4a6080] pr-12"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -133,14 +133,14 @@ function LoginContent() {
             <button
               type="button"
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A5B6E] hover:text-[#2c3e5f] focus:outline-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8fafd4] hover:text-white focus:outline-none"
               tabIndex={0}
               onClick={() => setShowPassword((v) => !v)}
             >
               {showPassword ? (
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M12 5c-7 0-9 7-9 7s2 7 9 7 9-7 9-7-2-7-9-7z" stroke="#2c3e5f" strokeWidth="2"/><circle cx="12" cy="12" r="3" stroke="#2c3e5f" strokeWidth="2"/></svg>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M12 5c-7 0-9 7-9 7s2 7 9 7 9-7 9-7-2-7-9-7z" stroke="#8fafd4" strokeWidth="2"/><circle cx="12" cy="12" r="3" stroke="#8fafd4" strokeWidth="2"/></svg>
               ) : (
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M17.94 17.94A10.97 10.97 0 0112 19c-7 0-9-7-9-7a17.92 17.92 0 014.06-5.94M9.53 9.53A3.5 3.5 0 0112 8.5c1.93 0 3.5 1.57 3.5 3.5 0 .47-.09.92-.26 1.33" stroke="#2c3e5f" strokeWidth="2"/><path d="M1 1l22 22" stroke="#2c3e5f" strokeWidth="2"/></svg>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M17.94 17.94A10.97 10.97 0 0112 19c-7 0-9-7-9-7a17.92 17.92 0 014.06-5.94M9.53 9.53A3.5 3.5 0 0112 8.5c1.93 0 3.5 1.57 3.5 3.5 0 .47-.09.92-.26 1.33" stroke="#8fafd4" strokeWidth="2"/><path d="M1 1l22 22" stroke="#8fafd4" strokeWidth="2"/></svg>
               )}
             </button>
           </div>
@@ -167,12 +167,12 @@ function LoginContent() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
           {error && (
-            <div className="text-red-600 text-center mt-2">{error}</div>
+            <div className="text-red-400 text-center mt-2">{error}</div>
           )}
         </form>
         <div className="flex flex-col gap-2 w-full mt-6">
           <button
-            className="w-full border border-[#e0e6f7] bg-white text-[#23263a] font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#f5f5f5] transition shadow-sm focus:outline-none"
+            className="w-full border border-[#1e2d50] bg-[#0a1020] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#111a30] transition shadow-sm focus:outline-none"
             aria-label="Sign in with Google"
             onClick={async () => {
               await signIn("google", { callbackUrl: "/dashboard", redirect: true });
@@ -182,7 +182,7 @@ function LoginContent() {
             <span>Sign in with Google</span>
           </button>
         </div>
-        <div className="w-full flex flex-col items-center mt-4 text-xs text-[#4A5B6E]">
+        <div className="w-full flex flex-col items-center mt-4 text-xs text-[#8fafd4]">
           <div className="flex gap-2">
             <Link href="/privacy" className="hover:underline">
               Privacy
@@ -201,7 +201,7 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#181A20] to-[#23263a]">
+      <div className="min-h-screen flex items-center justify-center bg-[#060B1E]">
         <p className="text-white text-sm">Loading...</p>
       </div>
     }>
