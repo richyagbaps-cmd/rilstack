@@ -2,7 +2,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function GoogleLogo() {
@@ -169,8 +169,8 @@ function LoginContent() {
           <button
             className="w-full border border-[#e0e6f7] bg-white text-[#23263a] font-semibold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#f5f5f5] transition shadow-sm focus:outline-none"
             aria-label="Sign in with Google"
-            onClick={async () => {
-              await signIn("google", { callbackUrl: "/dashboard", redirect: true });
+            onClick={() => {
+              window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent("/dashboard")}`;
             }}
           >
             <GoogleLogo />
