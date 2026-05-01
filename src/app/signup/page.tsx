@@ -74,19 +74,9 @@ function SignupPageInner() {
       return;
     }
 
-    if ((session?.user as any)?.dashboardAccessGranted) {
+    if (session) {
       router.replace("/dashboard");
       return;
-    }
-
-    if (provider === "google") {
-      setSignupMethod("google");
-      setKYCDraft((prev) => ({
-        ...prev,
-        fullName: prev?.fullName || session?.user?.name || "",
-        email: prev?.email || session?.user?.email || "",
-      }));
-      setStep("kyc");
     }
   }, [router, searchParams, session, status]);
 

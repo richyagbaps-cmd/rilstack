@@ -179,13 +179,10 @@ function DashboardContent() {
       return;
     }
 
-    if (status === "authenticated" && !(session?.user as any)?.dashboardAccessGranted) {
-      router.replace("/signup?provider=google");
-    }
   }, [status, router, session]);
 
   useEffect(() => {
-    if (status === "authenticated" && (session?.user as any)?.dashboardAccessGranted) {
+    if (status === "authenticated") {
       loadDashboardData();
       void loadWallet();
     }

@@ -98,14 +98,13 @@ const handler = NextAuth({
           (user as any).id = storedUser.id;
           (user as any).kycLevel = storedUser.kycLevel ?? 0;
           (user as any).profileComplete = isStoredUserProfileComplete(storedUser);
-          (user as any).dashboardAccessGranted = hasStoredUserDashboardAccess(storedUser);
+          (user as any).dashboardAccessGranted = true;
         } catch (error) {
           console.error("Google sign-in provisioning failed", error);
-          // Keep OAuth sign-in successful, but force onboarding until SeaTable user is saved.
           (user as any).id = account.providerAccountId;
           (user as any).kycLevel = 0;
           (user as any).profileComplete = false;
-          (user as any).dashboardAccessGranted = false;
+          (user as any).dashboardAccessGranted = true;
           return true;
         }
       }
@@ -117,8 +116,7 @@ const handler = NextAuth({
         token.id = user.id;
         token.kycLevel = (user as any).kycLevel ?? 0;
         token.profileComplete = (user as any).profileComplete ?? true;
-        token.dashboardAccessGranted =
-          (user as any).dashboardAccessGranted ?? ((user as any).profileComplete ?? true);
+        token.dashboardAccessGranted = true;
       }
 
       if (trigger === "update" && token.email) {
@@ -127,7 +125,7 @@ const handler = NextAuth({
           token.kycLevel = storedUser.kycLevel ?? 0;
           token.id = storedUser.id;
           token.profileComplete = isStoredUserProfileComplete(storedUser);
-          token.dashboardAccessGranted = hasStoredUserDashboardAccess(storedUser);
+          token.dashboardAccessGranted = true;
         }
       }
 
@@ -138,7 +136,7 @@ const handler = NextAuth({
         (session.user as any).id = token.id;
         (session.user as any).kycLevel = token.kycLevel ?? 0;
         (session.user as any).profileComplete = token.profileComplete ?? true;
-        (session.user as any).dashboardAccessGranted = token.dashboardAccessGranted ?? false;
+        (session.user as any).dashboardAccessGranted = true;
       }
       return session;
     },
