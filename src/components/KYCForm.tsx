@@ -56,20 +56,6 @@ export default function KYCForm({
         { name: "address", label: "Home Address", required: true },
         { name: "state", label: "State", required: true },
         { name: "lga", label: "LGA", required: true },
-        { name: "idType", label: "Means of ID Type", required: true },
-        { name: "idNumber", label: "ID Number", required: true },
-        {
-          name: "selfie",
-          label: "Upload Selfie",
-          type: "file",
-          required: true,
-        },
-        {
-          name: "idPhoto",
-          label: "Upload ID Photo",
-          type: "file",
-          required: true,
-        },
       ],
     },
     {
@@ -128,7 +114,8 @@ export default function KYCForm({
       }
     }
 
-    onComplete(form);
+    // NIN automatically becomes the ID — no separate ID type/number needed
+    onComplete({ ...form, idType: "nin", idNumber: form.nin });
   };
 
   return (
