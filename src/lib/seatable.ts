@@ -93,6 +93,9 @@ export const TABLES = {
   INVESTMENT_PRODUCTS: "Investment_Products",
   ADMIN_LOG:           "Admin_Log",
   SUPPORT_TICKETS:     "Support_Tickets",
+  WALLETS:             "Wallets",
+  WALLET_TRANSACTIONS: "Wallet_Transactions",
+  PAYOUT_RECIPIENTS:   "Payout_Recipients",
 } as const;
 
 let _token: string | null = null;

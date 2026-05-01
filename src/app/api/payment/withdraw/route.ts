@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildWithdrawalReference, paystackRequest } from "@/lib/paystack";
-import { getPaystackLedgerForEmail } from "@/lib/account-ledger";
+import { findStoredUserByEmail } from "@/lib/user-store";
+import {
+  getWalletByUserId,
+  debitWallet,
+  getPayoutRecipient,
+  savePayoutRecipient,
+} from "@/lib/wallet-store";
 
 export const dynamic = "force-dynamic";
 
@@ -46,26 +52,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Enforce withdrawal limits from the user's wallet ledger before hitting Paystack.
-    const ledger = await getPaystackLedgerForEmail(userEmail);
-    const availableBalance = Number(ledger?.summary?.availableBalance || 0);
+    const normalizedEmail = userEmail.trim().toLowerCase();
+
+    // Look up user and their wallet in the DB
+    const user = await findStoredUserByEmail(normalizedEmail);
+    if (!user) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
+    const wallet = await getWalletByUserId(user.id);
+    if (!wallet) {
+      return NextResponse.json(
+        { error: "Wallet not set up. Please complete your profile first." },
+        { status: 400 },
+      );
+    }
+
+    const availableBalance = Number(wallet.Balance ?? 0) / 100;
     if (amount > availableBalance) {
       return NextResponse.json(
         {
-          error: `Insufficient wallet balance for this withdrawal. Available balance is ₦${availableBalance.toLocaleString()}.`,
+          error: `Insufficient wallet balance. Available: ₦${availableBalance.toLocaleString("en-NG")}.`,
         },
         { status: 400 },
       );
     }
 
-    const accountData = await paystackRequest<{ account_name: string }>(
-      `/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
-      { method: "GET" },
-    );
+    // Reuse existing Paystack recipient if we've sent to this account before
+    let recipientCode: string;
+    const savedRecipient = await getPayoutRecipient(user.id, accountNumber);
 
-    const recipient = await paystackRequest<{ recipient_code: string }>(
-      "/transferrecipient",
-      {
+    if (savedRecipient) {
+      recipientCode = savedRecipient.Recipient_Code;
+    } else {
+      // Verify the account number is valid
+      await paystackRequest<{ account_name: string }>(
+        `/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+        { method: "GET" },
+      );
+
+      // Create a new Paystack transfer recipient
+      const recipientRes = await paystackRequest<{
+        recipient_code: string;
+        name: string;
+      }>("/transferrecipient", {
         method: "POST",
         body: JSON.stringify({
           type: "nuban",
@@ -74,7 +104,29 @@ export async function POST(request: NextRequest) {
           bank_code: bankCode,
           currency: "NGN",
         }),
-      },
+      });
+      recipientCode = recipientRes.data.recipient_code;
+
+      // Save for future withdrawals
+      await savePayoutRecipient({
+        userId: user.id,
+        recipientCode,
+        bankName: "",
+        accountNumber,
+        accountName: recipientName,
+        bankCode,
+      });
+    }
+
+    const reference = buildWithdrawalReference(normalizedEmail);
+
+    // Debit wallet BEFORE initiating transfer — prevents double-spend
+    await debitWallet(
+      wallet,
+      amount * 100,
+      reference,
+      "withdrawal",
+      { recipientCode, accountNumber, bankCode },
     );
 
     const transfer = await paystackRequest<{
@@ -86,9 +138,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         source: "balance",
         amount: amount * 100,
-        recipient: recipient.data.recipient_code,
-        reason: narration || `RILSTACK Withdrawal for ${userEmail}`,
-        reference: buildWithdrawalReference(userEmail),
+        recipient: recipientCode,
+        reason: narration || `RILSTACK Withdrawal`,
+        reference,
       }),
     });
 

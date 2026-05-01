@@ -52,6 +52,7 @@ type ModalState =
   | { type: "none" }
   | { type: "deposit_method" }
   | { type: "deposit_amount"; method: DepositMethod }
+  | { type: "deposit_dva"; accountNumber: string; accountName: string; bankName: string; amount: number }
   | { type: "withdraw" };
 
 type DashboardData = {
@@ -304,6 +305,12 @@ function DashboardContent() {
       const payload = await res.json();
       if (!res.ok || !payload?.success) {
         throw new Error(payload?.error || "Unable to start deposit.");
+      }
+      // Bank transfer: show the user their dedicated virtual account details.
+      if (payload.dva) {
+        const { accountNumber, accountName, bankName } = payload.dva as { accountNumber: string; accountName: string; bankName: string };
+        setModal({ type: "deposit_dva", accountNumber, accountName, bankName, amount });
+        return;
       }
       if (payload.paymentUrl) {
         window.location.href = payload.paymentUrl as string;
@@ -661,6 +668,45 @@ function DashboardContent() {
           </div>
         </section>
       </div>
+
+      {/* DVA bank transfer details modal */}
+      {modal.type === "deposit_dva" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setModal({ type: "none" })}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_16px_48px_rgba(0,0,0,0.18)]" onClick={(e) => e.stopPropagation()}>
+            <p className="mb-1 text-sm font-bold text-[#212529]">Transfer to Your Wallet</p>
+            <p className="mb-5 text-xs text-[#6C757D]">Send exactly <span className="font-semibold text-[#1A5F7A]">₦{modal.amount.toLocaleString("en-NG")}</span> to the account below. Your balance updates automatically once received.</p>
+            <div className="space-y-3 rounded-xl bg-[#F0F6FA] p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#6C757D]">Bank</span>
+                <span className="text-sm font-semibold text-[#212529]">{modal.bankName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#6C757D]">Account Number</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold tracking-widest text-[#1A5F7A]">{modal.accountNumber}</span>
+                  <button
+                    type="button"
+                    className="text-xs text-[#1A5F7A] underline"
+                    onClick={() => { navigator.clipboard.writeText(modal.accountNumber); setWalletMessage("Account number copied!"); }}
+                  >Copy</button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#6C757D]">Account Name</span>
+                <span className="text-sm font-semibold text-[#212529]">{modal.accountName}</span>
+              </div>
+            </div>
+            <p className="mt-4 text-[11px] text-[#6C757D]">This is your permanent Rilstack virtual account. You can always fund your wallet by transferring to this number.</p>
+            <button
+              type="button"
+              onClick={() => { setModal({ type: "none" }); loadWallet(); }}
+              className="mt-5 h-11 w-full rounded-xl bg-[#1A5F7A] text-sm font-semibold text-white"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Deposit method modal */}
       {modal.type === "deposit_method" && (

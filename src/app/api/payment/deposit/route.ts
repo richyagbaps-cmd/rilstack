@@ -43,12 +43,33 @@ export async function POST(request: NextRequest) {
 
     let wallet: Awaited<ReturnType<typeof ensurePaystackWalletForEmail>> | null = null;
 
-    // Wallet provisioning should not block deposits. If this fails, we still
-    // initialize the payment and complete metadata with the fields we have.
+    // Always provision/fetch the user's dedicated virtual account.
     try {
       wallet = await ensurePaystackWalletForEmail(userEmail);
     } catch (walletError) {
       console.warn("Wallet provisioning failed during deposit init:", walletError);
+    }
+
+    // For bank transfers, the user deposits directly to their permanent
+    // dedicated virtual account (DVA) — no payment link needed.
+    if (method === "transfer") {
+      if (!wallet) {
+        return NextResponse.json(
+          { error: "Unable to provision your virtual account. Please try again." },
+          { status: 500 },
+        );
+      }
+      return NextResponse.json({
+        success: true,
+        method: "transfer",
+        amount,
+        dva: {
+          accountNumber: wallet.accountNumber,
+          accountName: wallet.accountName,
+          bankName: wallet.bankName,
+        },
+        message: `Transfer ₦${amount.toLocaleString("en-NG")} to your wallet account below. Your balance will update automatically once received.`,
+      });
     }
 
     const reference = `RIL_${Date.now()}`;

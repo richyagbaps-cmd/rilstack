@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPaystackLedgerForEmail } from "@/lib/account-ledger";
 import { ensurePaystackWalletForEmail } from "@/lib/paystack";
+import { findStoredUserByEmail } from "@/lib/user-store";
+import { getWalletByUserId, upsertWallet } from "@/lib/wallet-store";
 
 export const dynamic = "force-dynamic";
 
@@ -18,20 +20,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let wallet: Awaited<ReturnType<typeof ensurePaystackWalletForEmail>> | null = null;
+    // Ensure the user has a wallet record — auto-provision if missing
     try {
-      wallet = await ensurePaystackWalletForEmail(email);
-    } catch (walletError) {
-      console.warn("Wallet provisioning failed while fetching account ledger:", walletError);
+      const user = await findStoredUserByEmail(email);
+      if (user) {
+        const existing = await getWalletByUserId(user.id);
+        if (!existing) {
+          const dva = await ensurePaystackWalletForEmail(email, {
+            name: user.name,
+            phone: user.phone,
+          });
+          // Fetch customer code
+          const { paystackRequest } = await import("@/lib/paystack");
+          const customerRes = await paystackRequest<{ customer_code: string }>(
+            `/customer/${encodeURIComponent(email)}`,
+          );
+          await upsertWallet({
+            userId: user.id,
+            paystackCustomerCode: customerRes.data.customer_code,
+            accountNumber: dva.accountNumber,
+            accountName: dva.accountName,
+            bankName: dva.bankName,
+          });
+        }
+      }
+    } catch (provErr) {
+      console.warn("Account: wallet auto-provision failed:", provErr);
     }
 
-    const ledger = await getPaystackLedgerForEmail(email, { wallet });
+    const ledger = await getPaystackLedgerForEmail(email);
     return NextResponse.json(ledger);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch account ledger.";
     console.error("Account ledger error:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to fetch account ledger." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

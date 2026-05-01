@@ -4,6 +4,11 @@ import {
   paystackRequest,
   type PaystackWalletDetails,
 } from "@/lib/paystack";
+import {
+  getWalletByUserId,
+  getWalletTransactions,
+} from "@/lib/wallet-store";
+import { findStoredUserByEmail } from "@/lib/user-store";
 
 interface PaystackTransaction {
   id: number;
@@ -83,6 +88,75 @@ export async function getPaystackLedgerForEmail(
 ): Promise<AccountLedger> {
   const normalizedEmail = email.trim().toLowerCase();
 
+  // --- Primary path: use DB wallet record (accurate, fast, no Paystack API calls) ---
+  try {
+    const user = await findStoredUserByEmail(normalizedEmail);
+    if (user) {
+      const dbWallet = await getWalletByUserId(user.id);
+      if (dbWallet) {
+        const dbTxs = await getWalletTransactions(user.id, 100);
+        const balanceNaira = Number(dbWallet.Balance ?? 0) / 100;
+
+        const transactions: LedgerTransaction[] = dbTxs.map((tx) => ({
+          id: tx._id,
+          reference: tx.Reference,
+          type: tx.Type === "deposit" ? "deposit" : "withdrawal",
+          amount: tx.Amount / 100,
+          method: "transfer",
+          date: tx.Created_At,
+          status: "success",
+          description:
+            tx.Type === "deposit" ? "Wallet deposit" : "Wallet withdrawal",
+        }));
+
+        const generatedAt = new Date().toISOString();
+        return {
+          summary: {
+            totalBalance: balanceNaira,
+            availableBalance: balanceNaira,
+            lockedBalance: 0,
+            generatedAt,
+          },
+          accounts: [
+            {
+              id: "1",
+              type: "checking",
+              name: "Primary Wallet",
+              balance: balanceNaira,
+              availableBalance: balanceNaira,
+              currency: "NGN",
+              walletId: dbWallet._id,
+              accountNumber: dbWallet.Account_Number,
+              accountName: dbWallet.Account_Name,
+              bankName: dbWallet.Bank_Name,
+            },
+            {
+              id: "2",
+              type: "savings",
+              name: "Savings Balance",
+              balance: 0,
+              availableBalance: 0,
+              currency: "NGN",
+            },
+            {
+              id: "3",
+              type: "investment",
+              name: "Investment Balance",
+              balance: 0,
+              availableBalance: 0,
+              currency: "NGN",
+            },
+          ],
+          transactions,
+        };
+      }
+    }
+  } catch (dbErr) {
+    console.warn("getPaystackLedgerForEmail: DB wallet lookup failed, falling back to Paystack API:", dbErr);
+  }
+
+  // --- Fallback path: poll Paystack API directly (used before wallet is set up) ---
+
   // Query multiple pages so users with older or less recent deposits still
   // have accurate wallet balances reflected on dashboard.
   const txPages = [1, 2, 3, 4, 5];
@@ -108,12 +182,10 @@ export async function getPaystackLedgerForEmail(
         const isUserTx =
           customerEmail === normalizedEmail || metadataEmail === normalizedEmail;
 
-        const isDepositTx =
-          (transaction.metadata?.platform === "rilstack" &&
-            transaction.metadata?.type === "deposit") ||
-          transaction.reference?.startsWith("RIL_");
-
-        return isUserTx && isDepositTx;
+        // Count any successful transaction belonging to this user as a deposit.
+        // The previous strict check (platform=rilstack + RIL_ prefix) was filtering
+        // out valid deposits that arrived via different flows.
+        return isUserTx && transaction.status === "success";
       },
     )
     .map((transaction) => ({
