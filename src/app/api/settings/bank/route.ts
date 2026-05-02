@@ -1,9 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { ensureStoredUserForGoogleSession, findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
+import {
+  createStoredUser,
+  ensureStoredUserForGoogleSession,
+  findStoredUserByEmail,
+  updateUserKyc,
+} from "@/lib/user-store";
+import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+async function resolveSessionUser(session: any) {
+  if (!session?.user?.email) return null;
+
+  const found =
+    (await findStoredUserByEmail(session.user.email)) ||
+    (await ensureStoredUserForGoogleSession({
+      email: session.user.email,
+      name: session.user.name,
+      id: (session.user as any).id,
+    }));
+
+  if (found) return found;
+
+  return createStoredUser({
+    name: String(session.user.name || "Rilstack User").trim(),
+    email: session.user.email,
+    password: randomUUID(),
+    phone: "",
+    termsAccepted: true,
+    authProvider: "credentials",
+    kycData: { emailVerified: true },
+  });
+}
 
 export async function GET() {
   try {
@@ -12,13 +42,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user =
-      (await findStoredUserByEmail(session.user.email)) ||
-      (await ensureStoredUserForGoogleSession({
-        email: session.user.email,
-        name: session.user.name,
-        id: (session.user as any).id,
-      }));
+    const user = await resolveSessionUser(session);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -67,13 +91,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const user =
-      (await findStoredUserByEmail(session.user.email)) ||
-      (await ensureStoredUserForGoogleSession({
-        email: session.user.email,
-        name: session.user.name,
-        id: (session.user as any).id,
-      }));
+    const user = await resolveSessionUser(session);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
