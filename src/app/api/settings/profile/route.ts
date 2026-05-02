@@ -92,6 +92,18 @@ export async function PATCH(request: NextRequest) {
       sourceOfFunds,
     } = body;
 
+    const existingUser =
+      (await findStoredUserByEmail(session.user.email)) ||
+      (await ensureStoredUserForGoogleSession({
+        email: session.user.email,
+        name: session.user.name,
+        id: (session.user as any).id,
+      }));
+
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     if (!fullName || !phone || !dateOfBirth || !gender || !stateOfOrigin || !address) {
       return NextResponse.json(
         { error: "Missing required profile fields" },

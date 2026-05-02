@@ -78,7 +78,14 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const user = await findStoredUserByEmail(session.user.email);
+    const user =
+      (await findStoredUserByEmail(session.user.email)) ||
+      (await ensureStoredUserForGoogleSession({
+        email: session.user.email,
+        name: session.user.name,
+        id: (session.user as any).id,
+      }));
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
