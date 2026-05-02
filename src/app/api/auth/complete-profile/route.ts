@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import {
+  ensureStoredUserForGoogleSession,
   findStoredUserByEmail,
   findStoredUserByIdentifier,
   hashPin,
@@ -53,7 +54,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existing = await findStoredUserByEmail(session.user.email);
+    const existing =
+      (await findStoredUserByEmail(session.user.email)) ||
+      (await ensureStoredUserForGoogleSession({
+        email: session.user.email,
+        name: session.user.name || "",
+        id: (session.user as any).id,
+      }));
 
     if (!existing) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
