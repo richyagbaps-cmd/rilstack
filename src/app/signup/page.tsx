@@ -32,7 +32,9 @@ function SignupPageInner() {
   const [step, setStep] = useState<SignupStep>("choose");
   const [signupMethod, setSignupMethod] = useState<"google" | "email" | null>(null);
   const [emailCredentials, setEmailCredentials] = useState({
-    name: "",
+    surname: "",
+    firstName: "",
+    middleName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -45,6 +47,16 @@ function SignupPageInner() {
   const [success, setSuccess] = useState("");
   const [skipLoading, setSkipLoading] = useState(false);
 
+  const composeFullName = (parts: {
+    surname?: string;
+    firstName?: string;
+    middleName?: string;
+  }) =>
+    [parts.surname, parts.firstName, parts.middleName]
+      .map((v) => String(v || "").trim())
+      .filter(Boolean)
+      .join(" ");
+
   useEffect(() => {
     const storedDraft = window.sessionStorage.getItem("rilstack-signup-draft");
     if (!storedDraft) {
@@ -52,14 +64,36 @@ function SignupPageInner() {
     }
 
     try {
-      const parsed = JSON.parse(storedDraft) as typeof emailCredentials;
-      setEmailCredentials(parsed);
+      const parsed = JSON.parse(storedDraft) as Partial<typeof emailCredentials> & {
+        name?: string;
+      };
+      const restored = {
+        surname: parsed.surname || "",
+        firstName: parsed.firstName || "",
+        middleName: parsed.middleName || "",
+        email: parsed.email || "",
+        password: parsed.password || "",
+        confirmPassword: parsed.confirmPassword || "",
+      };
+
+      // Backward compatibility for old drafts that stored a single `name`.
+      if ((!restored.surname || !restored.firstName) && parsed.name) {
+        const parts = parsed.name.trim().split(/\s+/);
+        restored.surname = restored.surname || parts[0] || "";
+        restored.firstName = restored.firstName || parts[1] || "";
+        restored.middleName = restored.middleName || parts.slice(2).join(" ");
+      }
+
+      setEmailCredentials(restored);
       setSignupMethod("email");
       setStep("kyc");
       setKYCDraft((prev) => ({
         ...prev,
-        fullName: prev?.fullName || parsed.name,
-        email: prev?.email || parsed.email,
+        surname: prev?.surname || restored.surname,
+        firstName: prev?.firstName || restored.firstName,
+        middleName: prev?.middleName || restored.middleName,
+        fullName: prev?.fullName || composeFullName(restored),
+        email: prev?.email || restored.email,
       }));
       window.sessionStorage.removeItem("rilstack-signup-draft");
     } catch {
@@ -84,8 +118,8 @@ function SignupPageInner() {
     e.preventDefault();
     setError("");
 
-    if (!emailCredentials.name || !emailCredentials.email || !emailCredentials.password) {
-      setError("Name, email, and password are required.");
+    if (!emailCredentials.surname || !emailCredentials.firstName || !emailCredentials.email || !emailCredentials.password) {
+      setError("Surname, first name, email, and password are required.");
       return;
     }
 
@@ -118,7 +152,10 @@ function SignupPageInner() {
     setSignupMethod("email");
     setKYCDraft((prev) => ({
       ...prev,
-      fullName: prev?.fullName || emailCredentials.name,
+      surname: prev?.surname || emailCredentials.surname,
+      firstName: prev?.firstName || emailCredentials.firstName,
+      middleName: prev?.middleName || emailCredentials.middleName,
+      fullName: prev?.fullName || composeFullName(emailCredentials),
       email: prev?.email || emailCredentials.email,
     }));
     setStep("kyc");
@@ -173,7 +210,10 @@ function SignupPageInner() {
     }
 
     const payload = {
-      name: kycData.fullName || emailCredentials.name,
+      surname: kycData.surname || emailCredentials.surname,
+      firstName: kycData.firstName || emailCredentials.firstName,
+      middleName: kycData.middleName || emailCredentials.middleName,
+      name: kycData.fullName || composeFullName(emailCredentials),
       email: kycData.email || emailCredentials.email || session?.user?.email,
       phone: kycData.phone,
       pin,
@@ -193,6 +233,8 @@ function SignupPageInner() {
       selfieName: kycData.selfie?.name,
       idPhotoName: kycData.idPhoto?.name,
     };
+
+    payload.name = payload.name || composeFullName(payload);
 
     try {
       if (signupMethod === "google") {
@@ -341,12 +383,31 @@ function SignupPageInner() {
             <input
               type="text"
               className="w-full border p-3 rounded"
-              placeholder="Full name"
-              value={emailCredentials.name}
+              placeholder="Surname"
+              value={emailCredentials.surname}
               onChange={(e) =>
-                setEmailCredentials((prev) => ({ ...prev, name: e.target.value }))
+                setEmailCredentials((prev) => ({ ...prev, surname: e.target.value }))
               }
               required
+            />
+            <input
+              type="text"
+              className="w-full border p-3 rounded"
+              placeholder="First name"
+              value={emailCredentials.firstName}
+              onChange={(e) =>
+                setEmailCredentials((prev) => ({ ...prev, firstName: e.target.value }))
+              }
+              required
+            />
+            <input
+              type="text"
+              className="w-full border p-3 rounded"
+              placeholder="Middle name (optional)"
+              value={emailCredentials.middleName}
+              onChange={(e) =>
+                setEmailCredentials((prev) => ({ ...prev, middleName: e.target.value }))
+              }
             />
             <input
               type="email"

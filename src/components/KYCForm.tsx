@@ -23,6 +23,12 @@ export default function KYCForm({
   const [form, setForm] = useState<Record<string, any>>(initialData || {});
   const [saving, setSaving] = useState(false);
 
+  const composeFullName = (data: Record<string, any>) =>
+    [data.surname, data.firstName, data.middleName]
+      .map((v) => String(v || "").trim())
+      .filter(Boolean)
+      .join(" ");
+
   const validatePhone = (phone: string) =>
     /^(080|081|070|090)\d{7,8}$/.test(phone);
   const validateNIN = (nin: string) => /^\d{11}$/.test(nin);
@@ -31,7 +37,9 @@ export default function KYCForm({
     {
       label: "Basic Info",
       fields: [
-        { name: "fullName", label: "Full Name", required: true },
+        { name: "surname", label: "Surname", required: true },
+        { name: "firstName", label: "First Name", required: true },
+        { name: "middleName", label: "Middle Name", required: false },
         { name: "dob", label: "Date of Birth", type: "date", required: true },
         { name: "gender", label: "Gender", required: true },
         {
@@ -115,7 +123,12 @@ export default function KYCForm({
     }
 
     // NIN automatically becomes the ID — no separate ID type/number needed
-    onComplete({ ...form, idType: "nin", idNumber: form.nin });
+    onComplete({
+      ...form,
+      fullName: composeFullName(form),
+      idType: "nin",
+      idNumber: form.nin,
+    });
   };
 
   return (

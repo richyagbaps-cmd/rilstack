@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createStoredUser, findStoredUserByEmail, findStoredUserByIdentifier } from "@/lib/user-store";
 
 interface RegisterRequest {
-  name: string;
+  name?: string;
+  surname?: string;
+  firstName?: string;
+  middleName?: string;
   email: string;
   password: string;
   phone: string;
@@ -28,6 +31,9 @@ export async function POST(request: NextRequest) {
     const body: RegisterRequest = await request.json();
     const {
       name,
+      surname,
+      firstName,
+      middleName,
       email,
       password,
       phone,
@@ -48,9 +54,15 @@ export async function POST(request: NextRequest) {
       kycData,
     } = body;
 
-    if (!name || !email || !password || !phone) {
+    const composedName = [surname, firstName, middleName]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+      .join(" ");
+    const resolvedName = String(name || composedName).trim();
+
+    if (!resolvedName || !email || !password || !phone) {
       return NextResponse.json(
-        { error: "Name, email, password, and phone are required." },
+        { error: "Surname/first name, email, password, and phone are required." },
         { status: 400 },
       );
     }
@@ -90,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await createStoredUser({
-      name,
+      name: resolvedName,
       email,
       password,
       phone,
