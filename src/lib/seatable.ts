@@ -319,6 +319,20 @@ export type STUser = {
   Auth_Provider?: "credentials" | "google";
   Created_At?: string;
   Updated_At?: string;
+  // Legacy columns (older SeaTable schema)
+  Email?: string;
+  Full_Name?: string;
+  Phone?: string;
+  Password?: string;
+  KYC_Status?: "Pending" | "Verified" | "Rejected";
+  Date_Of_Birth?: string;
+  BVN?: string;
+  NIN?: string;
+  Address?: string;
+  Occupation?: string;
+  Income_Range?: string;
+  Last_Login?: string;
+  Login_Count?: number;
 };
 
 /** KYC_Documents table row */
@@ -425,11 +439,25 @@ export const koboToNaira = (k: number) => k / 100;
 /** naira -> kobo */
 export const nairaToKobo = (n: number) => Math.round(n * 100);
 
+function isMissingColumnError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /no such column/i.test(message);
+}
+
 export async function getUserByEmail(email: string): Promise<STUser | null> {
-  const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE email='${email.replace(/'/g, "''")}' LIMIT 1`,
-  );
-  return rows[0] ?? null;
+  const safeEmail = email.replace(/'/g, "''");
+  try {
+    const rows = await query<STUser>(
+      `SELECT * FROM ${TABLES.USERS} WHERE email='${safeEmail}' LIMIT 1`,
+    );
+    return rows[0] ?? null;
+  } catch (err) {
+    if (!isMissingColumnError(err)) throw err;
+    const rows = await query<STUser>(
+      `SELECT * FROM ${TABLES.USERS} WHERE Email='${safeEmail}' LIMIT 1`,
+    );
+    return rows[0] ?? null;
+  }
 }
 
 export async function getUserById(userId: string): Promise<STUser | null> {
@@ -445,10 +473,19 @@ export async function getUserById(userId: string): Promise<STUser | null> {
 }
 
 export async function getUserByPhone(phone: string): Promise<STUser | null> {
-  const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE phone_number='${phone.replace(/'/g, "''")}' LIMIT 1`,
-  );
-  return rows[0] ?? null;
+  const safePhone = phone.replace(/'/g, "''");
+  try {
+    const rows = await query<STUser>(
+      `SELECT * FROM ${TABLES.USERS} WHERE phone_number='${safePhone}' LIMIT 1`,
+    );
+    return rows[0] ?? null;
+  } catch (err) {
+    if (!isMissingColumnError(err)) throw err;
+    const rows = await query<STUser>(
+      `SELECT * FROM ${TABLES.USERS} WHERE Phone='${safePhone}' LIMIT 1`,
+    );
+    return rows[0] ?? null;
+  }
 }
 
 export async function listUsers(): Promise<STUser[]> {
