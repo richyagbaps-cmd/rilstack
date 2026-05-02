@@ -2,9 +2,9 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import {
+  ensureStoredUserForGoogleSession,
   findStoredUserByEmail,
   findStoredUserByIdentifier,
-  hasStoredUserDashboardAccess,
   verifyPassword,
   isStoredUserProfileComplete,
   upsertGoogleUser,
@@ -117,6 +117,23 @@ const handler = NextAuth({
         token.kycLevel = (user as any).kycLevel ?? 0;
         token.profileComplete = (user as any).profileComplete ?? true;
         token.dashboardAccessGranted = true;
+      }
+
+      if (token.email) {
+        const storedUser =
+          (await findStoredUserByEmail(token.email as string)) ||
+          (await ensureStoredUserForGoogleSession({
+            email: token.email as string,
+            name: (token.name as string | null | undefined) ?? "",
+            id: (token.sub as string | null | undefined) ?? (token.id as string | null | undefined),
+          }));
+
+        if (storedUser) {
+          token.kycLevel = storedUser.kycLevel ?? 0;
+          token.id = storedUser.id;
+          token.profileComplete = isStoredUserProfileComplete(storedUser);
+          token.dashboardAccessGranted = true;
+        }
       }
 
       if (trigger === "update" && token.email) {
