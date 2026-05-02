@@ -1305,21 +1305,34 @@ export default function InvestmentsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Investments</h1>
-      <div className="flex gap-2 mb-6">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-lg font-semibold transition border-b-2 ${activeTab === tab.key ? "border-[#2c3e5f] text-[#2c3e5f] bg-white" : "border-transparent text-slate-600 bg-slate-100 hover:bg-white"}`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      <div className="bg-white rounded-xl shadow p-6 min-h-[350px]">
-        {TABS.find((tab) => tab.key === activeTab)?.component}
+    <div className="min-h-screen bg-[#f8f9fc] px-4 py-6">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-4 rounded-2xl border border-[#d8e2ef] bg-white p-6 shadow-[0_6px_20px_rgba(20,44,76,0.08)]">
+          <h1 className="text-3xl font-bold text-[#2c3e5f]">Investments</h1>
+          <p className="mt-1 text-sm text-[#4A5B6E]">
+            Browse auctions, bonds, and mutual funds, then track everything in one portfolio view.
+          </p>
+        </div>
+
+        <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                activeTab === tab.key
+                  ? "border-[#2c3e5f] bg-[#eaf2fa] text-[#2c3e5f] shadow"
+                  : "border-[#d8e2ef] bg-white text-[#4A5B6E] hover:border-[#2c3e5f]/40 hover:bg-[#f3f7fd]"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="rounded-2xl border border-[#d8e2ef] bg-white p-6 shadow-[0_6px_20px_rgba(20,44,76,0.08)] min-h-[420px]">
+          {TABS.find((tab) => tab.key === activeTab)?.component}
+        </div>
       </div>
     </div>
   );
