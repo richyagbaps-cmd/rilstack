@@ -549,169 +549,92 @@ export default function SettingsSection() {
   return (
     <div className="space-y-5 text-slate-800">
 
-      {/* 4.1.1 Profile & Personal Info */}
+      {/* 4.1.1 Profile & Personal Info — read-only */}
       <section className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-sm md:p-5">
-        <h3 className="mb-2 text-base font-bold text-slate-900 md:text-lg">Profile & Personal Info</h3>
-        <div className="flex flex-col gap-4 md:flex-row md:items-center">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-20 w-20 rounded-full border-2 border-[#1A5F7A] bg-slate-100 flex items-center justify-center overflow-hidden">
-              {profilePhotoUrl ? (
-                <Image src={profilePhotoUrl} alt="Profile preview" width={80} height={80} unoptimized className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-xs font-semibold text-slate-500">No Photo</span>
-              )}
-            </div>
-            <label className="cursor-pointer rounded bg-[#1A5F7A] px-3 py-1 text-xs font-semibold text-white hover:bg-[#174e62]">
-              {profilePhotoUrl ? "Change Photo" : "Add Photo"}
-              <input type="file" accept="image/*" onChange={onProfilePhotoChange} className="hidden" />
-            </label>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h3 className="text-base font-bold text-slate-900 md:text-lg">Profile & Personal Info</h3>
+          {savedProfile && (
+            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+              ✔ Verified
+            </span>
+          )}
+        </div>
+
+        {/* Contact-support notice */}
+        <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <span className="mt-0.5 text-lg">🔒</span>
+          <div>
+            <p className="text-[13px] font-semibold text-amber-800">Profile details are locked</p>
+            <p className="mt-0.5 text-[12px] text-amber-700 leading-relaxed">
+              For security, personal information can only be updated by our support team. Contact us with your request and a valid ID.
+            </p>
+            <a
+              href="/contact-support"
+              className="mt-2 inline-block rounded-xl bg-amber-500 px-4 py-2 text-[12px] font-bold text-white hover:bg-amber-600 transition"
+            >
+              Contact Support to Edit
+            </a>
           </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="grid flex-1 gap-3 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Surname</label>
-              <input type="text" {...register("surname", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">First Name</label>
-              <input type="text" {...register("firstName", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Middle Name(s)</label>
-              <input type="text" {...register("middleName")} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Email</label>
-              <input type="email" {...register("email", { required: true })} disabled className="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 outline-none" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Phone Number</label>
-              <input type="tel" {...register("phone", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Date of Birth</label>
-              <input type="date" {...register("dateOfBirth", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Gender</label>
-              <select {...register("gender", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100">
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">State of Origin</label>
-              <input type="text" {...register("stateOfOrigin", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">LGA</label>
-              <input type="text" {...register("lga", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Residential Address</label>
-              <input type="text" {...register("address", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">NIN</label>
-              <input type="text" {...register("nin", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
+        </div>
+
+        {isLoadingProfile ? (
+          <p className="text-sm text-slate-400">Loading profile…</p>
+        ) : savedProfile ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {(
+              [
+                ["Full Name", savedProfile.fullName],
+                ["Phone", savedProfile.phone],
+                ["Email", savedProfile.email],
+                ["Date of Birth", savedProfile.dateOfBirth],
+                ["Gender", savedProfile.gender === "M" ? "Male" : savedProfile.gender === "F" ? "Female" : savedProfile.gender],
+                ["State of Origin", savedProfile.stateOfOrigin],
+                ["LGA", savedProfile.lga],
+                ["Address", savedProfile.address],
+                ["NIN", savedProfile.nin ? savedProfile.nin.replace(/.(?=.{4})/g, "*") : "—"],
+                ["KYC ID", savedProfile.idType ? `${savedProfile.idType.toUpperCase()} ${savedProfile.idNumber || ""}`.trim() : "—"],
+                ["Occupation", savedProfile.occupation],
+                ["Income Range", savedProfile.incomeRange],
+                ["Source of Funds", savedProfile.sourceOfFunds],
+              ] as [string, string][]
+            ).map(([label, value]) => (
+              <div key={label} className={label === "Address" || label === "Source of Funds" ? "md:col-span-2" : ""}>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+                <p className="mt-0.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-[13px] text-slate-700 select-none">
+                  {value || "—"}
+                </p>
+              </div>
+            ))}
             {bvn && (
               <div className="md:col-span-2">
-                <label className="mb-1 block text-xs font-semibold text-slate-700">BVN</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={bvn.replace(/.(?=.{4})/g, "*")}
-                    readOnly
-                    className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 cursor-not-allowed select-none"
-                  />
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">BVN</p>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <p className="flex-1 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-[13px] text-slate-700 select-none">
+                    {bvn.replace(/.(?=.{4})/g, "*")}
+                  </p>
                   <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">Verified</span>
                 </div>
-                <p className="mt-1 text-xs text-slate-400">Your BVN is stored securely and used to set up your virtual account. It cannot be changed here.</p>
               </div>
             )}
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">KYC ID Type</label>
-              <select {...register("idType", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100">
-                <option value="nin">NIN</option>
-                <option value="bvn">BVN</option>
-                <option value="passport">International Passport</option>
-                <option value="drivers-license">Driver&apos;s License</option>
-                <option value="voters-card">Voter&apos;s Card</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">ID Number</label>
-              <input type="text" {...register("idNumber", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Occupation</label>
-              <input type="text" {...register("occupation", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Income Range</label>
-              <input type="text" {...register("incomeRange", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Source of Funds</label>
-              <input type="text" {...register("sourceOfFunds", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
-            </div>
-            <div className="mt-1 flex items-center gap-2 md:col-span-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#2E7D32] text-white text-xs font-semibold">✔️ Verified</span>
-              <button
-                type="button"
-                className="text-xs text-[#F4A261] underline ml-2 disabled:opacity-60"
-                disabled={actionLoading === "upload-docs"}
-                onClick={handleUploadMissingDocs}
-              >
-                {actionLoading === "upload-docs" ? "Uploading..." : "Upload missing docs"}
-              </button>
-            </div>
-            <div className="mt-1 flex gap-2 md:col-span-2">
-              <button
-                type="button"
-                className="text-xs text-[#1A5F7A] underline disabled:opacity-60"
-                disabled={actionLoading === "change-password"}
-                onClick={handleChangePassword}
-              >
-                {actionLoading === "change-password" ? "Changing..." : "Change Password"}
-              </button>
-              <button
-                type="button"
-                className="text-xs text-[#1A5F7A] underline disabled:opacity-60"
-                disabled={actionLoading === "change-pin"}
-                onClick={handleChangePin}
-              >
-                {actionLoading === "change-pin" ? "Changing..." : "Change PIN"}
-              </button>
-            </div>
-            {saveError && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{saveError}</div>
-            )}
-            {saveSuccess && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{saveSuccess}</div>
-            )}
-            {savedProfile && (
-              <div className="rounded-xl border border-[#d8e2ef] bg-[#f8fafc] px-4 py-3 text-xs text-slate-700">
-                <p className="font-semibold text-slate-900">Saved</p>
-                <p className="mt-1">Surname: {savedProfile.surname || "-"}</p>
-                <p>First Name: {savedProfile.firstName || "-"}</p>
-                <p>Middle Name(s): {savedProfile.middleName || "-"}</p>
-                <p>Name: {savedProfile.fullName || "-"}</p>
-                <p>Phone: {savedProfile.phone || "-"}</p>
-                <p>DOB: {savedProfile.dateOfBirth || "-"}</p>
-                <p>LGA: {savedProfile.lga || "-"}</p>
-                <p>NIN: {savedProfile.nin ? savedProfile.nin.replace(/.(?=.{4})/g, "*") : "-"}</p>
-                <p>ID: {savedProfile.idType?.toUpperCase() || "-"} {savedProfile.idNumber || ""}</p>
-                <p>Occupation: {savedProfile.occupation || "-"}</p>
-                <p>Income Range: {savedProfile.incomeRange || "-"}</p>
-                <p>Source of Funds: {savedProfile.sourceOfFunds || "-"}</p>
-                <p>Address: {savedProfile.address || "-"}</p>
-                {savedProfile.bvn && <p>BVN: {savedProfile.bvn.replace(/.(?=.{4})/g, "*")}</p>}
-              </div>
-            )}
-            <button type="submit" disabled={isLoadingProfile || isSavingProfile} className="rounded-xl bg-[#2c3e5f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1e2d46] disabled:cursor-not-allowed disabled:opacity-70">{isSavingProfile ? "Saving..." : "Save Settings"}</button>
-          </form>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400">No profile data found.</p>
+        )}
+
+        {/* Password & PIN — also via support */}
+        <div className="mt-5 flex flex-wrap gap-3 border-t border-slate-100 pt-4">
+          <a
+            href="/contact-support"
+            className="rounded-xl border border-slate-200 px-4 py-2 text-[12px] font-semibold text-slate-600 hover:border-[#1A5F7A] hover:text-[#1A5F7A] transition"
+          >
+            Change Password via Support
+          </a>
+          <a
+            href="/contact-support"
+            className="rounded-xl border border-slate-200 px-4 py-2 text-[12px] font-semibold text-slate-600 hover:border-[#1A5F7A] hover:text-[#1A5F7A] transition"
+          >
+            Change PIN via Support
+          </a>
         </div>
       </section>
 
