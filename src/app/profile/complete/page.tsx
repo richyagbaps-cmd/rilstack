@@ -159,7 +159,13 @@ export default function CompleteProfilePage() {
         setError(data.error || "Failed to save. Please try again.");
         return;
       }
-      await update({ profileComplete: true, kycLevel: Number(data?.user?.kycLevel ?? 1) });
+      await update({
+        profileComplete: true,
+        kycLevel: Number(data?.user?.kycLevel ?? 1),
+        expressAccessToken: String(data?.token || "").trim(),
+        googleTempToken: null,
+        dashboardAccessGranted: true,
+      });
       router.replace("/dashboard");
     } catch {
       setError("Network error. Please try again.");

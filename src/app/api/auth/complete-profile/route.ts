@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import {
   ensureStoredUserForGoogleSession,
   findStoredUserByEmail,
@@ -8,6 +9,7 @@ import {
   updateUserKyc,
 } from "@/lib/user-store";
 import { saveKycDocumentsForEmail } from "@/lib/kyc-documents";
+import { expressJsonRequest, isExpressBackendEnabled } from "@/lib/express-backend";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +47,69 @@ export async function POST(request: NextRequest) {
       incomeRange,
       sourceOfFunds,
     } = body;
+
+    if (isExpressBackendEnabled()) {
+      const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
+      const sessionTempToken = String((token as any)?.googleTempToken || "").trim();
+      const bodyTempToken = String(kyc.google_temp_token || kyc.googleTempToken || "").trim();
+      const googleTempToken = bodyTempToken || sessionTempToken;
+
+      if (!googleTempToken) {
+        return NextResponse.json(
+          { error: "Google completion token is missing. Restart Google signup." },
+          { status: 400 },
+        );
+      }
+
+      const expressPayload = {
+        google_temp_token: googleTempToken,
+        Middle_Name: String(middleName || "").trim(),
+        Phone: String(phone || "").trim(),
+        NIN: String(nin || "").trim(),
+        BVN: String(bvn || "").trim(),
+        Address: String(address || "").trim(),
+        State: String(stateOfOrigin || "").trim(),
+        LGA: String(lga || "").trim(),
+        Occupation: String(occupation || "").trim(),
+        Income_Range: String(incomeRange || "").trim(),
+        Source_of_Funds: String(sourceOfFunds || "").trim(),
+        PIN: String(pin || "").trim(),
+        ID_Type: String(idType || "nin").trim(),
+        ID_Number: String(idNumber || nin || "").trim(),
+        Selfie_URL: String(selfieUrl || selfieName || "").trim(),
+        ID_Doc_URL: String(idDocUrl || idPhotoName || "").trim(),
+      };
+
+      const result = await expressJsonRequest<any>("/auth/google/complete", {
+        method: "POST",
+        body: JSON.stringify(expressPayload),
+      });
+
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: result.data?.error || "Failed to complete profile." },
+          { status: result.status || 500 },
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        token: result.data?.token || "",
+        user: {
+          id: result.data?.user?.User_ID || result.data?.user?._id || "",
+          email: String(result.data?.user?.Email || session.user.email || "").trim(),
+          name: [
+            result.data?.user?.Surname,
+            result.data?.user?.First_Name,
+            result.data?.user?.Middle_Name,
+          ]
+            .map((v: unknown) => String(v || "").trim())
+            .filter(Boolean)
+            .join(" "),
+          kycLevel: 1,
+        },
+      });
+    }
 
     const resolvedPhone = String(phone || kyc.phone || "").trim();
     const resolvedDateOfBirth = String(dateOfBirth || kyc.dateOfBirth || kyc.dob || "").trim() || undefined;

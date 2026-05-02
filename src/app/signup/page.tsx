@@ -103,8 +103,19 @@ function SignupPageInner() {
 
   useEffect(() => {
     const provider = searchParams.get("provider");
+    const hasGoogleTempToken = Boolean((session?.user as any)?.googleTempToken);
 
     if (status !== "authenticated") {
+      return;
+    }
+
+    if (provider === "google" || hasGoogleTempToken) {
+      setSignupMethod("google");
+      setStep("kyc");
+      setKYCDraft((prev) => ({
+        ...prev,
+        email: prev?.email || session?.user?.email || "",
+      }));
       return;
     }
 
@@ -266,13 +277,22 @@ function SignupPageInner() {
         const res = await fetch("/api/auth/complete-profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            ...payload,
+            google_temp_token: (session?.user as any)?.googleTempToken || "",
+          }),
         });
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data.error || "Failed to complete profile.");
         }
-        await update();
+        await update({
+          profileComplete: true,
+          kycLevel: Number(data?.user?.kycLevel ?? 1),
+          expressAccessToken: String(data?.token || "").trim(),
+          googleTempToken: null,
+          dashboardAccessGranted: true,
+        });
       } else {
         const res = await fetch("/api/auth/register", {
           method: "POST",

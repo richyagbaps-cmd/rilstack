@@ -26,7 +26,7 @@ function GoogleLogo() {
 }
 
 export default function GoogleSignInButton({
-  callbackUrl = "/dashboard",
+  callbackUrl = "/signup?provider=google",
   label = "Continue with Google",
 }: {
   callbackUrl?: string;

@@ -8,7 +8,11 @@ import {
   findStoredUserByIdentifierAndPassword,
   recordUserLogin,
 } from "@/lib/user-store";
-import { expressJsonRequest, isExpressBackendEnabled } from "@/lib/express-backend";
+import {
+  expressJsonRequest,
+  getExpressBackendBaseUrl,
+  isExpressBackendEnabled,
+} from "@/lib/express-backend";
 
 // Strip trailing slash — must happen before NextAuth reads the env var
 if (process.env.NEXTAUTH_URL) {
@@ -111,8 +115,78 @@ const handler = NextAuth({
     error: "/login",
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === "google" && user.email && account.providerAccountId) {
+        if (isExpressBackendEnabled()) {
+          try {
+            const fallbackParts = String(user.name || "")
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean);
+            const firstName =
+              String((profile as any)?.given_name || "").trim() || fallbackParts[0] || "User";
+            const lastName =
+              String((profile as any)?.family_name || "").trim() || fallbackParts[1] || "Google";
+            const avatarUrl = String((profile as any)?.picture || user.image || "").trim();
+
+            const params = new URLSearchParams({
+              mode: "signup",
+              email: String(user.email).trim().toLowerCase(),
+              first_name: firstName,
+              last_name: lastName,
+              google_id: String(account.providerAccountId || "").trim(),
+            });
+            if (avatarUrl) params.set("avatar_url", avatarUrl);
+
+            const response = await fetch(
+              `${getExpressBackendBaseUrl()}/auth/google?${params.toString()}`,
+              {
+                method: "GET",
+                redirect: "manual",
+                cache: "no-store",
+              },
+            );
+
+            const locationHeader = response.headers.get("location") || "";
+            if (locationHeader) {
+              const locationUrl = new URL(locationHeader, getExpressBackendBaseUrl());
+              const expressToken = String(locationUrl.searchParams.get("token") || "").trim();
+              const googleTempToken = String(
+                locationUrl.searchParams.get("google_temp_token") || "",
+              ).trim();
+
+              if (expressToken) {
+                (user as any).id = String(account.providerAccountId || user.email);
+                (user as any).kycLevel = 1;
+                (user as any).profileComplete = true;
+                (user as any).dashboardAccessGranted = true;
+                (user as any).expressAccessToken = expressToken;
+                (user as any).googleTempToken = null;
+                return true;
+              }
+
+              if (googleTempToken) {
+                (user as any).id = String(account.providerAccountId || user.email);
+                (user as any).kycLevel = 0;
+                (user as any).profileComplete = false;
+                (user as any).dashboardAccessGranted = false;
+                (user as any).googleTempToken = googleTempToken;
+                (user as any).expressAccessToken = null;
+                return true;
+              }
+            }
+          } catch (error) {
+            console.error("Express Google callback bridge failed", error);
+          }
+
+          // Let sign-in continue; UI will surface completion state/fallback paths.
+          (user as any).id = String(account.providerAccountId || user.email);
+          (user as any).kycLevel = 0;
+          (user as any).profileComplete = false;
+          (user as any).dashboardAccessGranted = false;
+          return true;
+        }
+
         try {
           const storedUser = await upsertGoogleUser({
             name: user.name || "",
@@ -141,8 +215,9 @@ const handler = NextAuth({
         token.id = user.id;
         token.kycLevel = (user as any).kycLevel ?? 0;
         token.profileComplete = (user as any).profileComplete ?? true;
-        token.dashboardAccessGranted = true;
+        token.dashboardAccessGranted = (user as any).dashboardAccessGranted ?? true;
         token.expressAccessToken = (user as any).expressAccessToken || token.expressAccessToken;
+        token.googleTempToken = (user as any).googleTempToken ?? token.googleTempToken ?? null;
       }
 
       // Apply explicit session update values before any DB lookup.
@@ -152,6 +227,17 @@ const handler = NextAuth({
         }
         if (typeof (session as any).kycLevel === "number") {
           token.kycLevel = Number((session as any).kycLevel);
+        }
+        if (typeof (session as any).dashboardAccessGranted === "boolean") {
+          token.dashboardAccessGranted = Boolean((session as any).dashboardAccessGranted);
+        }
+        if (typeof (session as any).expressAccessToken === "string") {
+          token.expressAccessToken = String((session as any).expressAccessToken || "").trim() || null;
+        }
+        if (Object.prototype.hasOwnProperty.call(session as any, "googleTempToken")) {
+          const raw = (session as any).googleTempToken;
+          token.googleTempToken =
+            typeof raw === "string" ? String(raw || "").trim() || null : raw == null ? null : token.googleTempToken;
         }
       }
 
@@ -178,8 +264,9 @@ const handler = NextAuth({
         (session.user as any).id = token.id;
         (session.user as any).kycLevel = token.kycLevel ?? 0;
         (session.user as any).profileComplete = token.profileComplete ?? true;
-        (session.user as any).dashboardAccessGranted = true;
+        (session.user as any).dashboardAccessGranted = (token as any).dashboardAccessGranted ?? true;
         (session.user as any).expressAccessToken = (token as any).expressAccessToken || null;
+        (session.user as any).googleTempToken = (token as any).googleTempToken || null;
       }
       return session;
     },
