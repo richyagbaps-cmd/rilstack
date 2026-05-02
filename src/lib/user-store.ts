@@ -32,6 +32,18 @@ export interface KycData {
   bankName?: string;
   bankAccountNumber?: string;
   bankAccountName?: string;
+  // User preferences stored in KYC_Data_JSON
+  preferences?: {
+    privacyMode?: boolean;
+    biometric?: boolean;
+    loginAlerts?: boolean;
+    twoFaEnabled?: boolean;
+    pushNotifications?: boolean;
+    budgetAlerts?: boolean;
+    savingsReminders?: boolean;
+    investmentUpdates?: boolean;
+    promoTips?: boolean;
+  };
 }
 
 export interface StoredUser {

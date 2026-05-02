@@ -173,16 +173,19 @@ export default function SettingsSection() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-  // New toggles for upgrade
+  const [prefsLoading, setPrefsLoading] = useState(true);
+  const [prefsSaving, setPrefsSaving] = useState<string | null>(null);
+  // Security
   const [privacyMode, setPrivacyMode] = useState(false);
   const [biometric, setBiometric] = useState(false);
-  const [pushNotifications, setPushNotifications] = useState(true);
   const [loginAlerts, setLoginAlerts] = useState(true);
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+  // Notifications
+  const [pushNotifications, setPushNotifications] = useState(true);
   const [budgetAlerts, setBudgetAlerts] = useState(true);
   const [savingsReminders, setSavingsReminders] = useState(true);
   const [investmentUpdates, setInvestmentUpdates] = useState(true);
   const [promoTips, setPromoTips] = useState(true);
-  // ...other toggles as needed
 
   const { register, handleSubmit, reset } = useForm<SettingsFormData>({
     defaultValues: {
@@ -257,6 +260,48 @@ export default function SettingsSection() {
 
     loadProfileSettings();
   }, [reset, session?.user?.email, session?.user?.name]);
+
+  useEffect(() => {
+    const loadPreferences = async () => {
+      if (!session?.user?.email) { setPrefsLoading(false); return; }
+      try {
+        const res = await fetch("/api/settings/preferences", { method: "GET" });
+        const payload = await res.json();
+        if (res.ok && payload?.preferences) {
+          const p = payload.preferences;
+          setPrivacyMode(p.privacyMode ?? false);
+          setBiometric(p.biometric ?? false);
+          setLoginAlerts(p.loginAlerts ?? true);
+          setTwoFaEnabled(p.twoFaEnabled ?? false);
+          setPushNotifications(p.pushNotifications ?? true);
+          setBudgetAlerts(p.budgetAlerts ?? true);
+          setSavingsReminders(p.savingsReminders ?? true);
+          setInvestmentUpdates(p.investmentUpdates ?? true);
+          setPromoTips(p.promoTips ?? true);
+        }
+      } catch {}
+      setPrefsLoading(false);
+    };
+    loadPreferences();
+  }, [session?.user?.email]);
+
+  const savePreference = async (key: string, value: boolean) => {
+    setPrefsSaving(key);
+    try {
+      await fetch("/api/settings/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: value }),
+      });
+    } catch {}
+    setPrefsSaving(null);
+  };
+
+  const togglePref = (key: string, setter: (v: boolean) => void, current: boolean) => {
+    const next = !current;
+    setter(next);
+    savePreference(key, next);
+  };
 
   const onProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -402,26 +447,65 @@ export default function SettingsSection() {
         <h3 className="mb-2 text-base font-bold text-slate-900 md:text-lg">Security</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Biometric Login</span>
-            <input type="checkbox" checked={biometric} onChange={() => setBiometric(v => !v)} className="accent-[#1A5F7A]" disabled />
+            <div>
+              <span className="text-sm font-medium text-slate-800">Biometric Login</span>
+              <p className="text-xs text-slate-500">Use fingerprint or face ID on supported devices</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={biometric}
+              onChange={() => togglePref("biometric", setBiometric, biometric)}
+              disabled={prefsLoading || prefsSaving === "biometric"}
+              className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+            />
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Privacy Mode</span>
-            <input type="checkbox" checked={privacyMode} onChange={() => setPrivacyMode(v => !v)} className="accent-[#1A5F7A]" disabled />
+            <div>
+              <span className="text-sm font-medium text-slate-800">Privacy Mode</span>
+              <p className="text-xs text-slate-500">Hide balances and sensitive info by default</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={privacyMode}
+              onChange={() => togglePref("privacyMode", setPrivacyMode, privacyMode)}
+              disabled={prefsLoading || prefsSaving === "privacyMode"}
+              className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-medium text-slate-800">Login Alerts</span>
+              <p className="text-xs text-slate-500">Get notified on new sign-ins to your account</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={loginAlerts}
+              onChange={() => togglePref("loginAlerts", setLoginAlerts, loginAlerts)}
+              disabled={prefsLoading || prefsSaving === "loginAlerts"}
+              className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-medium text-slate-800">Two-Factor Authentication (2FA)</span>
+              <p className="text-xs text-slate-500">Require a code at each login for extra security</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={twoFaEnabled}
+              onChange={() => togglePref("twoFaEnabled", setTwoFaEnabled, twoFaEnabled)}
+              disabled={prefsLoading || prefsSaving === "twoFaEnabled"}
+              className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+            />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-800">Session Management</span>
-            <button className="text-xs text-[#1A5F7A] underline" disabled>View Devices</button>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Two-Factor Authentication (2FA)</span>
-            <button className="text-xs text-[#1A5F7A] underline" disabled>Setup</button>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Login Alerts</span>
-            <input type="checkbox" checked={loginAlerts} onChange={() => setLoginAlerts(v => !v)} className="accent-[#1A5F7A]" disabled />
+            <a href="/security" className="text-xs text-[#1A5F7A] underline">View Devices</a>
           </div>
         </div>
+        {prefsSaving && (
+          <p className="mt-2 text-xs text-slate-500">Saving...</p>
+        )}
       </section>
 
       {/* 4.1.3 Notifications */}
@@ -429,59 +513,68 @@ export default function SettingsSection() {
         <h3 className="mb-2 text-base font-bold text-slate-900 md:text-lg">Notifications</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Push Notifications</span>
-            <input type="checkbox" checked={pushNotifications} onChange={() => setPushNotifications(v => !v)} className="accent-[#1A5F7A]" disabled />
+            <div>
+              <span className="text-sm font-medium text-slate-800">Push Notifications</span>
+              <p className="text-xs text-slate-500">Master switch for all notifications</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={pushNotifications}
+              onChange={() => togglePref("pushNotifications", setPushNotifications, pushNotifications)}
+              disabled={prefsLoading || prefsSaving === "pushNotifications"}
+              className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+            />
           </div>
-          <div className="pl-4 space-y-2">
+          <div className="pl-4 space-y-2 border-l-2 border-slate-100">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-700">Budget Alerts</span>
-              <input type="checkbox" checked={budgetAlerts} onChange={() => setBudgetAlerts(v => !v)} className="accent-[#1A5F7A]" disabled />
+              <input
+                type="checkbox"
+                checked={budgetAlerts}
+                onChange={() => togglePref("budgetAlerts", setBudgetAlerts, budgetAlerts)}
+                disabled={prefsLoading || !pushNotifications || prefsSaving === "budgetAlerts"}
+                className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+              />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-700">Savings Reminders</span>
-              <input type="checkbox" checked={savingsReminders} onChange={() => setSavingsReminders(v => !v)} className="accent-[#1A5F7A]" disabled />
+              <input
+                type="checkbox"
+                checked={savingsReminders}
+                onChange={() => togglePref("savingsReminders", setSavingsReminders, savingsReminders)}
+                disabled={prefsLoading || !pushNotifications || prefsSaving === "savingsReminders"}
+                className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+              />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-700">Investment Updates</span>
-              <input type="checkbox" checked={investmentUpdates} onChange={() => setInvestmentUpdates(v => !v)} className="accent-[#1A5F7A]" disabled />
+              <input
+                type="checkbox"
+                checked={investmentUpdates}
+                onChange={() => togglePref("investmentUpdates", setInvestmentUpdates, investmentUpdates)}
+                disabled={prefsLoading || !pushNotifications || prefsSaving === "investmentUpdates"}
+                className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+              />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-700">Promotions & Tips</span>
-              <input type="checkbox" checked={promoTips} onChange={() => setPromoTips(v => !v)} className="accent-[#1A5F7A]" disabled />
+              <input
+                type="checkbox"
+                checked={promoTips}
+                onChange={() => togglePref("promoTips", setPromoTips, promoTips)}
+                disabled={prefsLoading || !pushNotifications || prefsSaving === "promoTips"}
+                className="h-4 w-4 accent-[#1A5F7A] cursor-pointer"
+              />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#D32F2F]">Fraud Alerts</span>
-              <input type="checkbox" checked disabled />
+              <input type="checkbox" checked readOnly className="h-4 w-4 accent-[#D32F2F]" title="Always on — cannot be disabled" />
             </div>
           </div>
         </div>
-      </section>
-
-      {/* 4.1.4 Preferences */}
-      <section className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-sm md:p-5">
-        <h3 className="mb-2 text-base font-bold text-slate-900 md:text-lg">Preferences</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Default Currency</span>
-            <span className="text-xs font-medium text-slate-700">NGN</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Start of Week</span>
-            <span className="text-xs font-medium text-slate-700">Monday</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Date Format</span>
-            <span className="text-xs font-medium text-slate-700">DD/MM/YYYY</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Theme</span>
-            <span className="text-xs font-medium text-slate-700">System</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Language</span>
-            <span className="text-xs font-medium text-slate-700">English</span>
-          </div>
-        </div>
+        {prefsSaving && (
+          <p className="mt-2 text-xs text-slate-500">Saving...</p>
+        )}
       </section>
 
       {/* 4.1.5 Data & Privacy */}
