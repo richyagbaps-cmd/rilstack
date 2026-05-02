@@ -362,9 +362,24 @@ function withGoogleUpsertLock<T>(email: string, fn: () => Promise<T>): Promise<T
 
 async function findGoogleAuthCandidate(email: string, googleId: string): Promise<StoredUser | null> {
   const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE Email='${email.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' ORDER BY Updated_At DESC LIMIT 5`,
+    `SELECT * FROM ${TABLES.USERS} WHERE Email='${email.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' LIMIT 20`,
   );
-  return rows[0] ? mapSeaTableUser(rows[0]) : null;
+  if (!rows.length) return null;
+
+  // Prefer the strongest match first: exact email + googleId, then email, then googleId.
+  const ranked = rows.sort((a, b) => {
+    const rank = (row: STUser) => {
+      const emailMatch = (row.Email || "").trim().toLowerCase() === email;
+      const googleMatch = (row.Google_ID || "").trim() === googleId;
+      if (emailMatch && googleMatch) return 3;
+      if (emailMatch) return 2;
+      if (googleMatch) return 1;
+      return 0;
+    };
+    return rank(b) - rank(a);
+  });
+
+  return mapSeaTableUser(ranked[0]);
 }
 
 export async function createStoredUser(input: CreateStoredUserInput) {

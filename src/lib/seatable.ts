@@ -432,7 +432,7 @@ export async function getUserByPhone(phone: string): Promise<STUser | null> {
 
 export async function listUsers(): Promise<STUser[]> {
   return query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} ORDER BY Updated_At DESC`,
+    `SELECT * FROM ${TABLES.USERS}`,
   );
 }
 
