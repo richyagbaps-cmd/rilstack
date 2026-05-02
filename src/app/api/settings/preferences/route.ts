@@ -6,6 +6,9 @@ import {
   updateUserKyc,
 } from "@/lib/user-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const session = await getServerSession();
@@ -27,20 +30,23 @@ export async function GET() {
 
     const prefs = user.kycData?.preferences ?? {};
 
-    return NextResponse.json({
-      success: true,
-      preferences: {
-        privacyMode: prefs.privacyMode ?? false,
-        biometric: prefs.biometric ?? false,
-        loginAlerts: prefs.loginAlerts ?? true,
-        twoFaEnabled: prefs.twoFaEnabled ?? false,
-        pushNotifications: prefs.pushNotifications ?? true,
-        budgetAlerts: prefs.budgetAlerts ?? true,
-        savingsReminders: prefs.savingsReminders ?? true,
-        investmentUpdates: prefs.investmentUpdates ?? true,
-        promoTips: prefs.promoTips ?? true,
+    return NextResponse.json(
+      {
+        success: true,
+        preferences: {
+          privacyMode: prefs.privacyMode ?? false,
+          biometric: prefs.biometric ?? false,
+          loginAlerts: prefs.loginAlerts ?? true,
+          twoFaEnabled: prefs.twoFaEnabled ?? false,
+          pushNotifications: prefs.pushNotifications ?? true,
+          budgetAlerts: prefs.budgetAlerts ?? true,
+          savingsReminders: prefs.savingsReminders ?? true,
+          investmentUpdates: prefs.investmentUpdates ?? true,
+          promoTips: prefs.promoTips ?? true,
+        },
       },
-    });
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } },
+    );
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to fetch preferences" },

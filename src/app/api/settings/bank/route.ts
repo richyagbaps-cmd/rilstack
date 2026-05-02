@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { ensureStoredUserForGoogleSession, findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const session = await getServerSession();
@@ -21,14 +24,17 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      success: true,
-      bank: {
-        bankName: user.kycData?.bankName || "",
-        accountNumber: user.kycData?.bankAccountNumber || "",
-        accountName: user.kycData?.bankAccountName || "",
+    return NextResponse.json(
+      {
+        success: true,
+        bank: {
+          bankName: user.kycData?.bankName || "",
+          accountNumber: user.kycData?.bankAccountNumber || "",
+          accountName: user.kycData?.bankAccountName || "",
+        },
       },
-    });
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } },
+    );
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to fetch bank settings" },

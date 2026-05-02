@@ -18,7 +18,10 @@ function WithdrawalBankSection() {
   useEffect(() => {
     const loadBankSettings = async () => {
       try {
-        const res = await fetch("/api/settings/bank", { method: "GET" });
+        const res = await fetch("/api/settings/bank", {
+          method: "GET",
+          cache: "no-store",
+        });
         const payload = await res.json();
 
         if (res.ok && payload?.bank) {
@@ -271,7 +274,10 @@ export default function SettingsSection() {
       if (!session?.user?.email) return;
       setIsLoadingProfile(true);
       try {
-        const res = await fetch("/api/settings/profile", { method: "GET" });
+        const res = await fetch("/api/settings/profile", {
+          method: "GET",
+          cache: "no-store",
+        });
         const payload = await res.json();
         if (!res.ok) {
           throw new Error(payload.error || "Failed to load profile settings");
@@ -294,7 +300,10 @@ export default function SettingsSection() {
     const loadPreferences = async () => {
       if (!session?.user?.email) { setPrefsLoading(false); return; }
       try {
-        const res = await fetch("/api/settings/preferences", { method: "GET" });
+        const res = await fetch("/api/settings/preferences", {
+          method: "GET",
+          cache: "no-store",
+        });
         const payload = await res.json();
         if (res.ok && payload?.preferences) {
           const p = payload.preferences;

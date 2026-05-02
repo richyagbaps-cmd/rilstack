@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { ensureStoredUserForGoogleSession, findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function normalizeIdTypeForUi(value?: string):
   | "nin"
   | "bvn"
@@ -59,7 +62,10 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, profile: toResponseProfile(user) });
+    return NextResponse.json(
+      { success: true, profile: toResponseProfile(user) },
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } },
+    );
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to fetch profile settings" },
