@@ -65,6 +65,8 @@ export interface StoredUser {
   kycStatus: "Pending" | "Verified" | "Rejected";
   termsAccepted: boolean;
   authProvider: "credentials" | "google";
+  loginCount: number;
+  lastLogin: string;
   kycData: KycData;
   createdAt: string;
   updatedAt: string;
@@ -200,6 +202,8 @@ function mapSeaTableUser(row: STUser): StoredUser {
     kycStatus: row.KYC_Status || deriveKycStatus(kycData),
     termsAccepted: parseSeatableBool(row.Terms_Accepted),
     authProvider: row.Auth_Provider || (row.Google_ID ? "google" : "credentials"),
+    loginCount: Number(row.Login_Count ?? 0),
+    lastLogin: row.Last_Login || "",
     kycData,
     createdAt,
     updatedAt,
@@ -227,6 +231,8 @@ function buildUserUpdates(user: StoredUser): Record<string, unknown> {
     KYC_Data_JSON: JSON.stringify(user.kycData),
     Terms_Accepted: user.termsAccepted ? "true" : "false",
     Auth_Provider: user.authProvider,
+    Login_Count: user.loginCount,
+    Last_Login: user.lastLogin,
     Created_At: user.createdAt,
     Updated_At: user.updatedAt,
   };
@@ -307,6 +313,7 @@ export async function createStoredUser(input: CreateStoredUserInput) {
     ...(input.kycData || {}),
   };
   const kycLevel = calculateKycLevel(mergedKycData);
+  const loginCount = 1;
 
   const user: StoredUser = {
     id: crypto.randomUUID(),
@@ -327,6 +334,8 @@ export async function createStoredUser(input: CreateStoredUserInput) {
     kycStatus: deriveKycStatus(mergedKycData),
     termsAccepted: Boolean(input.termsAccepted),
     authProvider: input.authProvider || (input.googleId ? "google" : "credentials"),
+    loginCount,
+    lastLogin: now,
     kycData: mergedKycData,
     createdAt: now,
     updatedAt: now,
@@ -366,22 +375,58 @@ export async function upsertGoogleUser(input: {
     });
   }
 
+  const now = new Date().toISOString();
   const updated: StoredUser = {
     ...existing,
     name: existing.name || input.name,
     googleId: input.googleId,
     authProvider: "google",
+    loginCount: (existing.loginCount ?? 0) + 1,
+    lastLogin: now,
     kycData: {
       ...existing.kycData,
       emailVerified: true,
     },
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
   };
   updated.kycLevel = calculateKycLevel(updated.kycData);
   updated.kycStatus = deriveKycStatus(updated.kycData);
 
   await updateRow(TABLES.USERS, existing.rowId, buildUserUpdates(updated));
   return updated;
+}
+
+/**
+ * Increment Login_Count and stamp Last_Login for any sign-in.
+ * Call this from the credentials authorize callback after password verify.
+ */
+export async function recordUserLogin(email: string): Promise<void> {
+  const user = await findStoredUserByEmail(email);
+  if (!user) return;
+  const now = new Date().toISOString();
+  await updateRow(TABLES.USERS, user.rowId, {
+    Login_Count: (user.loginCount ?? 0) + 1,
+    Last_Login: now,
+    Updated_At: now,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Idempotency guard for webhook events (in-memory; resets on cold start)
+// ---------------------------------------------------------------------------
+const _processedWebhookIds = new Set<string>();
+
+export function isWebhookEventProcessed(eventId: string): boolean {
+  return _processedWebhookIds.has(eventId);
+}
+
+export function markWebhookEventProcessed(eventId: string): void {
+  _processedWebhookIds.add(eventId);
+  // Prevent unbounded growth — cap at 10 000 entries
+  if (_processedWebhookIds.size > 10_000) {
+    const oldest = _processedWebhookIds.values().next().value;
+    if (oldest !== undefined) _processedWebhookIds.delete(oldest);
+  }
 }
 
 export async function updateUserKyc(

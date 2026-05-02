@@ -296,6 +296,8 @@ export type STUser = {
   KYC_Data_JSON?: string;
   Terms_Accepted?: boolean;
   Auth_Provider?: "credentials" | "google";
+  Login_Count?: number;
+  Last_Login?: string;
   Created_At?: string;
   Updated_At?: string;
 };

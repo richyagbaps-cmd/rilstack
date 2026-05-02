@@ -5,7 +5,7 @@ import {
   getWalletByUserId,
   creditWallet,
 } from "@/lib/wallet-store";
-import { findStoredUserByEmail } from "@/lib/user-store";
+import { findStoredUserByEmail, isWebhookEventProcessed, markWebhookEventProcessed } from "@/lib/user-store";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +67,12 @@ export async function POST(request: NextRequest) {
   if (status !== "success") {
     return NextResponse.json({ received: true });
   }
+
+  // Idempotency: skip if this exact reference has already been processed
+  if (isWebhookEventProcessed(reference)) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+  markWebhookEventProcessed(reference);
 
   try {
     // Find wallet by Paystack customer_code first (most reliable)

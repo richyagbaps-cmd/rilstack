@@ -7,6 +7,7 @@ import {
   findStoredUserByEmail,
   findStoredUserByIdentifier,
   verifyPassword,
+  recordUserLogin,
 } from "@/lib/user-store";
 
 const normalizedNextAuthUrl = process.env.NEXTAUTH_URL?.replace(/\/+$/, "");
@@ -62,6 +63,9 @@ const providers = [
       if (!isValid) {
         return null;
       }
+
+      // Fire-and-forget — don't block sign-in on a SeaTable write
+      recordUserLogin(user.email).catch(() => {});
 
       return {
         id: user.id,
