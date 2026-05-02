@@ -10,9 +10,9 @@ import {
   recordUserLogin,
 } from "@/lib/user-store";
 
-const normalizedNextAuthUrl = process.env.NEXTAUTH_URL?.replace(/\/+$/, "");
-if (normalizedNextAuthUrl) {
-  process.env.NEXTAUTH_URL = normalizedNextAuthUrl;
+// Strip trailing slash — must happen before NextAuth reads the env var
+if (process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL.replace(/\/+$/, "");
 }
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
@@ -122,33 +122,29 @@ const handler = NextAuth({
         token.dashboardAccessGranted = true;
       }
 
-      if (token.email) {
-        const storedUser = await findStoredUserByEmail(token.email as string);
-
-        if (storedUser) {
-          token.kycLevel = storedUser.kycLevel ?? 0;
-          token.id = storedUser.id;
-          token.profileComplete = isStoredUserProfileComplete(storedUser);
-          token.dashboardAccessGranted = true;
-        }
-      }
-
-      if (trigger === "update") {
-        if (session && typeof (session as any).profileComplete === "boolean") {
+      // Apply explicit session update values before any DB lookup.
+      if (trigger === "update" && session) {
+        if (typeof (session as any).profileComplete === "boolean") {
           token.profileComplete = Boolean((session as any).profileComplete);
         }
-        if (session && typeof (session as any).kycLevel === "number") {
+        if (typeof (session as any).kycLevel === "number") {
           token.kycLevel = Number((session as any).kycLevel);
         }
       }
 
-      if (trigger === "update" && token.email) {
-        const storedUser = await findStoredUserByEmail(token.email as string);
-        if (storedUser) {
-          token.kycLevel = storedUser.kycLevel ?? 0;
-          token.id = storedUser.id;
-          token.profileComplete = isStoredUserProfileComplete(storedUser);
-          token.dashboardAccessGranted = true;
+      // Refresh user data from SeaTable on sign-in and on explicit session updates.
+      // Wrapped in try-catch so a SeaTable failure never breaks the auth flow.
+      if (token.email && (user || trigger === "update")) {
+        try {
+          const storedUser = await findStoredUserByEmail(token.email as string);
+          if (storedUser) {
+            token.kycLevel = storedUser.kycLevel ?? 0;
+            token.id = storedUser.id;
+            token.profileComplete = isStoredUserProfileComplete(storedUser);
+            token.dashboardAccessGranted = true;
+          }
+        } catch (err) {
+          console.error("JWT SeaTable lookup failed (non-fatal)", err);
         }
       }
 
