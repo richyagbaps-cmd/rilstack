@@ -101,8 +101,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession();
     if (!session?.user?.email) {
