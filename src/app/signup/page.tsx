@@ -332,19 +332,33 @@ function SignupPageInner() {
               ? 4
               : 5;
 
+  const inputCls =
+    "w-full px-4 py-3 rounded-lg border border-[#1e2d50] bg-[#0a1020] text-white placeholder-[#4a6080] focus:outline-none focus:ring-2 focus:ring-[#00e096]";
+  const btnPrimary =
+    "w-full bg-[#00e096] text-[#060B1E] font-bold py-3 rounded-lg shadow hover:bg-[#00c080] transition text-base disabled:opacity-60";
+  const btnSecondary =
+    "w-full border border-[#1e2d50] bg-[#0a1020] text-white font-semibold py-2 rounded-lg hover:bg-[#111a30] transition";
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-blue-600 p-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
-        <div className="flex items-center justify-center gap-2 mb-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#060B1E] px-4 py-8">
+      <div className="w-full max-w-md bg-[#0D1530] border border-[#1e2d50] rounded-2xl shadow-2xl p-8">
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-3 mb-6">
           {steps.slice(0, 5).map((label, idx) => (
             <div key={label} className="flex flex-col items-center">
               <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm border-2 ${stepIndex === idx ? "bg-blue-600 text-white border-blue-600" : "bg-white text-blue-600 border-blue-300"}`}
+                className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm border-2 transition ${
+                  stepIndex === idx
+                    ? "bg-[#00e096] text-[#060B1E] border-[#00e096]"
+                    : stepIndex > idx
+                    ? "bg-[#00e096]/20 text-[#00e096] border-[#00e096]/40"
+                    : "bg-[#0a1020] text-[#4a6080] border-[#1e2d50]"
+                }`}
                 aria-current={stepIndex === idx ? "step" : undefined}
               >
                 {idx + 1}
               </div>
-              <span className="text-xs mt-1 text-blue-600 opacity-80">
+              <span className={`text-xs mt-1 ${stepIndex === idx ? "text-[#00e096]" : "text-[#4a6080]"}`}>
                 {["Start", "Details", "KYC", "PIN", "Terms"][idx]}
               </span>
             </div>
@@ -352,22 +366,23 @@ function SignupPageInner() {
         </div>
 
         {error && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded shadow font-semibold z-10 animate-fade-in">
+          <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center">
             {error}
           </div>
         )}
         {success && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded shadow font-semibold z-10 animate-fade-in">
+          <div className="mb-4 rounded-lg border border-[#00e096]/40 bg-[#00e096]/10 px-4 py-3 text-sm text-[#00e096] text-center">
             {success}
           </div>
         )}
 
         {step === "choose" && (
           <>
-            <h2 className="text-2xl font-bold mb-4 text-center">Sign Up</h2>
+            <h2 className="text-2xl font-bold mb-1 text-center text-white">Sign Up</h2>
+            <p className="text-[#8fafd4] text-center text-sm mb-6">Create your Rilstack account</p>
             <GoogleSignInButton />
             <button
-              className="w-full border border-blue-500 text-blue-700 py-2 rounded font-semibold mt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className={`${btnSecondary} mt-3`}
               onClick={() => setStep("emailCredentials")}
               aria-label="Sign up with Email"
               type="button"
@@ -379,10 +394,11 @@ function SignupPageInner() {
 
         {step === "emailCredentials" && (
           <form className="space-y-4" onSubmit={handleEmailStart}>
-            <h2 className="text-2xl font-bold mb-4 text-center">Create your account</h2>
+            <h2 className="text-2xl font-bold mb-1 text-center text-white">Create your account</h2>
+            <p className="text-[#8fafd4] text-center text-sm mb-4">Fill in your basic details</p>
             <input
               type="text"
-              className="w-full border p-3 rounded"
+              className={inputCls}
               placeholder="Surname"
               value={emailCredentials.surname}
               onChange={(e) =>
@@ -392,7 +408,7 @@ function SignupPageInner() {
             />
             <input
               type="text"
-              className="w-full border p-3 rounded"
+              className={inputCls}
               placeholder="First name"
               value={emailCredentials.firstName}
               onChange={(e) =>
@@ -402,7 +418,7 @@ function SignupPageInner() {
             />
             <input
               type="text"
-              className="w-full border p-3 rounded"
+              className={inputCls}
               placeholder="Middle name (optional)"
               value={emailCredentials.middleName}
               onChange={(e) =>
@@ -411,7 +427,7 @@ function SignupPageInner() {
             />
             <input
               type="email"
-              className="w-full border p-3 rounded"
+              className={inputCls}
               placeholder="Email address"
               value={emailCredentials.email}
               onChange={(e) =>
@@ -421,8 +437,8 @@ function SignupPageInner() {
             />
             <input
               type="password"
-              className="w-full border p-3 rounded"
-              placeholder="Password"
+              className={inputCls}
+              placeholder="Password (min 8 characters)"
               value={emailCredentials.password}
               onChange={(e) =>
                 setEmailCredentials((prev) => ({ ...prev, password: e.target.value }))
@@ -431,7 +447,7 @@ function SignupPageInner() {
             />
             <input
               type="password"
-              className="w-full border p-3 rounded"
+              className={inputCls}
               placeholder="Confirm password"
               value={emailCredentials.confirmPassword}
               onChange={(e) =>
@@ -442,10 +458,7 @@ function SignupPageInner() {
               }
               required
             />
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded font-semibold"
-            >
+            <button type="submit" className={btnPrimary}>
               Continue
             </button>
           </form>
@@ -461,7 +474,7 @@ function SignupPageInner() {
             />
             {signupMethod === "google" && (
               <button
-                className="mt-3 w-full rounded border border-slate-300 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+                className={`${btnSecondary} mt-3`}
                 onClick={handleSkipGoogleKyc}
                 disabled={skipLoading}
                 type="button"
@@ -477,7 +490,7 @@ function SignupPageInner() {
             <PinSetup onComplete={handlePinComplete} />
             {signupMethod === "google" && (
               <button
-                className="mt-3 w-full rounded border border-slate-300 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+                className={`${btnSecondary} mt-3`}
                 onClick={handleSkipGoogleKyc}
                 disabled={skipLoading}
                 type="button"
@@ -490,23 +503,24 @@ function SignupPageInner() {
 
         {step === "terms" && (
           <div>
-            <h3 className="font-bold mb-2">Terms & Conditions</h3>
+            <h3 className="text-lg font-bold mb-2 text-white">Terms &amp; Conditions</h3>
             <div
-              className="mb-2 text-sm text-gray-700"
+              className="mb-4 text-sm text-[#8fafd4] rounded-lg border border-[#1e2d50] bg-[#0a1020] p-3"
               style={{ maxHeight: 120, overflow: "auto" }}
             >
               By signing up, you agree to our terms of service and privacy policy.
             </div>
-            <label className="flex items-center gap-2 mb-4">
+            <label className="flex items-center gap-2 mb-4 cursor-pointer">
               <input
                 type="checkbox"
                 checked={termsAccepted}
                 onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="accent-[#00e096] w-4 h-4"
               />
-              <span>I accept the terms and conditions</span>
+              <span className="text-[#8fafd4] text-sm">I accept the terms and conditions</span>
             </label>
             <button
-              className="w-full bg-blue-600 text-white py-2 rounded font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className={btnPrimary}
               onClick={handleRegister}
               aria-label="Finish Registration"
               type="button"
@@ -515,7 +529,7 @@ function SignupPageInner() {
             </button>
             {signupMethod === "google" && (
               <button
-                className="mt-3 w-full rounded border border-slate-300 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+                className={`${btnSecondary} mt-3`}
                 onClick={handleSkipGoogleKyc}
                 disabled={skipLoading}
                 type="button"
@@ -527,8 +541,8 @@ function SignupPageInner() {
         )}
 
         {step === "done" && (
-          <div className="text-center text-green-600 font-bold">
-            Registration successful! Redirecting...
+          <div className="text-center text-[#00e096] font-bold py-4">
+            Registration successful! Redirecting…
           </div>
         )}
       </div>
