@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { ensureStoredUserForGoogleSession, findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
 
+function normalizeIdTypeForUi(value?: string):
+  | "nin"
+  | "bvn"
+  | "passport"
+  | "drivers-license"
+  | "voters-card" {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return "nin";
+  if (raw === "nin" || raw.includes("national id")) return "nin";
+  if (raw === "bvn" || raw.includes("bank verification")) return "bvn";
+  if (raw === "passport" || raw.includes("international passport")) return "passport";
+  if (raw === "drivers-license" || raw === "driver's license" || raw.includes("driver")) return "drivers-license";
+  if (raw === "voters-card" || raw === "voter's card" || raw.includes("voter")) return "voters-card";
+  return "nin";
+}
+
 function toResponseProfile(user: Awaited<ReturnType<typeof findStoredUserByEmail>>) {
   if (!user) return null;
 
@@ -13,13 +29,8 @@ function toResponseProfile(user: Awaited<ReturnType<typeof findStoredUserByEmail
     gender: (user.gender || "M") as "M" | "F" | "other",
     stateOfOrigin: user.stateOfOrigin || "",
     address: user.address || "",
-    idType: (user.kycData?.idType || "nin") as
-      | "nin"
-      | "bvn"
-      | "passport"
-      | "drivers-license"
-      | "voters-card",
-    idNumber: user.kycData?.idNumber || "",
+    idType: normalizeIdTypeForUi(user.idType || user.kycData?.idType),
+    idNumber: user.idNumber || user.kycData?.idNumber || "",
     bvn: user.bvn || "",
   };
 }
@@ -85,6 +96,8 @@ export async function PATCH(request: NextRequest) {
       gender,
       stateOfOrigin: String(stateOfOrigin).trim(),
       address: String(address).trim(),
+      idType: idType ? String(idType).trim() : undefined,
+      idNumber: idNumber ? String(idNumber).trim() : undefined,
       kycData: {
         idType: idType ? String(idType).trim() : undefined,
         idNumber: idNumber ? String(idNumber).trim() : undefined,
