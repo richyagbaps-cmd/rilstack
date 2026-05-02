@@ -10,8 +10,11 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      const profileComplete = (session?.user as any)?.profileComplete;
-      if (profileComplete === false) {
+      const u = session?.user as any;
+      const profileComplete = u?.profileComplete;
+      const dashboardAccessGranted = u?.dashboardAccessGranted;
+      // Block only when profile is explicitly incomplete AND access was NOT granted
+      if (profileComplete === false && dashboardAccessGranted !== true) {
         router.replace("/profile/complete");
       } else {
         router.replace("/dashboard");

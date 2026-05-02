@@ -102,8 +102,11 @@ function DashboardContent() {
   useEffect(() => {
     if (status === "unauthenticated") { router.replace("/"); return; }
     if (status === "authenticated") {
-      const pc = (session?.user as Record<string, unknown>)?.profileComplete;
-      if (pc === false) router.replace("/profile/complete");
+      const u = session?.user as Record<string, unknown>;
+      const pc = u?.profileComplete;
+      const dg = u?.dashboardAccessGranted;
+      // Only redirect if profile is explicitly incomplete AND access was not granted
+      if (pc === false && dg !== true) router.replace("/profile/complete");
     }
   }, [status, router, session]);
 
