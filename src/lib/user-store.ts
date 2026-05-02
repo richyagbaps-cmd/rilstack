@@ -316,6 +316,10 @@ export function hasStoredUserDashboardAccess(user: StoredUser) {
 
 export async function findStoredUserByEmail(email: string) {
   const normalized = normalizeEmail(email);
+
+  const consolidated = await consolidateUsersByEmail(normalized);
+  if (consolidated) return consolidated;
+
   const row = await getUserByEmail(normalized);
   if (row) return mapSeaTableUser(row);
 
@@ -451,6 +455,48 @@ function userRank(user: StoredUser, normalizedEmail: string, googleId: string): 
   return score;
 }
 
+function rankByEmail(user: StoredUser, normalizedEmail: string): number {
+  let score = 0;
+  if (user.email === normalizedEmail) score += 100;
+  if (user.pinHash) score += 30;
+  if (user.phone) score += 20;
+  if (user.bvn || user.nin) score += 20;
+  score += Number(user.kycLevel || 0) * 10;
+  score += Number(user.loginCount || 0);
+  return score;
+}
+
+async function consolidateUsersByEmail(normalizedEmail: string): Promise<StoredUser | null> {
+  const rows = await query<STUser>(
+    `SELECT * FROM ${TABLES.USERS} WHERE Email='${normalizedEmail.replace(/'/g, "''")}' LIMIT 50`,
+  );
+  if (!rows.length) return null;
+
+  const users = rows.map(mapSeaTableUser);
+  users.sort((a, b) => rankByEmail(b, normalizedEmail) - rankByEmail(a, normalizedEmail));
+
+  const canonical = users[0];
+  const duplicates = users.slice(1);
+  if (!duplicates.length) return canonical;
+
+  const fallbackGoogleId =
+    canonical.googleId || duplicates.find((u) => u.googleId)?.googleId || `google:${normalizedEmail}`;
+
+  const merged = mergeUsers(canonical, duplicates, normalizedEmail, fallbackGoogleId);
+  await updateRow(TABLES.USERS, canonical.rowId, buildUserUpdates(merged));
+
+  for (const duplicate of duplicates) {
+    if (duplicate.rowId === canonical.rowId) continue;
+    try {
+      await deleteRow(TABLES.USERS, duplicate.rowId);
+    } catch {
+      // Best-effort cleanup.
+    }
+  }
+
+  return merged;
+}
+
 async function consolidateUsersByIdentity(normalizedEmail: string, googleId: string): Promise<StoredUser | null> {
   const rows = await query<STUser>(
     `SELECT * FROM ${TABLES.USERS} WHERE Email='${normalizedEmail.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' LIMIT 50`,
@@ -505,7 +551,44 @@ export async function createStoredUser(input: CreateStoredUserInput) {
   return withSignupLock(normalizedEmail, async () => {
     const existing = await findStoredUserByEmail(normalizedEmail);
     if (existing) {
-      throw new Error("An account with this email already exists.");
+      const mergedKycData: KycData = {
+        ...existing.kycData,
+        ...(input.kycData || {}),
+      };
+      const nowExisting = new Date().toISOString();
+      const updatedExisting: StoredUser = {
+        ...existing,
+        name: input.name.trim() || existing.name,
+        email: normalizedEmail,
+        passwordHash: existing.passwordHash || hashPassword(input.password),
+        phone: normalizePhone(input.phone || existing.phone || ""),
+        pinHash: input.pin ? hashPin(input.pin) : existing.pinHash,
+        googleId: input.googleId || existing.googleId,
+        avatarUrl: input.avatarUrl || existing.avatarUrl,
+        dateOfBirth: input.dateOfBirth || existing.dateOfBirth,
+        nin: input.nin?.trim() || existing.nin,
+        bvn: input.bvn?.trim() || existing.bvn,
+        address: input.address?.trim() || existing.address,
+        stateOfOrigin: input.stateOfOrigin?.trim() || existing.stateOfOrigin,
+        lga: input.lga?.trim() || existing.lga,
+        gender: input.gender || existing.gender,
+        idType: input.idType?.trim() || existing.idType,
+        idNumber: input.idNumber?.trim() || existing.idNumber,
+        selfieUrl: input.selfieUrl || existing.selfieUrl,
+        idDocUrl: input.idDocUrl || existing.idDocUrl,
+        occupation: input.occupation?.trim() || existing.occupation,
+        incomeRange: input.incomeRange?.trim() || existing.incomeRange,
+        sourceOfFunds: input.sourceOfFunds?.trim() || existing.sourceOfFunds,
+        termsAccepted: Boolean(input.termsAccepted ?? existing.termsAccepted),
+        authProvider: input.authProvider || existing.authProvider,
+        kycData: mergedKycData,
+        updatedAt: nowExisting,
+      };
+      updatedExisting.kycLevel = calculateKycLevel(updatedExisting.kycData);
+      updatedExisting.kycStatus = deriveKycStatus(updatedExisting.kycData);
+
+      await updateRow(TABLES.USERS, existing.rowId, buildUserUpdates(updatedExisting));
+      return updatedExisting;
     }
 
   const now = new Date().toISOString();
@@ -557,10 +640,14 @@ export async function createStoredUser(input: CreateStoredUserInput) {
     ...buildUserUpdates(user),
   });
 
-    return {
+    const created = {
       ...user,
       rowId: String((row as { _id?: string })._id || user.id),
     };
+
+    // In case a concurrent insert happened, immediately collapse to one row.
+    const consolidated = await consolidateUsersByEmail(normalizedEmail);
+    return consolidated ?? created;
   });
 }
 
@@ -670,7 +757,10 @@ export async function updateUserKyc(
   email: string,
   updates: Partial<Omit<StoredUser, "kycData">> & { kycData?: Partial<KycData> },
 ) {
-  const existing = await findStoredUserByEmail(email);
+  const normalized = normalizeEmail(email);
+  const existing =
+    (await consolidateUsersByEmail(normalized)) ||
+    (await findStoredUserByEmail(normalized));
   if (!existing) {
     throw new Error("User not found.");
   }
