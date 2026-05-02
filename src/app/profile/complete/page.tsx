@@ -128,7 +128,7 @@ export default function CompleteProfilePage() {
         setError(data.error || "Failed to save. Please try again.");
         return;
       }
-      await update();
+      await update({ profileComplete: true, kycLevel: Number(data?.user?.kycLevel ?? 1) });
       router.replace("/dashboard");
     } catch {
       setError("Network error. Please try again.");

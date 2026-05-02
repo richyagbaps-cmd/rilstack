@@ -114,7 +114,7 @@ const handler = NextAuth({
 
       return true;
     },
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.kycLevel = (user as any).kycLevel ?? 0;
@@ -130,6 +130,15 @@ const handler = NextAuth({
           token.id = storedUser.id;
           token.profileComplete = isStoredUserProfileComplete(storedUser);
           token.dashboardAccessGranted = true;
+        }
+      }
+
+      if (trigger === "update") {
+        if (session && typeof (session as any).profileComplete === "boolean") {
+          token.profileComplete = Boolean((session as any).profileComplete);
+        }
+        if (session && typeof (session as any).kycLevel === "number") {
+          token.kycLevel = Number((session as any).kycLevel);
         }
       }
 
