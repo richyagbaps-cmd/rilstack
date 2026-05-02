@@ -11,58 +11,55 @@ interface DashboardTopBarProps {
 
 export default function DashboardTopBar({ onMenuClick }: DashboardTopBarProps) {
   const { data: session } = useSession();
-  
-  const initials = session?.user?.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase() || "U";
+
+  const initials =
+    session?.user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U";
+
+  const firstName = session?.user?.name?.split(" ")[0] || "there";
+  const h = new Date().getHours();
+  const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-      <div className="flex items-center justify-between px-4 h-14">
-        {/* Hamburger Menu */}
-        <button
-          onClick={onMenuClick}
-          className="flex flex-col gap-1.5 justify-center w-6 h-6 cursor-pointer"
-          aria-label="Menu"
-        >
-          <div className="w-6 h-0.5 bg-[#1A5F7A] rounded-full" />
-          <div className="w-4 h-0.5 bg-[#1A5F7A] rounded-full" />
-          <div className="w-6 h-0.5 bg-[#1A5F7A] rounded-full" />
-        </button>
-
-        {/* Logo / Branding */}
-        <div className="flex items-center gap-2">
-          <Image
-            src="/icons/rilstack-logo.png"
-            alt="rilstack logo"
-            width={32}
-            height={32}
-            className="h-8 w-8 object-contain"
-            priority
-          />
-          <span className="text-sm font-bold text-[#1A5F7A]">rilstack</span>
+    <header className="flex items-center justify-between bg-white px-5 pb-3 pt-4 shadow-sm">
+      {/* Avatar + greeting */}
+      <Link href="/profile" className="flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0AB68B] text-[12px] font-bold text-white shadow-sm">
+          {initials}
         </div>
-
-        {/* Bell + Avatar */}
-        <div className="flex items-center gap-3">
-          <button
-            className="relative p-1 text-[#1A5F7A] hover:bg-slate-100 rounded-full transition"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" aria-hidden="true" strokeWidth={2} />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-
-          <Link
-            href="/settings"
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1A5F7A] text-white text-xs font-bold"
-          >
-            {initials}
-          </Link>
+        <div>
+          <p className="text-[11px] text-slate-400">{greeting},</p>
+          <p className="text-[14px] font-semibold text-[#0F2C3D]">{firstName} 👋</p>
         </div>
+      </Link>
+
+      {/* Logo */}
+      <div className="flex items-center gap-1.5">
+        <Image
+          src="/icons/rilstack-logo.png"
+          alt="rilstack"
+          width={28}
+          height={28}
+          className="h-7 w-7 object-contain"
+          priority
+        />
+        <span className="text-[13px] font-bold text-[#0AB68B]">rilstack</span>
       </div>
+
+      {/* Notifications */}
+      <Link
+        href="/notifications"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#F4F6F8] transition hover:bg-slate-100"
+        aria-label="Notifications"
+      >
+        <Bell className="h-4.5 w-4.5 text-[#0F2C3D]" strokeWidth={2} />
+        <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+      </Link>
     </header>
   );
 }
+

@@ -6,13 +6,11 @@ const PIN_STORAGE_KEY = "rilstack-user-pin";
 
 function hashPin(digits: string[]) {
   const raw = digits.join("");
-  let hash = 0;
+  let hash = 5381;
   for (let i = 0; i < raw.length; i++) {
-    const char = raw.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
+    hash = (hash * 33) ^ raw.charCodeAt(i);
   }
-  return "ph_" + Math.abs(hash).toString(36);
+  return "ph_" + Math.abs(hash >>> 0).toString(36);
 }
 
 export function hasPin(): boolean {
@@ -28,6 +26,17 @@ export function verifyPin(digits: string[]): boolean {
   const stored = localStorage.getItem(PIN_STORAGE_KEY);
   if (!stored) return false;
   return hashPin(digits) === stored;
+}
+
+// Convenience wrappers used by the new PinModal
+export function hasPinStr(): boolean {
+  return hasPin();
+}
+export function savePinStr(pin: string): void {
+  savePinHash(pin.split(""));
+}
+export function verifyPinStr(pin: string): boolean {
+  return verifyPin(pin.split(""));
 }
 
 interface PinConfirmModalProps {

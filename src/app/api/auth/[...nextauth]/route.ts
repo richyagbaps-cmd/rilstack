@@ -26,6 +26,16 @@ if (!googleClientId || !googleClientSecret) {
   console.warn("Google OAuth is disabled: missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET.");
 }
 
+function inferExpressProfileComplete(user: any): boolean {
+  const kycStatus = String(user?.KYC_Status || "").trim().toLowerCase();
+  if (kycStatus === "pending" || kycStatus === "verified") return true;
+
+  // Fallback for older rows where status may be empty but profile data exists.
+  const hasAddressCore = Boolean(String(user?.Address || "").trim() && String(user?.State || "").trim());
+  const hasIdentity = Boolean(String(user?.NIN || user?.ID_Number || "").trim());
+  return hasAddressCore && hasIdentity;
+}
+
 const providers = [
   ...(googleClientId && googleClientSecret
     ? [
@@ -79,8 +89,8 @@ const providers = [
           name: fullName || String(u.First_Name || u.Surname || "User"),
           email: String(u.Email || identifier),
           kycLevel: 0,
-          profileComplete: Boolean(u.Address && u.State && u.LGA),
-          dashboardAccessGranted: true,
+          profileComplete: inferExpressProfileComplete(u),
+          dashboardAccessGranted: inferExpressProfileComplete(u),
           expressAccessToken: result.data?.token,
         } as any;
       }

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import InvestmentPortfolio from "../../components/InvestmentPortfolio";
+import PinModal from "@/components/PinModal";
 
 type TBill = {
   id: string;
@@ -719,7 +720,9 @@ function TBillReviewModal({
   onClose: () => void;
 }) {
   const [risk, setRisk] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
         <button
@@ -730,33 +733,24 @@ function TBillReviewModal({
         </button>
         <h3 className="text-xl font-bold mb-4">Review Subscription</h3>
         <ul className="text-sm mb-3 space-y-1">
-          <li>
-            <b>Product:</b> {tbill.name}
-          </li>
-          <li>
-            <b>Amount:</b> ₦{amount.toLocaleString()}
-          </li>
-          <li>
-            <b>Bid Type:</b>{" "}
-            {bidYield ? `Competitive (${bidYield}%)` : "Non-competitive"}
-          </li>
-          <li>
-            <b>Auction Date:</b> {tbill.auctionClose}
-          </li>
-          <li>
-            <b>Est. Discount/Yield:</b> {tbill.discountRate}
-          </li>
+          <li><b>Product:</b> {tbill.name}</li>
+          <li><b>Amount:</b> ₦{amount.toLocaleString()}</li>
+          <li><b>Bid Type:</b> {bidYield ? `Competitive (${bidYield}%)` : "Non-competitive"}</li>
+          <li><b>Auction Date:</b> {tbill.auctionClose}</li>
+          <li><b>Est. Discount/Yield:</b> {tbill.discountRate}</li>
         </ul>
         <RiskCheckbox checked={risk} onChange={setRisk} />
         <button
-          className="w-full rounded bg-[#2c3e5f] py-2 font-semibold text-white mt-2 disabled:opacity-50"
+          className="w-full rounded-xl bg-[#0AB68B] py-2.5 font-bold text-white mt-2 disabled:opacity-50 transition active:scale-[0.98]"
           disabled={!risk}
-          onClick={onConfirm}
+          onClick={() => setShowPin(true)}
         >
           Confirm & Submit
         </button>
       </div>
     </div>
+    <PinModal open={showPin} title="Authorize Investment" subtitle="Enter PIN to confirm this subscription" onSuccess={() => { setShowPin(false); onConfirm(); }} onCancel={() => setShowPin(false)} />
+    </>
   );
 }
 
@@ -773,43 +767,32 @@ function BondReviewModal({
   onClose: () => void;
 }) {
   const [risk, setRisk] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
-        <button
-          className="absolute top-3 right-3 text-slate-400 hover:text-slate-700"
-          onClick={onClose}
-        >
-          ✕
-        </button>
+        <button className="absolute top-3 right-3 text-slate-400 hover:text-slate-700" onClick={onClose}>✕</button>
         <h3 className="text-xl font-bold mb-4">Review Subscription</h3>
         <ul className="text-sm mb-3 space-y-1">
-          <li>
-            <b>Product:</b> {bond.name}
-          </li>
-          <li>
-            <b>Amount:</b> ₦{amount.toLocaleString()}
-          </li>
-          <li>
-            <b>Coupon Rate:</b> {bond.coupon}
-          </li>
-          <li>
-            <b>Issue Date:</b> {bond.issueDate}
-          </li>
-          <li>
-            <b>Interest Payment:</b> {bond.interestPayment}
-          </li>
+          <li><b>Product:</b> {bond.name}</li>
+          <li><b>Amount:</b> ₦{amount.toLocaleString()}</li>
+          <li><b>Coupon Rate:</b> {bond.coupon}</li>
+          <li><b>Issue Date:</b> {bond.issueDate}</li>
+          <li><b>Interest Payment:</b> {bond.interestPayment}</li>
         </ul>
         <RiskCheckbox checked={risk} onChange={setRisk} />
         <button
-          className="w-full rounded bg-[#2c3e5f] py-2 font-semibold text-white mt-2 disabled:opacity-50"
+          className="w-full rounded-xl bg-[#0AB68B] py-2.5 font-bold text-white mt-2 disabled:opacity-50 transition active:scale-[0.98]"
           disabled={!risk}
-          onClick={onConfirm}
+          onClick={() => setShowPin(true)}
         >
           Confirm & Submit
         </button>
       </div>
     </div>
+    <PinModal open={showPin} title="Authorize Investment" subtitle="Enter PIN to confirm this subscription" onSuccess={() => { setShowPin(false); onConfirm(); }} onCancel={() => setShowPin(false)} />
+    </>
   );
 }
 
@@ -836,7 +819,9 @@ function SecondaryBondReviewModal({
   onClose: () => void;
 }) {
   const [risk, setRisk] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
         <button
@@ -873,14 +858,16 @@ function SecondaryBondReviewModal({
         </ul>
         <RiskCheckbox checked={risk} onChange={setRisk} />
         <button
-          className="w-full rounded bg-[#2c3e5f] py-2 font-semibold text-white mt-2 disabled:opacity-50"
+          className="w-full rounded-xl bg-[#0AB68B] py-2.5 font-bold text-white mt-2 disabled:opacity-50 transition active:scale-[0.98]"
           disabled={!risk}
-          onClick={onConfirm}
+          onClick={() => setShowPin(true)}
         >
           Confirm & Submit
         </button>
       </div>
     </div>
+    <PinModal open={showPin} title="Authorize Trade" subtitle="Enter PIN to confirm this order" onSuccess={() => { setShowPin(false); onConfirm(); }} onCancel={() => setShowPin(false)} />
+    </>
   );
 }
 
@@ -903,7 +890,9 @@ function MutualFundReviewModal({
   onClose: () => void;
 }) {
   const [risk, setRisk] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
         <button
@@ -933,14 +922,16 @@ function MutualFundReviewModal({
         </ul>
         <RiskCheckbox checked={risk} onChange={setRisk} />
         <button
-          className="w-full rounded bg-[#2c3e5f] py-2 font-semibold text-white mt-2 disabled:opacity-50"
+          className="w-full rounded-xl bg-[#0AB68B] py-2.5 font-bold text-white mt-2 disabled:opacity-50 transition active:scale-[0.98]"
           disabled={!risk}
-          onClick={onConfirm}
+          onClick={() => setShowPin(true)}
         >
           Confirm & Submit
         </button>
       </div>
     </div>
+    <PinModal open={showPin} title="Authorize Investment" subtitle="Enter PIN to confirm this investment" onSuccess={() => { setShowPin(false); onConfirm(); }} onCancel={() => setShowPin(false)} />
+    </>
   );
 }
 
@@ -1305,24 +1296,27 @@ export default function InvestmentsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] px-4 py-6">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-4 rounded-2xl border border-[#d8e2ef] bg-white p-6 shadow-[0_6px_20px_rgba(20,44,76,0.08)]">
-          <h1 className="text-3xl font-bold text-[#2c3e5f]">Investments</h1>
-          <p className="mt-1 text-sm text-[#4A5B6E]">
-            Browse auctions, bonds, and mutual funds, then track everything in one portfolio view.
-          </p>
+    <div className="min-h-screen bg-[#F4F6F8] pb-24" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      {/* PiggyVest header */}
+      <div style={{ background: "linear-gradient(135deg, #0F2C3D 0%, #1A2E6B 60%, #7C3AED 100%)" }} className="overflow-hidden">
+        <div className="px-5 pb-8 pt-12">
+          <p className="text-[13px] font-semibold text-white/70 mb-1">Investments</p>
+          <p className="text-[28px] font-bold text-white">Grow your money</p>
+          <p className="text-[12px] text-white/60 mt-1">T-Bills · Bonds · Mutual Funds · Portfolio</p>
         </div>
+      </div>
 
-        <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="px-4 pt-4">
+        {/* Tab selector */}
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${
+              className={`rounded-2xl px-3 py-2.5 text-[12px] font-semibold transition active:scale-[0.97] ${
                 activeTab === tab.key
-                  ? "border-[#2c3e5f] bg-[#eaf2fa] text-[#2c3e5f] shadow"
-                  : "border-[#d8e2ef] bg-white text-[#4A5B6E] hover:border-[#2c3e5f]/40 hover:bg-[#f3f7fd]"
+                  ? "bg-[#0F2C3D] text-white shadow-sm"
+                  : "bg-white text-slate-500 border border-slate-200"
               }`}
             >
               {tab.label}
@@ -1330,7 +1324,7 @@ export default function InvestmentsPage() {
           ))}
         </div>
 
-        <div className="rounded-2xl border border-[#d8e2ef] bg-white p-6 shadow-[0_6px_20px_rgba(20,44,76,0.08)] min-h-[420px]">
+        <div className="rounded-2xl bg-white p-4 shadow-sm min-h-[420px]">
           {TABS.find((tab) => tab.key === activeTab)?.component}
         </div>
       </div>

@@ -1,9 +1,15 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { DEMO_EMAIL, DEMO_SAVINGS_GOALS } from "@/lib/demo-data";
+import {
+  PiggyBank, TrendingUp, Lock, Plus, Minus, ChevronRight, Eye, EyeOff,
+  ArrowLeft, RefreshCw,
+} from "lucide-react";
+import Link from "next/link";
+import PinModal from "@/components/PinModal";
 
-const DAILY_INTEREST = 0.03; // 3% daily
+const DAILY_INTEREST = 0.03;
 const RETIREMENT_RATE = 0.18;
 const RETIREMENT_PENALTY = 0.075;
 const MIN_RETIREMENT_DURATION_YEARS = 5;
@@ -12,18 +18,26 @@ const MAX_RETIREMENT_DURATION_YEARS = 30;
 function getInterest(saved: number, days: number) {
   return Math.round(saved * (Math.pow(1 + DAILY_INTEREST, days) - 1));
 }
-
 function daysSince(date: string) {
   const d = new Date(date);
   const now = new Date();
   return Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
 }
-
 function addYearsToDateInput(base: Date, years: number) {
   const next = new Date(base);
   next.setFullYear(next.getFullYear() + years);
   return next.toISOString().slice(0, 10);
 }
+function fmt(v: number) {
+  return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 2 }).format(v);
+}
+
+type PinAction =
+  | { type: "add"; idx: number }
+  | { type: "withdraw"; idx: number }
+  | { type: "retire_create" }
+  | { type: "retire_withdraw" }
+  | null;
 
 export default function SavingsDashboard() {
   const { data: session } = useSession();
@@ -32,6 +46,7 @@ export default function SavingsDashboard() {
   const [showAdd, setShowAdd] = useState<number | null>(null);
   const [showWithdraw, setShowWithdraw] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hidden, setHidden] = useState(false);
   const [retireInitial, setRetireInitial] = useState("");
   const [retireTarget, setRetireTarget] = useState("");
   const [retireDueDate, setRetireDueDate] = useState("");
@@ -40,6 +55,10 @@ export default function SavingsDashboard() {
   const [retireClaimReason, setRetireClaimReason] = useState<"early" | "retirement_age" | "incapacitation">("early");
   const [retireMedicalCertified, setRetireMedicalCertified] = useState(false);
   const [retireNotice, setRetireNotice] = useState("");
+  const [pinGate, setPinGate] = useState<PinAction>(null);
+  const [addAmounts, setAddAmounts] = useState<Record<number, string>>({});
+  const [wdAmounts, setWdAmounts] = useState<Record<number, string>>({});
+  const [actionError, setActionError] = useState("");
 
   const userId = typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
 
@@ -67,418 +86,398 @@ export default function SavingsDashboard() {
       .finally(() => setLoading(false));
   }, [session, userId]);
 
-  // Calculate total saved and interest
   const totalSaved = goals.reduce((sum, g) => sum + (g.currentAmount || 0), 0);
   const days = daysSince(lastUpdate || new Date().toISOString().slice(0, 10));
   const interest = getInterest(totalSaved, days);
 
   const handleAdd = async (idx: number, amt: number) => {
     const goal = goals[idx];
+    setActionError("");
     try {
       const res = await fetch(`/api/savings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "deposit",
-          rowId: goal.rowId,
-          goalId: goal.id,
-          userId,
-          amount: amt,
-        }),
+        body: JSON.stringify({ action: "deposit", rowId: goal.rowId, goalId: goal.id, userId, amount: amt }),
       });
       if (!res.ok) throw new Error("Failed to add money");
       await refreshGoals();
+      setShowAdd(null);
+      setAddAmounts((p) => ({ ...p, [idx]: "" }));
     } catch (err) {
-      alert("Failed to add money");
+      setActionError(err instanceof Error ? err.message : "Failed to add money");
     }
-    setShowAdd(null);
   };
+
   const handleWithdraw = async (idx: number, amt: number) => {
     const goal = goals[idx];
-    // Check safe lock
     const locked = goal.safeLocks?.some((l: any) => new Date(l.unlockDate) > new Date());
-    if (locked) return alert("Funds are locked and cannot be withdrawn.");
-    if (amt > (goal.currentAmount || 0)) return alert("Insufficient funds.");
+    if (locked) { setActionError("Funds are locked and cannot be withdrawn."); return; }
+    if (amt > (goal.currentAmount || 0)) { setActionError("Insufficient funds."); return; }
+    setActionError("");
     try {
       const res = await fetch(`/api/savings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "withdraw",
-          rowId: goal.rowId,
-          goalId: goal.id,
-          userId,
-          amount: amt,
-        }),
+        body: JSON.stringify({ action: "withdraw", rowId: goal.rowId, goalId: goal.id, userId, amount: amt }),
       });
       if (!res.ok) throw new Error("Failed to withdraw");
       await refreshGoals();
+      setShowWithdraw(null);
+      setWdAmounts((p) => ({ ...p, [idx]: "" }));
     } catch (err) {
-      alert("Failed to withdraw");
+      setActionError(err instanceof Error ? err.message : "Failed to withdraw");
     }
-    setShowWithdraw(null);
   };
 
-  const retirementGoal = goals.find((goal) => goal.type === "retirement");
+  const retirementGoal = goals.find((g) => g.type === "retirement");
   const minRetirementDueDate = addYearsToDateInput(new Date(), MIN_RETIREMENT_DURATION_YEARS);
   const maxRetirementDueDate = addYearsToDateInput(new Date(), MAX_RETIREMENT_DURATION_YEARS);
 
   const handleCreateRetirementPlan = async () => {
-    if (!userId) return alert("User not logged in");
-    setRetireNotice("");
-
-    if (!retireDueDate) {
-      setRetireNotice(
-        `Please select a maturity date between ${MIN_RETIREMENT_DURATION_YEARS} and ${MAX_RETIREMENT_DURATION_YEARS} years from today.`,
-      );
+    if (!userId) { setRetireNotice("Not logged in"); return; }
+    if (!retireDueDate || retireDueDate < minRetirementDueDate || retireDueDate > maxRetirementDueDate) {
+      setRetireNotice(`Select a date between ${MIN_RETIREMENT_DURATION_YEARS} and ${MAX_RETIREMENT_DURATION_YEARS} years from today.`);
       return;
     }
-
-    if (retireDueDate < minRetirementDueDate || retireDueDate > maxRetirementDueDate) {
-      setRetireNotice(
-        `Retirement plan duration must be between ${MIN_RETIREMENT_DURATION_YEARS} and ${MAX_RETIREMENT_DURATION_YEARS} years.`,
-      );
-      return;
-    }
-
-    const payload = {
-      action: "create_retirement_plan",
-      userId,
-      amount: Number(retireInitial || 0),
-      targetAmount: Number(retireTarget || 0),
-      dueDate: retireDueDate || undefined,
-      payoutPreference: retirePayoutPreference,
-    };
-
     const res = await fetch("/api/savings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        action: "create_retirement_plan", userId,
+        amount: Number(retireInitial || 0), targetAmount: Number(retireTarget || 0),
+        dueDate: retireDueDate, payoutPreference: retirePayoutPreference,
+      }),
     });
     const data = await res.json();
-    if (!res.ok) {
-      setRetireNotice(data.error || "Failed to create retirement plan.");
-      return;
-    }
-    setRetireNotice("Retirement plan created successfully.");
-    await refreshGoals();
+    setRetireNotice(res.ok ? "Retirement plan created!" : (data.error || "Failed to create plan."));
+    if (res.ok) await refreshGoals();
   };
 
   const handleRetirementWithdraw = async () => {
     if (!userId || !retirementGoal?.rowId) return;
     setRetireNotice("");
-
     const res = await fetch("/api/savings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        action: "retirement_withdraw",
-        userId,
-        rowId: retirementGoal.rowId,
-        goalId: retirementGoal.id,
-        name: retirementGoal.name,
-        amount: Number(retireWithdrawAmount || 0),
-        claimReason: retireClaimReason,
+        action: "retirement_withdraw", userId, rowId: retirementGoal.rowId,
+        goalId: retirementGoal.id, name: retirementGoal.name,
+        amount: Number(retireWithdrawAmount || 0), claimReason: retireClaimReason,
         medicalCertified: retireMedicalCertified,
       }),
     });
-
     const data = await res.json();
-    if (!res.ok) {
-      setRetireNotice(data.error || "Retirement withdrawal failed.");
-      return;
-    }
-
-    setRetireNotice(
-      `Withdrawal successful. Net paid: ₦${Number(data.netAmount || 0).toLocaleString()}${
-        Number(data.penalty || 0) > 0
-          ? ` (Penalty: ₦${Number(data.penalty).toLocaleString()})`
-          : ""
-      }`,
-    );
+    if (!res.ok) { setRetireNotice(data.error || "Withdrawal failed."); return; }
+    setRetireNotice(`Withdrawal successful. Net paid: ₦${Number(data.netAmount || 0).toLocaleString()}${Number(data.penalty || 0) > 0 ? ` (Penalty: ₦${Number(data.penalty).toLocaleString()})` : ""}`);
     await refreshGoals();
   };
 
   if (loading) {
-    return <div className="text-center mt-20 text-xl">Loading savings goals...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F4F6F8]">
+        <RefreshCw className="h-6 w-6 animate-spin text-[#0AB68B]" />
+      </div>
+    );
   }
+
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-8 mt-8">
-      <h2 className="text-2xl font-bold mb-4 text-center">Savings Dashboard</h2>
-      <div className="flex justify-between mb-6">
-        <div>
-          <div className="text-gray-700">Total Saved</div>
-          <div className="text-2xl font-bold">
-            ₦{totalSaved.toLocaleString()}
+    <div className="min-h-screen bg-[#F4F6F8] pb-24" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      {/* Header */}
+      <div className="overflow-hidden" style={{ background: "linear-gradient(135deg, #0F2C3D 0%, #0A5C45 60%, #0AB68B 100%)" }}>
+        <div className="px-5 pb-8 pt-12">
+          <div className="mb-1 flex items-center gap-3">
+            <Link href="/dashboard" className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <p className="text-[13px] font-semibold text-white/80">Savings</p>
           </div>
-        </div>
-        <div>
-          <div className="text-gray-700">Interest Accrued</div>
-          <div className="text-2xl font-bold text-green-600">
-            ₦{interest.toLocaleString()}
+          <div className="mt-3 flex items-end justify-between">
+            <div>
+              <p className="text-[12px] text-white/70">Total Saved</p>
+              <p className="text-[30px] font-bold text-white">
+                {hidden ? "₦ ••••••" : fmt(totalSaved)}
+              </p>
+              <p className="mt-0.5 text-[12px] text-white/60">
+                Interest accrued: {hidden ? "••••" : fmt(interest)}
+              </p>
+            </div>
+            <button type="button" onClick={() => setHidden((v) => !v)}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white">
+              {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-center">
+            <div className="rounded-2xl bg-white/15 py-3">
+              <p className="text-[11px] text-white/60">Daily Rate</p>
+              <p className="text-[18px] font-bold text-white">{(DAILY_INTEREST * 100).toFixed(0)}%</p>
+            </div>
+            <div className="rounded-2xl bg-white/15 py-3">
+              <p className="text-[11px] text-white/60">Retirement APY</p>
+              <p className="text-[18px] font-bold text-white">{(RETIREMENT_RATE * 100).toFixed(0)}%</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mb-8 rounded-xl border border-[#d7e3ff] bg-[#f6f9ff] p-5">
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-[#1d3766]">Retirement Plan</h3>
-          <span className="rounded-full bg-[#1d3766] px-3 py-1 text-xs font-semibold text-white">
-            18% p.a. fixed
-          </span>
+      {/* Savings Goals */}
+      <div className="px-4 py-5">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[14px] font-bold text-[#0F2C3D]">Savings Goals</p>
+          <Link href="/savings/goal/new"
+            className="flex items-center gap-1 rounded-full bg-[#0AB68B] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm">
+            <Plus className="h-3 w-3" /> New Goal
+          </Link>
         </div>
-        <p className="mb-3 text-sm text-slate-700">
-          Lock funds for long-term growth. One free withdrawal per calendar quarter, otherwise 7.5% early withdrawal penalty applies before retirement age or approved permanent incapacity.
-        </p>
-        <p className="mb-3 text-sm font-medium text-[#1d3766]">
-          Duration: minimum {MIN_RETIREMENT_DURATION_YEARS} years, maximum {MAX_RETIREMENT_DURATION_YEARS} years.
-        </p>
 
-        {!retirementGoal ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            <input
-              type="number"
-              min={0}
-              className="rounded border p-2"
-              placeholder="Initial amount (optional)"
-              value={retireInitial}
-              onChange={(e) => setRetireInitial(e.target.value)}
-            />
-            <input
-              type="number"
-              min={0}
-              className="rounded border p-2"
-              placeholder="Target amount (optional)"
-              value={retireTarget}
-              onChange={(e) => setRetireTarget(e.target.value)}
-            />
-            <input
-              type="date"
-              className="rounded border p-2"
-              value={retireDueDate}
-              min={minRetirementDueDate}
-              max={maxRetirementDueDate}
-              onChange={(e) => setRetireDueDate(e.target.value)}
-            />
-            <select
-              className="rounded border p-2"
-              value={retirePayoutPreference}
-              onChange={(e) =>
-                setRetirePayoutPreference(
-                  e.target.value === "wallet" ? "wallet" : "compound",
-                )
-              }
-            >
-              <option value="compound">Reinvest to compound</option>
-              <option value="wallet">Pay interest to wallet</option>
-            </select>
-            <button
-              className="rounded bg-[#1d3766] px-4 py-2 font-semibold text-white md:col-span-2"
-              onClick={handleCreateRetirementPlan}
-            >
-              Create Retirement Plan
-            </button>
+        {goals.filter((g) => g.type !== "retirement").length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-10 text-center shadow-sm">
+            <PiggyBank className="mb-3 h-12 w-12 text-slate-200" />
+            <p className="text-[14px] font-semibold text-slate-500">No savings goals yet</p>
+            <p className="mt-1 text-[12px] text-slate-400">Create a goal to start saving</p>
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded bg-white p-3">
-                <div className="text-xs text-slate-500">Current Balance</div>
-                <div className="text-lg font-bold text-slate-800">
-                  ₦{Number(retirementGoal.currentAmount || 0).toLocaleString()}
-                </div>
-              </div>
-              <div className="rounded bg-white p-3">
-                <div className="text-xs text-slate-500">Projected Yearly Interest</div>
-                <div className="text-lg font-bold text-emerald-700">
-                  ₦{Number((retirementGoal.currentAmount || 0) * RETIREMENT_RATE).toLocaleString()}
-                </div>
-              </div>
-              <div className="rounded bg-white p-3">
-                <div className="text-xs text-slate-500">Penalty Rate</div>
-                <div className="text-lg font-bold text-rose-700">
-                  {(RETIREMENT_PENALTY * 100).toFixed(1)}%
-                </div>
-              </div>
-            </div>
+            {goals.filter((g) => g.type !== "retirement").map((g, idx) => {
+              const percent = Math.min(100, Math.round(((g.currentAmount || 0) / (g.targetAmount || 1)) * 100));
+              const locked = g.safeLocks?.some((l: any) => new Date(l.unlockDate) > new Date());
+              const unlockDate = locked ? g.safeLocks.find((l: any) => new Date(l.unlockDate) > new Date())?.unlockDate : null;
+              return (
+                <div key={g.name} className="rounded-2xl bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E6F7F3]">
+                        <PiggyBank className="h-5 w-5 text-[#0AB68B]" />
+                      </div>
+                      <div>
+                        <p className="text-[14px] font-bold text-[#0F2C3D]">{g.name}</p>
+                        <p className="text-[11px] text-slate-500">Target: {fmt(g.targetAmount || 0)}</p>
+                      </div>
+                    </div>
+                    {locked && (
+                      <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1">
+                        <Lock className="h-3 w-3 text-amber-600" />
+                        <span className="text-[10px] font-semibold text-amber-600">Locked</span>
+                      </div>
+                    )}
+                  </div>
 
-            <div className="grid gap-2 md:grid-cols-4">
-              <input
-                type="number"
-                min={1}
-                className="rounded border p-2"
-                placeholder="Withdraw amount"
-                value={retireWithdrawAmount}
-                onChange={(e) => setRetireWithdrawAmount(e.target.value)}
-              />
-              <select
-                className="rounded border p-2"
-                value={retireClaimReason}
-                onChange={(e) =>
-                  setRetireClaimReason(
-                    e.target.value === "retirement_age" ||
-                      e.target.value === "incapacitation"
-                      ? e.target.value
-                      : "early",
-                  )
-                }
-              >
-                <option value="early">Early access</option>
-                <option value="retirement_age">Reached retirement age</option>
-                <option value="incapacitation">Inability to work</option>
-              </select>
-              <label className="flex items-center gap-2 rounded border bg-white px-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={retireMedicalCertified}
-                  onChange={(e) => setRetireMedicalCertified(e.target.checked)}
-                  disabled={retireClaimReason !== "incapacitation"}
-                />
-                Medical certification
-              </label>
-              <button
-                className="rounded bg-[#1d3766] px-4 py-2 font-semibold text-white"
-                onClick={handleRetirementWithdraw}
-              >
-                Withdraw
-              </button>
-            </div>
+                  {/* Progress bar */}
+                  <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-2 rounded-full bg-[#0AB68B] transition-all" style={{ width: `${percent}%` }} />
+                  </div>
+                  <div className="mb-3 flex justify-between text-[11px]">
+                    <span className="font-semibold text-[#0AB68B]">{hidden ? "••••" : fmt(g.currentAmount || 0)}</span>
+                    <span className="text-slate-400">{percent}%</span>
+                  </div>
+
+                  {locked && unlockDate && (
+                    <p className="mb-2 text-[11px] text-amber-600">Locked until {new Date(unlockDate).toLocaleDateString()}</p>
+                  )}
+                  {actionError && showAdd === idx && (
+                    <p className="mb-2 text-[12px] text-red-500">{actionError}</p>
+                  )}
+
+                  {/* Add/Withdraw buttons */}
+                  <div className="flex gap-2">
+                    <button type="button"
+                      onClick={() => { setActionError(""); setShowAdd(idx === showAdd ? null : idx); setShowWithdraw(null); }}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#E6F7F3] py-2.5 text-[13px] font-semibold text-[#0AB68B] transition active:scale-95">
+                      <Plus className="h-4 w-4" /> Add
+                    </button>
+                    <button type="button"
+                      onClick={() => { setActionError(""); setShowWithdraw(idx === showWithdraw ? null : idx); setShowAdd(null); }}
+                      disabled={locked}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-[13px] font-semibold text-slate-500 transition active:scale-95 disabled:opacity-40">
+                      <Minus className="h-4 w-4" /> Withdraw
+                    </button>
+                  </div>
+
+                  {/* Add panel */}
+                  {showAdd === idx && (
+                    <div className="mt-3 rounded-xl bg-[#F4F6F8] p-3">
+                      <p className="mb-2 text-[12px] font-semibold text-slate-600">Amount to add (₦)</p>
+                      <input type="number" inputMode="numeric" min={1}
+                        placeholder="Enter amount"
+                        value={addAmounts[idx] || ""}
+                        onChange={(e) => setAddAmounts((p) => ({ ...p, [idx]: e.target.value }))}
+                        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-[14px] focus:border-[#0AB68B] focus:outline-none" />
+                      <button type="button"
+                        onClick={() => {
+                          const amt = Number(addAmounts[idx] || 0);
+                          if (amt > 0) setPinGate({ type: "add", idx });
+                          else setActionError("Enter a valid amount");
+                        }}
+                        className="mt-2 h-11 w-full rounded-xl bg-[#0AB68B] text-[13px] font-bold text-white transition active:scale-[0.98]">
+                        Confirm Add
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Withdraw panel */}
+                  {showWithdraw === idx && (
+                    <div className="mt-3 rounded-xl bg-[#F4F6F8] p-3">
+                      <p className="mb-2 text-[12px] font-semibold text-slate-600">Amount to withdraw (₦)</p>
+                      <input type="number" inputMode="numeric" min={1}
+                        placeholder="Enter amount"
+                        value={wdAmounts[idx] || ""}
+                        onChange={(e) => setWdAmounts((p) => ({ ...p, [idx]: e.target.value }))}
+                        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-[14px] focus:border-[#0AB68B] focus:outline-none" />
+                      {actionError && showWithdraw === idx && (
+                        <p className="mt-1 text-[12px] text-red-500">{actionError}</p>
+                      )}
+                      <button type="button"
+                        onClick={() => {
+                          const amt = Number(wdAmounts[idx] || 0);
+                          if (amt > 0) setPinGate({ type: "withdraw", idx });
+                          else setActionError("Enter a valid amount");
+                        }}
+                        className="mt-2 h-11 w-full rounded-xl bg-red-500 text-[13px] font-bold text-white transition active:scale-[0.98]">
+                        Confirm Withdraw
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {retireNotice && (
-          <div className="mt-3 rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-            {retireNotice}
+        {/* Retirement Plan */}
+        <div className="mt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[14px] font-bold text-[#0F2C3D]">Retirement Plan</p>
+            <span className="rounded-full bg-[#E6F7F3] px-3 py-1 text-[11px] font-bold text-[#0AB68B]">
+              {(RETIREMENT_RATE * 100).toFixed(0)}% p.a.
+            </span>
           </div>
-        )}
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EBF0FB]">
+                <TrendingUp className="h-5 w-5 text-[#2D65E0]" />
+              </div>
+              <div>
+                <p className="text-[13px] font-semibold text-[#0F2C3D]">Long-term growth</p>
+                <p className="text-[11px] text-slate-500">
+                  {MIN_RETIREMENT_DURATION_YEARS}–{MAX_RETIREMENT_DURATION_YEARS} year lock · 7.5% early penalty
+                </p>
+              </div>
+            </div>
+
+            {!retirementGoal ? (
+              <div className="space-y-2">
+                <input type="number" min={0} placeholder="Initial amount (optional)"
+                  value={retireInitial} onChange={(e) => setRetireInitial(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-[14px] focus:border-[#0AB68B] focus:outline-none" />
+                <input type="number" min={0} placeholder="Target amount (optional)"
+                  value={retireTarget} onChange={(e) => setRetireTarget(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-[14px] focus:border-[#0AB68B] focus:outline-none" />
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-500">Maturity Date</label>
+                  <input type="date" value={retireDueDate}
+                    min={minRetirementDueDate} max={maxRetirementDueDate}
+                    onChange={(e) => setRetireDueDate(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-slate-200 px-3 text-[14px] focus:border-[#0AB68B] focus:outline-none" />
+                </div>
+                <select value={retirePayoutPreference}
+                  onChange={(e) => setRetirePayoutPreference(e.target.value === "wallet" ? "wallet" : "compound")}
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[14px] focus:border-[#0AB68B] focus:outline-none">
+                  <option value="compound">Reinvest to compound</option>
+                  <option value="wallet">Pay interest to wallet</option>
+                </select>
+                {retireNotice && <p className="text-[12px] text-[#0AB68B]">{retireNotice}</p>}
+                <button type="button" onClick={() => setPinGate({ type: "retire_create" })}
+                  className="h-12 w-full rounded-2xl bg-[#2D65E0] text-[14px] font-bold text-white transition active:scale-[0.98]">
+                  Create Retirement Plan
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-[#F4F6F8] p-3">
+                    <p className="text-[11px] text-slate-500">Balance</p>
+                    <p className="text-[16px] font-bold text-[#0F2C3D]">
+                      {hidden ? "••••" : fmt(retirementGoal.currentAmount || 0)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-[#F4F6F8] p-3">
+                    <p className="text-[11px] text-slate-500">Yearly Interest</p>
+                    <p className="text-[16px] font-bold text-[#0AB68B]">
+                      {hidden ? "••••" : fmt((retirementGoal.currentAmount || 0) * RETIREMENT_RATE)}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500">Penalty: {(RETIREMENT_PENALTY * 100).toFixed(1)}% for early withdrawal</p>
+                <input type="number" inputMode="numeric" placeholder="Withdrawal amount"
+                  value={retireWithdrawAmount} onChange={(e) => setRetireWithdrawAmount(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-[14px] focus:border-[#0AB68B] focus:outline-none" />
+                <select value={retireClaimReason} onChange={(e) => setRetireClaimReason(e.target.value as any)}
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-[14px] focus:border-[#0AB68B] focus:outline-none">
+                  <option value="early">Early withdrawal</option>
+                  <option value="retirement_age">Retirement age</option>
+                  <option value="incapacitation">Permanent incapacitation</option>
+                </select>
+                {retireClaimReason === "incapacitation" && (
+                  <label className="flex items-center gap-2 text-[12px] text-slate-600">
+                    <input type="checkbox" checked={retireMedicalCertified} onChange={(e) => setRetireMedicalCertified(e.target.checked)} className="h-4 w-4 accent-[#0AB68B]" />
+                    Medical certificate verified
+                  </label>
+                )}
+                {retireNotice && (
+                  <p className={`text-[12px] ${retireNotice.includes("success") ? "text-[#0AB68B]" : "text-red-500"}`}>{retireNotice}</p>
+                )}
+                <button type="button" onClick={() => setPinGate({ type: "retire_withdraw" })}
+                  className="h-12 w-full rounded-2xl bg-red-500 text-[14px] font-bold text-white transition active:scale-[0.98]">
+                  Withdraw from Retirement
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Safe Lock CTA */}
+        <Link href="/savings/safe-lock"
+          className="mt-4 flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm active:scale-[0.98]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EBF0FB]">
+              <Lock className="h-5 w-5 text-[#2D65E0]" />
+            </div>
+            <div>
+              <p className="text-[13px] font-bold text-[#0F2C3D]">SafeLock</p>
+              <p className="text-[11px] text-slate-500">Lock savings for higher yield</p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-400" />
+        </Link>
       </div>
 
-      <div className="space-y-8">
-        {goals.map((g, idx) => {
-          const percent = Math.min(
-            100,
-            Math.round(((g.currentAmount || 0) / (g.targetAmount || 1)) * 100),
-          );
-          const locked = g.safeLocks?.some(
-            (l: any) => new Date(l.unlockDate) > new Date(),
-          );
-          const unlockDate = locked
-            ? g.safeLocks.find((l: any) => new Date(l.unlockDate) > new Date())
-                ?.unlockDate
-            : null;
-          return (
-            <div key={g.name} className="border rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <div className="font-bold text-lg">{g.name}</div>
-                <div className="text-sm text-gray-600">
-                  Target: ₦{Number(g.targetAmount || 0).toLocaleString()}
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                <div
-                  className="bg-blue-500 h-3 rounded-full"
-                  style={{ width: percent + "%" }}
-                />
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <div className="text-gray-700">
-                  Saved: ₦{Number(g.currentAmount || 0).toLocaleString()}
-                </div>
-                <div className="text-gray-700">{percent}%</div>
-              </div>
-              {locked && (
-                <div className="text-yellow-700 font-semibold mb-2">
-                  Locked until {unlockDate} – cannot withdraw
-                </div>
-              )}
-              <div className="flex gap-2">
-                <button
-                  className="bg-green-600 text-white px-4 py-2 rounded"
-                  onClick={() => setShowAdd(idx)}
-                >
-                  Add Money
-                </button>
-                <button
-                  className="bg-blue-600 text-white px-4 py-2 rounded"
-                  onClick={() => setShowWithdraw(idx)}
-                  disabled={locked}
-                >
-                  Withdraw
-                </button>
-              </div>
-              {showAdd === idx && (
-                <div className="mt-2 flex gap-2">
-                  <input
-                    type="number"
-                    className="border p-2 rounded w-32"
-                    placeholder="Amount"
-                    min={1}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    id={`add-amt-${idx}`}
-                  />
-                  <button
-                    className="bg-green-600 text-white px-3 py-1 rounded"
-                    onClick={() => {
-                      const amt = Number(
-                        (
-                          document.getElementById(
-                            `add-amt-${idx}`,
-                          ) as HTMLInputElement
-                        )?.value || 0,
-                      );
-                      if (amt > 0) handleAdd(idx, amt);
-                    }}
-                  >
-                    Confirm
-                  </button>
-                  <button
-                    className="bg-gray-300 px-3 py-1 rounded"
-                    onClick={() => setShowAdd(null)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-              {showWithdraw === idx && (
-                <div className="mt-2 flex gap-2">
-                  <input
-                    type="number"
-                    className="border p-2 rounded w-32"
-                    placeholder="Amount"
-                    min={1}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    id={`wd-amt-${idx}`}
-                  />
-                  <button
-                    className="bg-blue-600 text-white px-3 py-1 rounded"
-                    onClick={() => {
-                      const amt = Number(
-                        (
-                          document.getElementById(
-                            `wd-amt-${idx}`,
-                          ) as HTMLInputElement
-                        )?.value || 0,
-                      );
-                      if (amt > 0) handleWithdraw(idx, amt);
-                    }}
-                  >
-                    Confirm
-                  </button>
-                  <button
-                    className="bg-gray-300 px-3 py-1 rounded"
-                    onClick={() => setShowWithdraw(null)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-8 text-xs text-gray-500">
-        Interest compounds daily and is added to your total savings balance.
-      </div>
+      {/* PIN Modal */}
+      <PinModal
+        open={pinGate !== null}
+        title={
+          pinGate?.type === "add" ? "Confirm Deposit" :
+          pinGate?.type === "withdraw" ? "Confirm Withdrawal" :
+          pinGate?.type === "retire_create" ? "Create Retirement Plan" :
+          "Confirm Withdrawal"
+        }
+        subtitle="Enter your PIN to authorize this action"
+        onSuccess={() => {
+          const gate = pinGate;
+          setPinGate(null);
+          if (!gate) return;
+          if (gate.type === "add") {
+            const amt = Number(addAmounts[gate.idx] || 0);
+            if (amt > 0) handleAdd(gate.idx, amt);
+          } else if (gate.type === "withdraw") {
+            const amt = Number(wdAmounts[gate.idx] || 0);
+            if (amt > 0) handleWithdraw(gate.idx, amt);
+          } else if (gate.type === "retire_create") {
+            handleCreateRetirementPlan();
+          } else if (gate.type === "retire_withdraw") {
+            handleRetirementWithdraw();
+          }
+        }}
+        onCancel={() => setPinGate(null)}
+      />
     </div>
   );
 }

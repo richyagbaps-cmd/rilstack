@@ -11,7 +11,7 @@ export default function Home() {
   useEffect(() => {
     if (status === "authenticated") {
       const profileComplete = (session?.user as any)?.profileComplete;
-      if (!profileComplete) {
+      if (profileComplete === false) {
         router.replace("/profile/complete");
       } else {
         router.replace("/dashboard");
