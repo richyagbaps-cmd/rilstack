@@ -56,7 +56,7 @@ export default function DashboardTopBar({ onMenuClick }: DashboardTopBarProps) {
           </button>
 
           <Link
-            href="/profile"
+            href="/settings"
             className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1A5F7A] text-white text-xs font-bold"
           >
             {initials}

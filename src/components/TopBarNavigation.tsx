@@ -141,10 +141,10 @@ export default function TopBarNavigation() {
               <span className="text-sm text-[#4A5B6E] mb-3 break-all">{user?.email || "user@rilstack.com"}</span>
               <button
                 className="mt-1 px-4 py-2 rounded-lg bg-[#1A5F7A] text-white font-semibold hover:bg-[#174e62] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]"
-                onClick={() => { setDrawerOpen(false); router.push('/profile'); }}
+                onClick={() => { setDrawerOpen(false); router.push('/settings'); }}
                 tabIndex={0}
               >
-                View Profile
+                Profile & Settings
               </button>
             </div>
             {/* Drawer Menu: Section A - Account & Security */}
@@ -153,8 +153,8 @@ export default function TopBarNavigation() {
                 <span className="uppercase text-xs font-bold text-[#4A5B6E] tracking-wider">Account & Security</span>
               </div>
               <div className="flex flex-col gap-1 mb-6">
-                <button className="flex items-center gap-3 text-left py-2 px-2 rounded hover:bg-[#F8F9FA] text-[#1A5F7A] font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]" tabIndex={0} onClick={() => { setDrawerOpen(false); router.push('/profile'); }}>
-                  <span role="img" aria-label="Profile" className="text-xl"></span> Profile
+                <button className="flex items-center gap-3 text-left py-2 px-2 rounded hover:bg-[#F8F9FA] text-[#1A5F7A] font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]" tabIndex={0} onClick={() => { setDrawerOpen(false); router.push('/settings'); }}>
+                  <span role="img" aria-label="Profile and settings" className="text-xl"></span> Profile & Settings
                 </button>
                 <button className="flex items-center gap-3 text-left py-2 px-2 rounded hover:bg-[#F8F9FA] text-[#1A5F7A] font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A5F7A]" tabIndex={0} onClick={() => { setDrawerOpen(false); router.push('/settings/security'); }}>
                   <span role="img" aria-label="Security" className="text-xl"></span> Security Settings

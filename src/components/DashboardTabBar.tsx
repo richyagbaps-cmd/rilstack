@@ -12,7 +12,7 @@ export default function DashboardTabBar() {
     { href: "/budgets", label: "Budget", icon: Calculator },
     { href: "/savings", label: "Savings", icon: PiggyBank },
     { href: "/investments", label: "Invest", icon: TrendingUp },
-    { href: "/profile", label: "Profile", icon: User },
+    { href: "/settings", label: "Profile", icon: User },
   ];
 
   return (

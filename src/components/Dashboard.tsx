@@ -1,13 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import React, { useState } from "react";
+import React from "react";
 import { useSession } from "next-auth/react";
 import ThreeDHome from "./ThreeDHome";
 import ReviewsWidget from "./ReviewsWidget";
 import MetricCardsCarousel from "./MetricCardsCarousel";
 import DashboardTabContent from "../app/DashboardTabContent";
-import UserProfile from "./UserProfile";
 
 const monthlyData = [
   { month: "Jan", income: 0, expenses: 0, invest: 0 },
@@ -47,7 +46,6 @@ const metricCards = [
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
-  const [showProfile, setShowProfile] = useState(false);
 
   if (status === "loading") {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -76,7 +74,6 @@ export default function Dashboard() {
         <button
           className="rounded-full border-2 border-cyan-400 p-1 md:p-2 bg-white/80 hover:scale-105 transition shadow"
           style={{ width: 44, height: 44, overflow: "hidden" }}
-          onClick={() => setShowProfile(true)}
         >
           {session.user?.image ? (
             <Image
@@ -93,9 +90,6 @@ export default function Dashboard() {
           )}
         </button>
       </div>
-
-      {/* Profile Modal */}
-      {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
 
       {/* Dashboard Content */}
       <div className="relative z-10 w-full max-w-4xl mx-auto mt-8 md:mt-12 px-2 md:px-0">
