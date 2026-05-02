@@ -179,7 +179,7 @@ function DashboardContent() {
     if (!session?.user?.email) return;
     const amount = Number(depositAmount.replace(/,/g, ""));
     if (!Number.isFinite(amount) || amount < 100) { setErrorMsg("Minimum deposit is ₦100."); return; }
-    setSheet({ type: "none" }); setWalletActionLoading("deposit"); setErrorMsg("");
+    setWalletActionLoading("deposit"); setErrorMsg("");
     try {
       const res = await fetch("/api/payment/deposit", {
         method: "POST",
@@ -196,8 +196,13 @@ function DashboardContent() {
         const { accountNumber, accountName, bankName } = data.dva as { accountNumber: string; accountName: string; bankName: string };
         setSheet({ type: "deposit_dva", accountNumber, accountName, bankName, amount }); return;
       }
-      if (data.paymentUrl) { window.location.href = data.paymentUrl as string; return; }
+      if (data.paymentUrl) {
+        setSheet({ type: "none" });
+        window.location.href = data.paymentUrl as string;
+        return;
+      }
       showToast("Deposit initialized.");
+      setSheet({ type: "none" });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Deposit failed");
     } finally { setWalletActionLoading(null); }
@@ -446,8 +451,9 @@ function DashboardContent() {
             <div className="grid grid-cols-3 gap-2">
               {(["card", "transfer", "ussd"] as DepositMethod[]).map((m) => (
                 <button key={m} type="button" onClick={() => submitDeposit(m)}
-                  className="rounded-xl border-2 border-[#0AB68B] py-3 text-[13px] font-semibold text-[#0AB68B] transition active:bg-[#E6F7F3]">
-                  {m === "ussd" ? "USSD" : m[0].toUpperCase() + m.slice(1)}
+                  disabled={walletActionLoading === "deposit"}
+                  className="rounded-xl border-2 border-[#0AB68B] py-3 text-[13px] font-semibold text-[#0AB68B] transition active:bg-[#E6F7F3] disabled:opacity-60 disabled:cursor-not-allowed">
+                  {walletActionLoading === "deposit" ? "…" : m === "ussd" ? "USSD" : m[0].toUpperCase() + m.slice(1)}
                 </button>
               ))}
             </div>
