@@ -279,7 +279,7 @@ function mapSeaTableUser(row: STUser): StoredUser {
   };
 }
 
-function buildUserUpdatesLowercase(user: StoredUser): Record<string, unknown> {
+function buildUserUpdates(user: StoredUser): Record<string, unknown> {
   return {
     // Spec-defined lowercase columns
     full_name: user.name,
@@ -295,6 +295,20 @@ function buildUserUpdatesLowercase(user: StoredUser): Record<string, unknown> {
     income_range: user.incomeRange || "",
     last_login: user.lastLogin,
     login_count: user.loginCount,
+    // Legacy columns kept in sync to support existing SeaTable schemas
+    Full_Name: user.name,
+    Email: user.email,
+    Phone: user.phone,
+    Password: user.passwordHash,
+    KYC_Status: user.kycStatus === "verified" ? "Verified" : "Pending",
+    Date_Of_Birth: user.dateOfBirth || "",
+    BVN: user.bvn || "",
+    NIN: user.nin || "",
+    Address: user.address || "",
+    Occupation: user.occupation || "",
+    Income_Range: user.incomeRange || "",
+    Last_Login: user.lastLogin,
+    Login_Count: user.loginCount,
     // Extended / legacy columns
     PIN_Hash: user.pinHash || "",
     Google_ID: user.googleId || "",
@@ -320,67 +334,15 @@ function buildUserUpdatesLowercase(user: StoredUser): Record<string, unknown> {
   };
 }
 
-function buildUserUpdatesLegacy(user: StoredUser): Record<string, unknown> {
-  return {
-    Full_Name: user.name,
-    Email: user.email,
-    Phone: user.phone,
-    Password: user.passwordHash,
-    KYC_Status: user.kycStatus === "verified" ? "Verified" : "Pending",
-    Date_Of_Birth: user.dateOfBirth || "",
-    BVN: user.bvn || "",
-    NIN: user.nin || "",
-    Address: user.address || "",
-    Occupation: user.occupation || "",
-    Income_Range: user.incomeRange || "",
-    Last_Login: user.lastLogin,
-    Login_Count: user.loginCount,
-    PIN_Hash: user.pinHash || "",
-    Google_ID: user.googleId || "",
-    Avatar_URL: user.avatarUrl || "",
-    State: user.stateOfOrigin || "",
-    LGA: user.lga || "",
-    ID_Type: user.idType || "",
-    ID_Number: user.idNumber || "",
-    Selfie_URL: user.selfieUrl || "",
-    ID_Doc_URL: user.idDocUrl || "",
-    Source_of_Funds: user.sourceOfFunds || "",
-    Privacy_Mode: user.privacyMode ? "true" : "false",
-    Biometric: user.biometric ? "true" : "false",
-    Notifications: user.notifications ? "true" : "false",
-    Is_Active: "true",
-    Gender: user.gender || "",
-    KYC_Level: user.kycLevel,
-    KYC_Data_JSON: JSON.stringify(user.kycData),
-    Terms_Accepted: user.termsAccepted ? "true" : "false",
-    Auth_Provider: user.authProvider,
-    Created_At: user.createdAt,
-    Updated_At: user.updatedAt,
-  };
-}
-
 async function updateUserRecord(rowId: string, user: StoredUser): Promise<void> {
-  try {
-    await updateRow(TABLES.USERS, rowId, buildUserUpdatesLowercase(user));
-  } catch (err) {
-    if (!isMissingColumnError(err)) throw err;
-    await updateRow(TABLES.USERS, rowId, buildUserUpdatesLegacy(user));
-  }
+  await updateRow(TABLES.USERS, rowId, buildUserUpdates(user));
 }
 
 async function insertUserRecord(user: StoredUser): Promise<Record<string, unknown>> {
-  try {
-    return await insertRow(TABLES.USERS, {
-      User_ID: user.id,
-      ...buildUserUpdatesLowercase(user),
-    });
-  } catch (err) {
-    if (!isMissingColumnError(err)) throw err;
-    return insertRow(TABLES.USERS, {
-      User_ID: user.id,
-      ...buildUserUpdatesLegacy(user),
-    });
-  }
+  return insertRow(TABLES.USERS, {
+    User_ID: user.id,
+    ...buildUserUpdates(user),
+  });
 }
 
 export function isStoredUserProfileComplete(user: StoredUser) {

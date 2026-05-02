@@ -283,8 +283,8 @@ export async function deleteRow(tableName: string, rowId: string): Promise<void>
 export type STUser = {
   _id: string;
   // Spec-defined columns (lowercase — actual SeaTable column names)
-  email: string;
-  full_name: string;
+  email?: string;
+  full_name?: string;
   phone_number?: string;
   password_hash?: string;      // bcrypt hash
   kyc_status?: "pending" | "incomplete" | "verified";
