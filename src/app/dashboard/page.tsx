@@ -84,6 +84,7 @@ function DashboardContent() {
   const [walletAvailable, setWalletAvailable] = useState(0);
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletActionLoading, setWalletActionLoading] = useState<"deposit" | "withdraw" | null>(null);
+  const [walletDva, setWalletDva] = useState<{ accountNumber: string; accountName: string; bankName: string } | null>(null);
   const [hidden, setHidden] = useState(true);
   const [sheet, setSheet] = useState<SheetState>({ type: "none" });
   const [toast, setToast] = useState("");
@@ -124,6 +125,13 @@ function DashboardContent() {
       const acc = (data?.accounts || []).find((a: { type?: string }) => a.type === "checking") || data?.accounts?.[0];
       setWalletBalance(Number(acc?.balance || 0));
       setWalletAvailable(Number(acc?.availableBalance || 0));
+      if (acc?.accountNumber) {
+        setWalletDva({
+          accountNumber: String(acc.accountNumber),
+          accountName: String(acc.accountName || ""),
+          bankName: String(acc.bankName || ""),
+        });
+      }
     } catch {
       setWalletBalance(0); setWalletAvailable(0);
     } finally {
@@ -132,7 +140,23 @@ function DashboardContent() {
   }, [session?.user?.email]);
 
   useEffect(() => {
-    if (status === "authenticated") void loadWallet();
+    if (status === "authenticated") {
+      void loadWallet();
+      // Silently provision DVA in background so every user has one ready
+      fetch("/api/wallet/setup", { method: "POST", headers: { "Content-Type": "application/json" } })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.wallet?.accountNumber && !walletDva?.accountNumber) {
+            setWalletDva({
+              accountNumber: String(d.wallet.accountNumber),
+              accountName: String(d.wallet.accountName || ""),
+              bankName: String(d.wallet.bankName || ""),
+            });
+          }
+        })
+        .catch(() => { /* non-fatal */ });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, loadWallet]);
 
   // Verify deposit redirect
@@ -179,6 +203,27 @@ function DashboardContent() {
     if (!session?.user?.email) return;
     const amount = Number(depositAmount.replace(/,/g, ""));
     if (!Number.isFinite(amount) || amount < 100) { setErrorMsg("Minimum deposit is ₦100."); return; }
+
+    // For Transfer: show DVA directly from state (no API call needed)
+    if (method === "transfer") {
+      if (walletDva?.accountNumber) {
+        setSheet({ type: "deposit_dva", accountNumber: walletDva.accountNumber, accountName: walletDva.accountName, bankName: walletDva.bankName, amount });
+        return;
+      }
+      // DVA not yet provisioned — provision now
+      setWalletActionLoading("deposit"); setErrorMsg("");
+      try {
+        const res = await fetch("/api/wallet/setup", { method: "POST", headers: { "Content-Type": "application/json" } });
+        const data = await res.json();
+        if (!res.ok || !data?.wallet?.accountNumber) throw new Error(data?.error || "Could not set up your virtual account. Please try again.");
+        setWalletDva({ accountNumber: String(data.wallet.accountNumber), accountName: String(data.wallet.accountName || ""), bankName: String(data.wallet.bankName || "") });
+        setSheet({ type: "deposit_dva", accountNumber: String(data.wallet.accountNumber), accountName: String(data.wallet.accountName || ""), bankName: String(data.wallet.bankName || ""), amount });
+      } catch (err) {
+        setErrorMsg(err instanceof Error ? err.message : "Deposit failed");
+      } finally { setWalletActionLoading(null); }
+      return;
+    }
+
     setWalletActionLoading("deposit"); setErrorMsg("");
     try {
       const res = await fetch("/api/payment/deposit", {
@@ -192,10 +237,6 @@ function DashboardContent() {
       });
       const data = await res.json();
       if (!res.ok || !data?.success) throw new Error(data?.error || "Deposit failed");
-      if (data.dva) {
-        const { accountNumber, accountName, bankName } = data.dva as { accountNumber: string; accountName: string; bankName: string };
-        setSheet({ type: "deposit_dva", accountNumber, accountName, bankName, amount }); return;
-      }
       if (data.paymentUrl) {
         setSheet({ type: "none" });
         window.location.href = data.paymentUrl as string;
