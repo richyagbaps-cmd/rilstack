@@ -148,9 +148,14 @@ interface SettingsFormData {
   dateOfBirth: string;
   gender: "M" | "F" | "other";
   stateOfOrigin: string;
+  lga: string;
   address: string;
+  nin: string;
   idType: "nin" | "bvn" | "passport" | "drivers-license" | "voters-card";
   idNumber: string;
+  occupation: string;
+  incomeRange: string;
+  sourceOfFunds: string;
 }
 
 interface SavedProfileView {
@@ -160,9 +165,14 @@ interface SavedProfileView {
   dateOfBirth: string;
   gender: "M" | "F" | "other";
   stateOfOrigin: string;
+  lga: string;
   address: string;
+  nin: string;
   idType: "nin" | "bvn" | "passport" | "drivers-license" | "voters-card";
   idNumber: string;
+  occupation: string;
+  incomeRange: string;
+  sourceOfFunds: string;
   bvn?: string;
 }
 
@@ -197,9 +207,14 @@ export default function SettingsSection() {
       dateOfBirth: "",
       gender: "M",
       stateOfOrigin: "",
+      lga: "",
       address: "",
+      nin: "",
       idType: "nin",
       idNumber: "",
+      occupation: "",
+      incomeRange: "",
+      sourceOfFunds: "",
     },
   });
 
@@ -211,7 +226,9 @@ export default function SettingsSection() {
       dateOfBirth: profile.dateOfBirth || "",
       gender: (profile.gender || "M") as "M" | "F" | "other",
       stateOfOrigin: profile.stateOfOrigin || "",
+      lga: profile.lga || "",
       address: profile.address || "",
+      nin: profile.nin || "",
       idType: (profile.idType || "nin") as
         | "nin"
         | "bvn"
@@ -219,6 +236,9 @@ export default function SettingsSection() {
         | "drivers-license"
         | "voters-card",
       idNumber: profile.idNumber || "",
+      occupation: profile.occupation || "",
+      incomeRange: profile.incomeRange || "",
+      sourceOfFunds: profile.sourceOfFunds || "",
       bvn: profile.bvn || "",
     };
 
@@ -235,9 +255,14 @@ export default function SettingsSection() {
       dateOfBirth: "",
       gender: "M",
       stateOfOrigin: "",
+      lga: "",
       address: "",
+      nin: "",
       idType: "nin",
       idNumber: "",
+      occupation: "",
+      incomeRange: "",
+      sourceOfFunds: "",
     });
   }, [reset, session?.user?.email, session?.user?.name]);
 
@@ -399,9 +424,17 @@ export default function SettingsSection() {
               <label className="mb-1 block text-xs font-semibold text-slate-700">State of Origin</label>
               <input type="text" {...register("stateOfOrigin", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
             </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">LGA</label>
+              <input type="text" {...register("lga", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
+            </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-semibold text-slate-700">Residential Address</label>
               <input type="text" {...register("address", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">NIN</label>
+              <input type="text" {...register("nin", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
             </div>
             {bvn && (
               <div className="md:col-span-2">
@@ -432,6 +465,18 @@ export default function SettingsSection() {
               <label className="mb-1 block text-xs font-semibold text-slate-700">ID Number</label>
               <input type="text" {...register("idNumber", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
             </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">Occupation</label>
+              <input type="text" {...register("occupation", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">Income Range</label>
+              <input type="text" {...register("incomeRange", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-xs font-semibold text-slate-700">Source of Funds</label>
+              <input type="text" {...register("sourceOfFunds", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
+            </div>
             <div className="mt-1 flex items-center gap-2 md:col-span-2">
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#2E7D32] text-white text-xs font-semibold">✔️ Verified</span>
               <button className="text-xs text-[#F4A261] underline ml-2" disabled>Upload missing docs</button>
@@ -452,7 +497,12 @@ export default function SettingsSection() {
                 <p className="mt-1">Name: {savedProfile.fullName || "-"}</p>
                 <p>Phone: {savedProfile.phone || "-"}</p>
                 <p>DOB: {savedProfile.dateOfBirth || "-"}</p>
+                <p>LGA: {savedProfile.lga || "-"}</p>
+                <p>NIN: {savedProfile.nin ? savedProfile.nin.replace(/.(?=.{4})/g, "*") : "-"}</p>
                 <p>ID: {savedProfile.idType?.toUpperCase() || "-"} {savedProfile.idNumber || ""}</p>
+                <p>Occupation: {savedProfile.occupation || "-"}</p>
+                <p>Income Range: {savedProfile.incomeRange || "-"}</p>
+                <p>Source of Funds: {savedProfile.sourceOfFunds || "-"}</p>
                 <p>Address: {savedProfile.address || "-"}</p>
                 {savedProfile.bvn && <p>BVN: {savedProfile.bvn.replace(/.(?=.{4})/g, "*")}</p>}
               </div>

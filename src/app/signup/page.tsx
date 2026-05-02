@@ -228,8 +228,8 @@ function SignupPageInner() {
       idType: kycData.idType,
       idNumber: kycData.idNumber,
       occupation: kycData.occupation,
-      income: kycData.income,
-      source: kycData.source,
+      incomeRange: kycData.income,
+      sourceOfFunds: kycData.source,
       selfieName: kycData.selfie?.name,
       idPhotoName: kycData.idPhoto?.name,
     };

@@ -28,9 +28,14 @@ function toResponseProfile(user: Awaited<ReturnType<typeof findStoredUserByEmail
     dateOfBirth: user.dateOfBirth || "",
     gender: (user.gender || "M") as "M" | "F" | "other",
     stateOfOrigin: user.stateOfOrigin || "",
+    lga: user.lga || "",
     address: user.address || "",
+    nin: user.nin || "",
     idType: normalizeIdTypeForUi(user.idType || user.kycData?.idType),
     idNumber: user.idNumber || user.kycData?.idNumber || "",
+    occupation: user.occupation || user.kycData?.occupation || "",
+    incomeRange: user.incomeRange || user.kycData?.income || "",
+    sourceOfFunds: user.sourceOfFunds || user.kycData?.source || "",
     bvn: user.bvn || "",
   };
 }
@@ -77,9 +82,14 @@ export async function PATCH(request: NextRequest) {
       dateOfBirth,
       gender,
       stateOfOrigin,
+      lga,
       address,
+      nin,
       idType,
       idNumber,
+      occupation,
+      incomeRange,
+      sourceOfFunds,
     } = body;
 
     if (!fullName || !phone || !dateOfBirth || !gender || !stateOfOrigin || !address) {
@@ -95,12 +105,20 @@ export async function PATCH(request: NextRequest) {
       dateOfBirth: String(dateOfBirth),
       gender,
       stateOfOrigin: String(stateOfOrigin).trim(),
+      lga: lga ? String(lga).trim() : undefined,
       address: String(address).trim(),
+      nin: nin ? String(nin).trim() : undefined,
       idType: idType ? String(idType).trim() : undefined,
       idNumber: idNumber ? String(idNumber).trim() : undefined,
+      occupation: occupation ? String(occupation).trim() : undefined,
+      incomeRange: incomeRange ? String(incomeRange).trim() : undefined,
+      sourceOfFunds: sourceOfFunds ? String(sourceOfFunds).trim() : undefined,
       kycData: {
         idType: idType ? String(idType).trim() : undefined,
         idNumber: idNumber ? String(idNumber).trim() : undefined,
+        occupation: occupation ? String(occupation).trim() : undefined,
+        income: incomeRange ? String(incomeRange).trim() : undefined,
+        source: sourceOfFunds ? String(sourceOfFunds).trim() : undefined,
       },
     });
 
