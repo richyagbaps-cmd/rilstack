@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import ReviewsWidget from "./ReviewsWidget";
@@ -201,6 +201,7 @@ export default function SettingsSection() {
   const [savingsReminders, setSavingsReminders] = useState(true);
   const [investmentUpdates, setInvestmentUpdates] = useState(true);
   const [promoTips, setPromoTips] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const { register, handleSubmit, reset } = useForm<SettingsFormData>({
     defaultValues: {
@@ -384,6 +385,138 @@ export default function SettingsSection() {
     }
   };
 
+  const runAction = async (key: string, fn: () => Promise<void>) => {
+    setActionLoading(key);
+    setSaveError(null);
+    setSaveSuccess(null);
+    try {
+      await fn();
+    } catch (error: any) {
+      setSaveError(error?.message || "Action failed.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUploadMissingDocs = () =>
+    runAction("upload-docs", async () => {
+      const selfieUrl = window.prompt("Enter selfie image URL (or leave blank)", "") || "";
+      const idDocUrl = window.prompt("Enter ID document URL (or leave blank)", "") || "";
+
+      const res = await fetch("/api/settings/kyc-documents", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selfieUrl, idDocUrl }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || "Failed to upload documents.");
+
+      setSaveSuccess(payload.message || "KYC documents updated successfully.");
+    });
+
+  const handleChangePassword = () =>
+    runAction("change-password", async () => {
+      const currentPassword = window.prompt("Enter current password") || "";
+      const newPassword = window.prompt("Enter new password (min 8 chars)") || "";
+      const confirmPassword = window.prompt("Confirm new password") || "";
+
+      if (!currentPassword || !newPassword) {
+        throw new Error("Current and new password are required.");
+      }
+      if (newPassword !== confirmPassword) {
+        throw new Error("Passwords do not match.");
+      }
+
+      const res = await fetch("/api/settings/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || "Failed to change password.");
+
+      setSaveSuccess(payload.message || "Password changed successfully.");
+    });
+
+  const handleChangePin = () =>
+    runAction("change-pin", async () => {
+      const currentPin = window.prompt("Enter current PIN") || "";
+      const newPin = window.prompt("Enter new PIN (4-6 digits)") || "";
+      const confirmPin = window.prompt("Confirm new PIN") || "";
+
+      if (!currentPin || !newPin) {
+        throw new Error("Current and new PIN are required.");
+      }
+      if (newPin !== confirmPin) {
+        throw new Error("PINs do not match.");
+      }
+
+      const res = await fetch("/api/settings/pin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPin, newPin }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || "Failed to change PIN.");
+
+      setSaveSuccess(payload.message || "PIN changed successfully.");
+    });
+
+  const handleDownloadData = () =>
+    runAction("download-data", async () => {
+      const res = await fetch("/api/settings/export-data", { method: "GET", cache: "no-store" });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || "Failed to export data.");
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `rilstack-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setSaveSuccess("Data export downloaded.");
+    });
+
+  const handleDeleteAccount = () =>
+    runAction("delete-account", async () => {
+      const confirmation = window.prompt('Type DELETE to confirm account deletion') || "";
+      const password = window.prompt("Enter your password to confirm") || "";
+
+      const res = await fetch("/api/settings/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation, password }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || "Failed to delete account.");
+
+      await signOut({ callbackUrl: "/signup" });
+    });
+
+  const handleLinkedAccounts = () =>
+    runAction("linked-accounts", async () => {
+      const res = await fetch("/api/settings/linked-accounts", {
+        method: "GET",
+        cache: "no-store",
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || "Failed to fetch linked accounts.");
+
+      const linked = payload.linkedAccounts || {};
+      const status = [
+        `Credentials: ${linked.credentials ? "Linked" : "Not linked"}`,
+        `Google: ${linked.google ? "Linked" : "Not linked"}`,
+      ].join("\n");
+      window.alert(status);
+      setSaveSuccess("Linked accounts loaded.");
+    });
+
   return (
     <div className="space-y-5 text-slate-800">
 
@@ -488,11 +621,32 @@ export default function SettingsSection() {
             </div>
             <div className="mt-1 flex items-center gap-2 md:col-span-2">
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#2E7D32] text-white text-xs font-semibold">✔️ Verified</span>
-              <button className="text-xs text-[#F4A261] underline ml-2" disabled>Upload missing docs</button>
+              <button
+                type="button"
+                className="text-xs text-[#F4A261] underline ml-2 disabled:opacity-60"
+                disabled={actionLoading === "upload-docs"}
+                onClick={handleUploadMissingDocs}
+              >
+                {actionLoading === "upload-docs" ? "Uploading..." : "Upload missing docs"}
+              </button>
             </div>
             <div className="mt-1 flex gap-2 md:col-span-2">
-              <button className="text-xs text-[#1A5F7A] underline" disabled>Change Password</button>
-              <button className="text-xs text-[#1A5F7A] underline" disabled>Change PIN</button>
+              <button
+                type="button"
+                className="text-xs text-[#1A5F7A] underline disabled:opacity-60"
+                disabled={actionLoading === "change-password"}
+                onClick={handleChangePassword}
+              >
+                {actionLoading === "change-password" ? "Changing..." : "Change Password"}
+              </button>
+              <button
+                type="button"
+                className="text-xs text-[#1A5F7A] underline disabled:opacity-60"
+                disabled={actionLoading === "change-pin"}
+                onClick={handleChangePin}
+              >
+                {actionLoading === "change-pin" ? "Changing..." : "Change PIN"}
+              </button>
             </div>
             {saveError && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{saveError}</div>
@@ -660,9 +814,15 @@ export default function SettingsSection() {
       <section className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-sm md:p-5">
         <h3 className="mb-2 text-base font-bold text-slate-900 md:text-lg">Data & Privacy</h3>
         <div className="space-y-3">
-          <button className="text-xs text-[#1A5F7A] underline" disabled>Download My Data</button>
-          <button className="text-xs text-[#D32F2F] underline" disabled>Delete Account</button>
-          <button className="text-xs text-[#1A5F7A] underline" disabled>Manage Linked Accounts</button>
+          <button type="button" className="text-xs text-[#1A5F7A] underline disabled:opacity-60" disabled={actionLoading === "download-data"} onClick={handleDownloadData}>
+            {actionLoading === "download-data" ? "Preparing export..." : "Download My Data"}
+          </button>
+          <button type="button" className="text-xs text-[#D32F2F] underline disabled:opacity-60" disabled={actionLoading === "delete-account"} onClick={handleDeleteAccount}>
+            {actionLoading === "delete-account" ? "Deleting account..." : "Delete Account"}
+          </button>
+          <button type="button" className="text-xs text-[#1A5F7A] underline disabled:opacity-60" disabled={actionLoading === "linked-accounts"} onClick={handleLinkedAccounts}>
+            {actionLoading === "linked-accounts" ? "Loading linked accounts..." : "Manage Linked Accounts"}
+          </button>
         </div>
       </section>
 
@@ -670,12 +830,12 @@ export default function SettingsSection() {
       <section className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-sm md:p-5">
         <h3 className="mb-2 text-base font-bold text-slate-900 md:text-lg">Support & About</h3>
         <div className="space-y-3">
-          <button className="text-xs text-[#1A5F7A] underline" disabled>Help Center</button>
-          <button className="text-xs text-[#1A5F7A] underline" disabled>Contact Support</button>
-          <button className="text-xs text-[#1A5F7A] underline" disabled>Report a Problem</button>
+          <a className="text-xs text-[#1A5F7A] underline" href="/about">Help Center</a>
+          <a className="text-xs text-[#1A5F7A] underline" href="/contact-support">Contact Support</a>
+          <a className="text-xs text-[#1A5F7A] underline" href="/report-fraud">Report a Problem</a>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs font-medium text-slate-700">rilstack v1.0.0</span>
-            <button className="text-xs text-[#1A5F7A] underline" disabled>Open Source Licenses</button>
+            <a className="text-xs text-[#1A5F7A] underline" href="/terms">Open Source Licenses</a>
           </div>
         </div>
       </section>

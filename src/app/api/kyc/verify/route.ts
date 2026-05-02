@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { ensureStoredUserForGoogleSession, findStoredUserByEmail, updateUserKyc } from "@/lib/user-store";
+import {
+  verifyBvnExternally,
+  verifyIdentityExternally,
+  verifyNinExternally,
+} from "@/lib/identity-verification";
 import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
@@ -47,44 +52,36 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // In production, send OTP via email/SMS service
-        let emailSent = false;
-
-        // Try to send via email if configured
-        if (process.env.RESEND_API_KEY) {
-          try {
-            const { Resend } = await import("resend");
-            const resendClient = new Resend(process.env.RESEND_API_KEY);
-            const fromEmail =
-              process.env.EMAIL_FROM || "rickinvestmentslimited@gmail.com";
-            await resendClient.emails.send({
-              from: fromEmail,
-              to: session.user.email,
-              subject: "Rilstack Verification Code",
-              html: `
-                <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-                  <h2 style="color: #2c5f2d;">Rilstack Verification</h2>
-                  <p>Your verification code is:</p>
-                  <div style="background: #f1f4f9; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
-                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1E2A3A;">${otp}</span>
-                  </div>
-                  <p style="color: #4A5B6E; font-size: 14px;">This code expires in 10 minutes. Do not share it with anyone.</p>
-                </div>
-              `,
-            });
-            emailSent = true;
-          } catch {
-            // Email send failed
-          }
+        if (!process.env.RESEND_API_KEY) {
+          return NextResponse.json(
+            { error: "OTP email provider is not configured." },
+            { status: 503 },
+          );
         }
 
-        // If email wasn't sent, return OTP directly so user can still verify
+        const { Resend } = await import("resend");
+        const resendClient = new Resend(process.env.RESEND_API_KEY);
+        const fromEmail = process.env.EMAIL_FROM || "no-reply@rilstack.xyz";
+
+        await resendClient.emails.send({
+          from: fromEmail,
+          to: session.user.email,
+          subject: "Rilstack Verification Code",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+              <h2 style="color: #2c5f2d;">Rilstack Verification</h2>
+              <p>Your verification code is:</p>
+              <div style="background: #f1f4f9; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1E2A3A;">${otp}</span>
+              </div>
+              <p style="color: #4A5B6E; font-size: 14px;">This code expires in 10 minutes. Do not share it with anyone.</p>
+            </div>
+          `,
+        });
+
         return NextResponse.json({
           success: true,
-          message: emailSent
-            ? "Verification code sent to your email."
-            : "Email service not configured. Use the code shown below.",
-          ...(!emailSent ? { fallbackOtp: otp } : {}),
+          message: "Verification code sent to your email.",
         });
       }
 
@@ -147,15 +144,24 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // In production, verify BVN via Dojah/Paystack/etc API
-        // For now, accept valid format
+        const bvnResult = await verifyBvnExternally(bvn);
+        if (!bvnResult.verified) {
+          return NextResponse.json(
+            { error: "BVN verification failed." },
+            { status: 422 },
+          );
+        }
+
         const newKycData = { ...kycData, bvnVerified: true };
         const newLevel = calculateKycLevel(newKycData);
 
         await updateUserKyc(session.user.email, {
           bvn,
           kycLevel: newLevel,
-          kycData: newKycData,
+          kycData: {
+            ...newKycData,
+            dojahReferenceId: bvnResult.referenceId || kycData.dojahReferenceId,
+          },
         });
 
         return NextResponse.json({
@@ -174,13 +180,24 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        const ninResult = await verifyNinExternally(nin);
+        if (!ninResult.verified) {
+          return NextResponse.json(
+            { error: "NIN verification failed." },
+            { status: 422 },
+          );
+        }
+
         const newKycData = { ...kycData, ninVerified: true };
         const newLevel = calculateKycLevel(newKycData);
 
         await updateUserKyc(session.user.email, {
           nin,
           kycLevel: newLevel,
-          kycData: newKycData,
+          kycData: {
+            ...newKycData,
+            dojahReferenceId: ninResult.referenceId || kycData.dojahReferenceId,
+          },
         });
 
         return NextResponse.json({
@@ -192,11 +209,26 @@ export async function POST(request: NextRequest) {
 
       case "verify-identity": {
         const { dojahReferenceId } = body;
+        const referenceId = String(dojahReferenceId || "").trim();
+        if (!referenceId) {
+          return NextResponse.json(
+            { error: "Identity reference ID is required." },
+            { status: 400 },
+          );
+        }
+
+        const identityResult = await verifyIdentityExternally(referenceId);
+        if (!identityResult.verified) {
+          return NextResponse.json(
+            { error: "Identity verification failed." },
+            { status: 422 },
+          );
+        }
 
         const newKycData = {
           ...kycData,
           identityVerified: true,
-          dojahReferenceId: dojahReferenceId || "manual-review",
+          dojahReferenceId: identityResult.referenceId,
         };
         const newLevel = calculateKycLevel(newKycData);
 
@@ -251,35 +283,6 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        // Handle skip steps
-        if (
-          step === "skip-email" ||
-          step === "skip-bvn" ||
-          step === "skip-nin" ||
-          step === "skip-identity"
-        ) {
-          const skipMap: Record<string, Partial<typeof kycData>> = {
-            "skip-email": { emailVerified: true },
-            "skip-bvn": { bvnVerified: true },
-            "skip-nin": { ninVerified: true },
-            "skip-identity": { identityVerified: true },
-          };
-          const skipped = skipMap[step] || {};
-          const newKycData = { ...kycData, ...skipped };
-          const newLevel = calculateKycLevel(newKycData);
-
-          await updateUserKyc(session.user.email, {
-            kycLevel: newLevel,
-            kycData: newKycData,
-          });
-
-          return NextResponse.json({
-            success: true,
-            message: "Step skipped. You can complete it later from Settings.",
-            kycLevel: newLevel,
-          });
-        }
-
         return NextResponse.json(
           { error: "Invalid verification step." },
           { status: 400 },
