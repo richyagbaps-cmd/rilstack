@@ -49,6 +49,16 @@ function LoginContent() {
           : "An account with this email already exists. Please sign in.",
       );
       if (email) setIdentifier(decodeURIComponent(email));
+      return;
+    }
+
+    if (n === "created") {
+      setNotice(
+        email
+          ? `Account created for ${email}. Please sign in to continue.`
+          : "Account created successfully. Please sign in to continue.",
+      );
+      if (email) setIdentifier(decodeURIComponent(email));
     }
   }, [searchParams]);
 

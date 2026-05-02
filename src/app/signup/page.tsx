@@ -237,8 +237,12 @@ function SignupPageInner() {
     payload.name = payload.name || composeFullName(payload);
 
     const autoLoginWithRetry = async (identifier: string, password: string) => {
-      const maxAttempts = 4;
+      const maxAttempts = 8;
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        if (attempt === 1) {
+          // Give the backend a short window to finish write + read propagation.
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
         const authResult = await signIn("credentials", {
           identifier,
           password,
@@ -303,7 +307,8 @@ function SignupPageInner() {
           emailCredentials.password,
         );
         if (!loginOk) {
-          throw new Error("Account created but automatic login failed.");
+          router.push(`/login?notice=created&email=${encodeURIComponent(String(payload.email || "").trim())}`);
+          return;
         }
       }
 
