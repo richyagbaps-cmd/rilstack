@@ -2,8 +2,8 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import {
+  hasStoredUserDashboardAccess,
   isStoredUserProfileComplete,
-  upsertGoogleUser,
   findStoredUserByEmail,
   findStoredUserByIdentifierAndPassword,
   recordUserLogin,
@@ -188,22 +188,29 @@ const handler = NextAuth({
         }
 
         try {
-          const storedUser = await upsertGoogleUser({
-            name: user.name || "",
-            email: user.email,
-            googleId: account.providerAccountId,
-          });
+          const storedUser = await findStoredUserByEmail(user.email);
 
-          (user as any).id = storedUser.id;
-          (user as any).kycLevel = storedUser.kycLevel ?? 0;
-          (user as any).profileComplete = isStoredUserProfileComplete(storedUser);
-          (user as any).dashboardAccessGranted = true;
+          if (storedUser) {
+            // Fire-and-forget — do not block sign-in if login counter update fails.
+            recordUserLogin(storedUser.email).catch(() => {});
+
+            (user as any).id = storedUser.id;
+            (user as any).kycLevel = storedUser.kycLevel ?? 0;
+            (user as any).profileComplete = isStoredUserProfileComplete(storedUser);
+            (user as any).dashboardAccessGranted = hasStoredUserDashboardAccess(storedUser);
+          } else {
+            // New Google users: defer first SeaTable insert until complete-profile submit.
+            (user as any).id = account.providerAccountId;
+            (user as any).kycLevel = 0;
+            (user as any).profileComplete = false;
+            (user as any).dashboardAccessGranted = false;
+          }
         } catch (error) {
-          console.error("Google sign-in provisioning failed", error);
+          console.error("Google sign-in lookup failed", error);
           (user as any).id = account.providerAccountId;
           (user as any).kycLevel = 0;
           (user as any).profileComplete = false;
-          (user as any).dashboardAccessGranted = true;
+          (user as any).dashboardAccessGranted = false;
           return true;
         }
       }

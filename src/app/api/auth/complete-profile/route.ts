@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
 import {
-  ensureStoredUserForGoogleSession,
+  createStoredUser,
   findStoredUserByEmail,
   findStoredUserByIdentifier,
   hashPin,
@@ -147,23 +148,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existing =
-      (await findStoredUserByEmail(session.user.email)) ||
-      (await ensureStoredUserForGoogleSession({
-        email: session.user.email,
-        name: session.user.name || "",
-        id: (session.user as any).id,
-      }));
-
-    if (!existing) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
-    }
+    const existing = await findStoredUserByEmail(session.user.email);
 
     // Check phone uniqueness — only if the phone is changing
     const normalizedPhone = resolvedPhone;
-    if (normalizedPhone !== (existing.phone || "").trim()) {
+    if (normalizedPhone !== ((existing?.phone as string) || "").trim()) {
       const phoneOwner = await findStoredUserByIdentifier(normalizedPhone);
-      if (phoneOwner && phoneOwner.email !== existing.email) {
+      if (phoneOwner && phoneOwner.email !== session.user.email) {
         return NextResponse.json(
           { error: "This phone number is already registered to another account." },
           { status: 409 },
@@ -171,38 +162,75 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const updated = await updateUserKyc(session.user.email, {
-      name: resolvedName,
-      phone: resolvedPhone,
-      pinHash: hashPin(String(pin)),
-      dateOfBirth: resolvedDateOfBirth,
-      gender,
-      nin: resolvedNin,
-      bvn: resolvedBvn,
-      address: resolvedAddress,
-      stateOfOrigin: resolvedStateOfOrigin,
-      lga: resolvedLga,
-      idType: resolvedIdType,
-      idNumber: resolvedIdNumber,
-      selfieUrl: selfieUrl ? String(selfieUrl) : undefined,
-      idDocUrl: idDocUrl ? String(idDocUrl) : undefined,
-      occupation: resolvedOccupation,
-      incomeRange: resolvedIncomeRange,
-      sourceOfFunds: resolvedSourceOfFunds,
-      termsAccepted: Boolean(termsAccepted),
-      kycData: {
-        ...existing.kycData,
-        emailVerified: true,
-        googleOnboardingSkipped: false,
-        detailsComplete: true,
-        lga: resolvedLga,
-        idType: resolvedIdType,
-        idNumber: resolvedIdNumber,
-        occupation: resolvedOccupation,
-        income: resolvedIncomeRange,
-        source: resolvedSourceOfFunds,
-      },
-    });
+    const updated = existing
+      ? await updateUserKyc(session.user.email, {
+          name: resolvedName,
+          phone: resolvedPhone,
+          pinHash: hashPin(String(pin)),
+          dateOfBirth: resolvedDateOfBirth,
+          gender,
+          nin: resolvedNin,
+          bvn: resolvedBvn,
+          address: resolvedAddress,
+          stateOfOrigin: resolvedStateOfOrigin,
+          lga: resolvedLga,
+          idType: resolvedIdType,
+          idNumber: resolvedIdNumber,
+          selfieUrl: selfieUrl ? String(selfieUrl) : undefined,
+          idDocUrl: idDocUrl ? String(idDocUrl) : undefined,
+          occupation: resolvedOccupation,
+          incomeRange: resolvedIncomeRange,
+          sourceOfFunds: resolvedSourceOfFunds,
+          termsAccepted: Boolean(termsAccepted),
+          kycData: {
+            ...existing.kycData,
+            emailVerified: true,
+            googleOnboardingSkipped: false,
+            detailsComplete: true,
+            lga: resolvedLga,
+            idType: resolvedIdType,
+            idNumber: resolvedIdNumber,
+            occupation: resolvedOccupation,
+            income: resolvedIncomeRange,
+            source: resolvedSourceOfFunds,
+          },
+        })
+      : await createStoredUser({
+          name: resolvedName,
+          email: session.user.email,
+          password: randomUUID(),
+          phone: resolvedPhone,
+          pin: String(pin),
+          googleId: String((session.user as any).id || `google:${session.user.email}`),
+          avatarUrl: String((session.user as any).image || "").trim() || undefined,
+          dateOfBirth: resolvedDateOfBirth,
+          nin: resolvedNin,
+          bvn: resolvedBvn,
+          address: resolvedAddress,
+          stateOfOrigin: resolvedStateOfOrigin,
+          lga: resolvedLga,
+          gender,
+          idType: resolvedIdType,
+          idNumber: resolvedIdNumber,
+          selfieUrl: selfieUrl ? String(selfieUrl) : undefined,
+          idDocUrl: idDocUrl ? String(idDocUrl) : undefined,
+          occupation: resolvedOccupation,
+          incomeRange: resolvedIncomeRange,
+          sourceOfFunds: resolvedSourceOfFunds,
+          termsAccepted: Boolean(termsAccepted),
+          authProvider: "google",
+          kycData: {
+            emailVerified: true,
+            googleOnboardingSkipped: false,
+            detailsComplete: true,
+            lga: resolvedLga,
+            idType: resolvedIdType,
+            idNumber: resolvedIdNumber,
+            occupation: resolvedOccupation,
+            income: resolvedIncomeRange,
+            source: resolvedSourceOfFunds,
+          },
+        });
 
     await saveKycDocumentsForEmail(updated.email, [
       { type: "selfie", url: String(selfieUrl || selfieName || "").trim() },
