@@ -20,6 +20,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       name,
+      surname,
+      firstName,
+      middleName,
       phone,
       pin,
       termsAccepted,
@@ -39,10 +42,16 @@ export async function POST(request: NextRequest) {
       sourceOfFunds,
     } = body;
 
+    const composedName = [surname, firstName, middleName]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+      .join(" ");
+    const resolvedName = String(name || composedName).trim();
+
     // Only the core fields are required for Google onboarding
-    if (!name || !phone || !pin || !termsAccepted || !dateOfBirth || !gender || !address || !stateOfOrigin) {
+    if (!resolvedName || !phone || !pin || !termsAccepted || !dateOfBirth || !gender || !address || !stateOfOrigin) {
       return NextResponse.json(
-        { error: "Name, phone, PIN, date of birth, gender, address and state are required." },
+        { error: "Surname/first name, phone, PIN, date of birth, gender, address and state are required." },
         { status: 400 },
       );
     }
@@ -79,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const updated = await updateUserKyc(session.user.email, {
-      name: String(name).trim(),
+      name: resolvedName,
       phone: String(phone).trim(),
       pinHash: hashPin(String(pin)),
       dateOfBirth: dateOfBirth ? String(dateOfBirth) : undefined,

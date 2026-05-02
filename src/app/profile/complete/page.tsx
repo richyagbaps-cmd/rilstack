@@ -36,7 +36,9 @@ export default function CompleteProfilePage() {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    name: "",
+    surname: "",
+    firstName: "",
+    middleName: "",
     phone: "",
     bvn: "",
     nin: "",
@@ -57,9 +59,28 @@ export default function CompleteProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const composeFullName = (parts: {
+    surname?: string;
+    firstName?: string;
+    middleName?: string;
+  }) =>
+    [parts.surname, parts.firstName, parts.middleName]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+      .join(" ");
+
   useEffect(() => {
     if (session?.user?.name) {
-      setForm((f) => ({ ...f, name: f.name || session.user!.name! }));
+      setForm((f) => {
+        if (f.surname || f.firstName || f.middleName) return f;
+        const parts = String(session.user!.name || "").trim().split(/\s+/);
+        return {
+          ...f,
+          surname: parts[0] || "",
+          firstName: parts[1] || "",
+          middleName: parts.slice(2).join(" "),
+        };
+      });
     }
     if (status === "authenticated" && (session?.user as any)?.profileComplete) {
       router.replace("/dashboard");
@@ -86,6 +107,13 @@ export default function CompleteProfilePage() {
     e.preventDefault();
     setError(null);
 
+    const fullName = composeFullName(form);
+
+    if (!form.surname || !form.firstName) {
+      setError("Surname and first name are required.");
+      return;
+    }
+
     if (form.pin !== form.confirmPin) {
       setError("PINs do not match.");
       return;
@@ -105,7 +133,10 @@ export default function CompleteProfilePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: form.name,
+          surname: form.surname,
+          firstName: form.firstName,
+          middleName: form.middleName,
+          name: fullName,
           phone: form.phone,
           bvn: form.bvn,
           nin: form.nin,
@@ -144,7 +175,7 @@ export default function CompleteProfilePage() {
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#2c3e5f] text-white text-xl font-bold">R</div>
           <h1 className="text-xl font-bold text-slate-900">Complete your profile</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Welcome{form.name ? `, ${form.name.split(" ")[0]}` : ""}! Fill in your details to activate your account.
+            Welcome{form.firstName ? `, ${form.firstName}` : ""}! Fill in your details to activate your account.
           </p>
         </div>
 
@@ -153,11 +184,25 @@ export default function CompleteProfilePage() {
           {/* Personal details section */}
           <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Personal Details</p>
 
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-700">Full Name</label>
-            <input type="text" value={form.name} onChange={(e) => set("name", e.target.value)} required
-              placeholder="e.g. Adaeze Okonkwo"
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#2c3e5f]" />
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">Surname</label>
+              <input type="text" value={form.surname} onChange={(e) => set("surname", e.target.value)} required
+                placeholder="e.g. Okonkwo"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#2c3e5f]" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">First Name</label>
+              <input type="text" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} required
+                placeholder="e.g. Adaeze"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#2c3e5f]" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">Middle Name</label>
+              <input type="text" value={form.middleName} onChange={(e) => set("middleName", e.target.value)}
+                placeholder="Optional"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#2c3e5f]" />
+            </div>
           </div>
 
           <div>
