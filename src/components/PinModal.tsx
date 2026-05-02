@@ -96,7 +96,7 @@ export default function PinModal({
   };
 
   const processComplete = useCallback(
-    (entered: string) => {
+    async (entered: string) => {
       if (step === "create") {
         setCreatePin(entered);
         setPin("");
@@ -117,21 +117,41 @@ export default function PinModal({
         return;
       }
 
-      // step === "enter"
-      if (!verifyPinStored(entered)) {
-        const next = attempts + 1;
-        setAttempts(next);
-        setError(
-          next >= 5
-            ? "Too many attempts. Try again later."
-            : `Incorrect PIN. ${5 - next} attempt${5 - next !== 1 ? "s" : ""} left.`,
-        );
-        doShake();
-        setPin("");
+      // step === "enter" — try local first, fall back to server
+      if (verifyPinStored(entered)) {
+        setError("");
+        onSuccess();
         return;
       }
-      setError("");
-      onSuccess();
+
+      // Local check failed — verify against server (handles mismatched/missing localStorage)
+      try {
+        const res = await fetch("/api/settings/pin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin: entered }),
+        });
+        const data = await res.json();
+        if (res.ok && data?.valid === true) {
+          // Re-sync localStorage so future local checks work
+          savePinStored(entered);
+          setError("");
+          onSuccess();
+          return;
+        }
+      } catch {
+        // Server unreachable — fall through to normal failure path
+      }
+
+      const next = attempts + 1;
+      setAttempts(next);
+      setError(
+        next >= 5
+          ? "Too many attempts. Try again later."
+          : `Incorrect PIN. ${5 - next} attempt${5 - next !== 1 ? "s" : ""} left.`,
+      );
+      doShake();
+      setPin("");
     },
     [step, pin, createPin, attempts, onSuccess],
   );

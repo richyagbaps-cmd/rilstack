@@ -73,3 +73,41 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+/**
+ * POST /api/settings/pin/verify
+ * Verify a PIN against the server-side scrypt hash.
+ * Used as a fallback when localStorage PIN is missing or mismatched.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const pin = String(body?.pin || "").trim();
+
+    if (!pin || !/^\d{4,6}$/.test(pin)) {
+      return NextResponse.json({ error: "Invalid PIN." }, { status: 400 });
+    }
+
+    const user = await findStoredUserByEmail(session.user.email);
+    if (!user) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
+    if (!user.pinHash) {
+      return NextResponse.json({ valid: false, noPinSet: true });
+    }
+
+    const valid = verifyPassword(pin, user.pinHash);
+    return NextResponse.json({ valid });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || "Verification failed." },
+      { status: 500 },
+    );
+  }
+}

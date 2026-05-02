@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { savePinStored } from "@/components/PinModal";
 
 const NIGERIAN_STATES = [
   "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
@@ -166,6 +167,8 @@ export default function CompleteProfilePage() {
         googleTempToken: null,
         dashboardAccessGranted: true,
       });
+      // Sync PIN to localStorage so PinModal works immediately after profile completion
+      savePinStored(form.pin);
       router.replace("/dashboard");
     } catch {
       setError("Network error. Please try again.");

@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import KYCForm from "@/components/KYCForm";
 import PinSetup from "@/components/PinSetup";
+import { savePinStored } from "@/components/PinModal";
 
 type SignupStep =
   | "choose"
@@ -205,6 +206,8 @@ function SignupPageInner() {
 
   const handlePinComplete = (pinValue: string) => {
     setPin(pinValue);
+    // Save to localStorage so PinModal can verify locally from first use
+    savePinStored(pinValue);
     setStep("terms");
   };
 
