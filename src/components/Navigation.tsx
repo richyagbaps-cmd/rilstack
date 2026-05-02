@@ -72,20 +72,6 @@ const navItems = [
     ),
     href: "/history",
   },
-  {
-    label: "Profile",
-    icon: (
-      <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-        <circle cx="12" cy="8" r="4" stroke="#2c3e5f" strokeWidth="2" />
-        <path
-          d="M4 20c0-2.21 3.582-4 8-4s8 1.79 8 4"
-          stroke="#2c3e5f"
-          strokeWidth="2"
-        />
-      </svg>
-    ),
-    href: "/account",
-  },
 ];
 
 export default function Navigation() {

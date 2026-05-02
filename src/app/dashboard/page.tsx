@@ -475,26 +475,28 @@ function DashboardContent() {
   };
 
   return (
-    <div className="bg-[#F8F9FA] min-h-screen pb-[76px]">
+    <div className="dashboard-root h-screen overflow-hidden bg-[#F8F9FA]">
       <DashboardTopBar />
 
-      <div className="px-4 pt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-[#000000]">Hello, {firstName}</h1>
-          <div className="flex items-center gap-2 text-xs text-[#6C757D]">
-            <span>{dateStr}</span>
-            <button
-              type="button"
-              onClick={() => setPrivacyMode((v) => !v)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white"
-              aria-label={privacyMode ? "Disable privacy mode" : "Enable privacy mode"}
-            >
-              {privacyMode ? <EyeOff className="h-4 w-4 text-[#1A5F7A]" /> : <Eye className="h-4 w-4 text-[#1A5F7A]" />}
-            </button>
-          </div>
-        </div>
+      <div className="h-[calc(100vh-112px)] pb-[56px]">
+        <div className="flex h-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <section className="flex h-full min-w-full snap-start flex-col gap-3 overflow-hidden px-4 py-3">
+            <div className="flex items-center justify-between">
+              <h1 className="text-lg font-bold text-[#000000]">Hello, {firstName}</h1>
+              <div className="flex items-center gap-2 text-xs text-[#6C757D]">
+                <span>{dateStr}</span>
+                <button
+                  type="button"
+                  onClick={() => setPrivacyMode((v) => !v)}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white"
+                  aria-label={privacyMode ? "Disable privacy mode" : "Enable privacy mode"}
+                >
+                  {privacyMode ? <EyeOff className="h-4 w-4 text-[#1A5F7A]" /> : <Eye className="h-4 w-4 text-[#1A5F7A]" />}
+                </button>
+              </div>
+            </div>
 
-        <section className="mb-3 rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <section className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="mb-1 flex items-center justify-between">
             <p className="text-sm font-bold text-[#000000]">Wallet</p>
             {walletLoading ? <span className="text-[11px] text-[#6C757D]">Syncing...</span> : null}
@@ -523,29 +525,32 @@ function DashboardContent() {
               {walletActionLoading === "withdraw" ? "Processing..." : "Withdraw"}
             </button>
           </div>
-          {walletError ? <p className="mt-2 text-[11px] text-[#D32F2F]">{walletError}</p> : null}
-          {walletMessage ? <p className="mt-2 text-[11px] text-[#2E7D32]">{walletMessage}</p> : null}
-        </section>
+            {walletError ? <p className="mt-2 text-[11px] text-[#D32F2F]">{walletError}</p> : null}
+            {walletMessage ? <p className="mt-2 text-[11px] text-[#2E7D32]">{walletMessage}</p> : null}
+            </section>
 
-        <div className="grid grid-cols-2 gap-2">
-          {metrics.map((m) => (
-            <button
-              key={m.label}
-              type="button"
-              onClick={revealForThreeSeconds}
-              className="h-20 rounded-xl bg-white p-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#F4A261]"
-            >
-              <div className="mb-1 flex items-center gap-2">
-                {metricIcon(m.key)}
-                <span className="text-[11px] font-semibold text-[#6C757D]">{m.label}</span>
-              </div>
-              <p className="text-sm font-bold text-[#212529]">{m.value}</p>
-              <p className={`text-[11px] ${m.subClass}`}>{m.sub}</p>
-            </button>
-          ))}
-        </div>
+            <div className="grid grid-cols-2 gap-2">
+              {metrics.map((m) => (
+                <button
+                  key={m.label}
+                  type="button"
+                  onClick={revealForThreeSeconds}
+                  className="h-20 rounded-xl bg-white p-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#F4A261]"
+                >
+                  <div className="mb-1 flex items-center gap-2">
+                    {metricIcon(m.key)}
+                    <span className="text-[11px] font-semibold text-[#6C757D]">{m.label}</span>
+                  </div>
+                  <p className="text-sm font-bold text-[#212529]">{m.value}</p>
+                  <p className={`text-[11px] ${m.subClass}`}>{m.sub}</p>
+                </button>
+              ))}
+            </div>
+            <p className="mt-auto text-center text-[11px] font-semibold text-[#6C757D]">Swipe left for budget and goals</p>
+          </section>
 
-        <section className="mt-3 rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <section className="flex h-full min-w-full snap-start flex-col gap-3 overflow-hidden px-4 py-3">
+            <section className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <Ring percent={data.budgetSpentPct} />
@@ -579,10 +584,10 @@ function DashboardContent() {
               );
             })}
           </div>
-        </section>
+            </section>
 
-        <section className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <section className="grid grid-cols-2 gap-2">
+              <div className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-sm font-bold text-[#000000]">Savings</p>
               <button className="text-[11px] font-semibold text-[#1A5F7A]">See all</button>
@@ -602,9 +607,9 @@ function DashboardContent() {
               <p className="text-[11px] text-[#6C757D]">Locked {hiddenAmount(amountsHidden, data.retirement.locked)}</p>
               <p className="mt-1 text-[11px] font-semibold text-[#2E7D32]">+{money(data.interestToday)} today</p>
             </div>
-          </div>
+              </div>
 
-          <div className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <div className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-sm font-bold text-[#000000]">Investments</p>
               <button className="text-[11px] font-semibold text-[#1A5F7A]">See all</button>
@@ -618,13 +623,16 @@ function DashboardContent() {
             <div className="mt-1">
               <CompactProgress value={data.fixedIncome.progress} />
             </div>
-            <button className="mt-2 inline-flex h-7 items-center rounded-md border border-[#1A5F7A] px-2 text-[11px] font-semibold text-[#1A5F7A]">
-              Explore
-            </button>
-          </div>
-        </section>
+                <button className="mt-2 inline-flex h-7 items-center rounded-md border border-[#1A5F7A] px-2 text-[11px] font-semibold text-[#1A5F7A]">
+                  Explore
+                </button>
+              </div>
+            </section>
+            <p className="mt-auto text-center text-[11px] font-semibold text-[#6C757D]">Swipe left for activity</p>
+          </section>
 
-        <section className="mt-3 rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <section className="flex h-full min-w-full snap-start flex-col gap-3 overflow-hidden px-4 py-3">
+            <section className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-bold text-[#000000]">Recent Transactions</p>
             <button className="text-[11px] font-semibold text-[#1A5F7A]">View all</button>
@@ -651,9 +659,9 @@ function DashboardContent() {
               </button>
             ))}
           </div>
-        </section>
+            </section>
 
-        <section className="mt-3 mb-2 rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <section className="rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="grid grid-cols-3 gap-2">
             <button className="flex h-11 flex-col items-center justify-center gap-1 rounded-lg text-[#1A5F7A] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#F4A261]">
               <Shield className="h-5 w-5" aria-hidden="true" />
@@ -668,7 +676,10 @@ function DashboardContent() {
               <span className="text-[11px] font-semibold">Settings</span>
             </button>
           </div>
-        </section>
+            </section>
+            <p className="mt-auto text-center text-[11px] font-semibold text-[#6C757D]">Swipe right to return</p>
+          </section>
+        </div>
       </div>
 
       {/* DVA bank transfer details modal */}
