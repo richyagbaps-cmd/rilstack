@@ -236,6 +236,26 @@ function SignupPageInner() {
 
     payload.name = payload.name || composeFullName(payload);
 
+    const autoLoginWithRetry = async (identifier: string, password: string) => {
+      const maxAttempts = 4;
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        const authResult = await signIn("credentials", {
+          identifier,
+          password,
+          redirect: false,
+        });
+
+        if (authResult && !authResult.error) {
+          return true;
+        }
+
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 350));
+        }
+      }
+      return false;
+    };
+
     try {
       if (signupMethod === "google") {
         const res = await fetch("/api/auth/complete-profile", {
@@ -278,12 +298,11 @@ function SignupPageInner() {
           throw new Error(data.error || "Registration failed");
         }
 
-        const authResult = await signIn("credentials", {
-          email: payload.email,
-          password: emailCredentials.password,
-          redirect: false,
-        });
-        if (!authResult || authResult.error) {
+        const loginOk = await autoLoginWithRetry(
+          String(payload.email || "").trim(),
+          emailCredentials.password,
+        );
+        if (!loginOk) {
           throw new Error("Account created but automatic login failed.");
         }
       }
