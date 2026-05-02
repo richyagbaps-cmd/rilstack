@@ -266,7 +266,11 @@ const handler = NextAuth({
           if (storedUser) {
             token.kycLevel = storedUser.kycLevel ?? 0;
             token.id = storedUser.id;
-            token.profileComplete = isStoredUserProfileComplete(storedUser);
+            const seaTableComplete = isStoredUserProfileComplete(storedUser);
+            // Never downgrade a token that was already marked complete — prevents
+            // returning users being looped back to /profile/complete if their
+            // KYC_Data_JSON was written by an older code path that omitted detailsComplete.
+            token.profileComplete = seaTableComplete || (token.profileComplete === true);
             token.dashboardAccessGranted = true;
           }
         } catch (err) {

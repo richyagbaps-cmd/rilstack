@@ -379,12 +379,11 @@ async function insertUserRecord(user: StoredUser): Promise<Record<string, unknow
 }
 
 export function isStoredUserProfileComplete(user: StoredUser) {
-  return Boolean(
-    user.phone &&
-      user.pinHash &&
-      user.termsAccepted &&
-      user.kycData.detailsComplete,
-  );
+  // Core fields every registered user must have
+  const hasCoreFields = Boolean(user.phone && user.pinHash && user.termsAccepted);
+  // detailsComplete is set in KYC_Data_JSON — present for all new sign-ups.
+  // For existing users whose JSON was never written we fall back to core fields.
+  return hasCoreFields && (user.kycData.detailsComplete || Boolean(user.phone && user.pinHash));
 }
 
 export function hasStoredUserDashboardAccess(user: StoredUser) {
