@@ -80,7 +80,7 @@ function SignupPageInner() {
     }
   }, [router, searchParams, session, status]);
 
-  const handleEmailStart = (e: React.FormEvent) => {
+  const handleEmailStart = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -97,6 +97,22 @@ function SignupPageInner() {
     if (emailCredentials.password !== emailCredentials.confirmPassword) {
       setError("Passwords do not match.");
       return;
+    }
+
+    // Check for existing account before proceeding to KYC
+    try {
+      const checkRes = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailCredentials.email }),
+      });
+      const checkData = await checkRes.json();
+      if (checkData.exists) {
+        router.push(`/login?notice=exists&email=${encodeURIComponent(emailCredentials.email)}`);
+        return;
+      }
+    } catch {
+      // Fail open — proceed to KYC if check fails
     }
 
     setSignupMethod("email");
@@ -187,6 +203,10 @@ function SignupPageInner() {
         });
         const data = await res.json();
         if (!res.ok) {
+          if (res.status === 409 || (data.error || "").toLowerCase().includes("already exists")) {
+            router.push(`/login?notice=exists&email=${encodeURIComponent(payload.email || "")}`);
+            return;
+          }
           throw new Error(data.error || "Registration failed");
         }
 

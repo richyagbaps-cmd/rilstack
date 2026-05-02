@@ -153,9 +153,22 @@ interface SettingsFormData {
   idNumber: string;
 }
 
+interface SavedProfileView {
+  fullName: string;
+  phone: string;
+  email: string;
+  dateOfBirth: string;
+  gender: "M" | "F" | "other";
+  stateOfOrigin: string;
+  address: string;
+  idType: "nin" | "bvn" | "passport" | "drivers-license" | "voters-card";
+  idNumber: string;
+}
+
 export default function SettingsSection() {
   const { data: session } = useSession();
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [savedProfile, setSavedProfile] = useState<SavedProfileView | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -185,6 +198,28 @@ export default function SettingsSection() {
     },
   });
 
+  const applyProfileToForm = (profile: Partial<SavedProfileView>) => {
+    const next: SavedProfileView = {
+      fullName: profile.fullName || session?.user?.name || "",
+      phone: profile.phone || "",
+      email: profile.email || session?.user?.email || "",
+      dateOfBirth: profile.dateOfBirth || "",
+      gender: (profile.gender || "M") as "M" | "F" | "other",
+      stateOfOrigin: profile.stateOfOrigin || "",
+      address: profile.address || "",
+      idType: (profile.idType || "nin") as
+        | "nin"
+        | "bvn"
+        | "passport"
+        | "drivers-license"
+        | "voters-card",
+      idNumber: profile.idNumber || "",
+    };
+
+    reset(next);
+    setSavedProfile(next);
+  };
+
   useEffect(() => {
     reset({
       fullName: session?.user?.name || "",
@@ -211,17 +246,7 @@ export default function SettingsSection() {
         }
 
         if (payload?.profile) {
-          reset({
-            fullName: payload.profile.fullName || session?.user?.name || "",
-            phone: payload.profile.phone || "",
-            email: payload.profile.email || session?.user?.email || "",
-            dateOfBirth: payload.profile.dateOfBirth || "",
-            gender: payload.profile.gender || "M",
-            stateOfOrigin: payload.profile.stateOfOrigin || "",
-            address: payload.profile.address || "",
-            idType: payload.profile.idType || "nin",
-            idNumber: payload.profile.idNumber || "",
-          });
+          applyProfileToForm(payload.profile);
         }
       } catch (error: any) {
         setSaveError(error.message || "Failed to load profile settings.");
@@ -262,6 +287,10 @@ export default function SettingsSection() {
 
       if (!res.ok) {
         throw new Error(payload.error || "Failed to save settings");
+      }
+
+      if (payload?.profile) {
+        applyProfileToForm(payload.profile);
       }
 
       setSaveSuccess("Settings saved successfully to SeaTable.");
@@ -352,6 +381,16 @@ export default function SettingsSection() {
             )}
             {saveSuccess && (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{saveSuccess}</div>
+            )}
+            {savedProfile && (
+              <div className="rounded-xl border border-[#d8e2ef] bg-[#f8fafc] px-4 py-3 text-xs text-slate-700">
+                <p className="font-semibold text-slate-900">Saved in SeaTable</p>
+                <p className="mt-1">Name: {savedProfile.fullName || "-"}</p>
+                <p>Phone: {savedProfile.phone || "-"}</p>
+                <p>DOB: {savedProfile.dateOfBirth || "-"}</p>
+                <p>ID: {savedProfile.idType?.toUpperCase() || "-"} {savedProfile.idNumber || ""}</p>
+                <p>Address: {savedProfile.address || "-"}</p>
+              </div>
             )}
             <button type="submit" disabled={isLoadingProfile || isSavingProfile} className="rounded-xl bg-[#2c3e5f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1e2d46] disabled:cursor-not-allowed disabled:opacity-70">{isSavingProfile ? "Saving..." : "Save Settings"}</button>
           </form>

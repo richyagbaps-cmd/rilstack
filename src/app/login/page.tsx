@@ -35,8 +35,22 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const n = searchParams.get("notice");
+    const email = searchParams.get("email");
+    if (n === "exists") {
+      setNotice(
+        email
+          ? `An account already exists for ${email}. Please sign in.`
+          : "An account with this email already exists. Please sign in.",
+      );
+      if (email) setIdentifier(decodeURIComponent(email));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -111,6 +125,11 @@ function LoginContent() {
           Sign in to continue
         </h1>
         <p className="text-[#8fafd4] mb-6">Jump right in</p>
+        {notice && (
+          <div className="w-full mb-4 rounded-lg border border-[#00e096]/40 bg-[#00e096]/10 px-4 py-3 text-sm text-[#00e096] text-center">
+            {notice}
+          </div>
+        )}
         <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
           <input
             type="text"
