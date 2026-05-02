@@ -2,6 +2,7 @@ import crypto from "crypto";
 import {
   TABLES,
   type STUser,
+  deleteRow,
   getUserByEmail,
   getUserById,
   getUserByPhone,
@@ -117,6 +118,20 @@ function normalizeEmail(email: string) {
 
 function normalizePhone(phone: string) {
   return (phone ?? "").replace(/\s+/g, "").trim();
+}
+
+function parseRilstackUserNumber(userId: string): number {
+  const m = /^rilstack(\d+)$/i.exec((userId || "").trim());
+  return m ? Number(m[1]) : 0;
+}
+
+async function generateNextRilstackUserId(): Promise<string> {
+  const rows = await listUsers();
+  let max = 0;
+  for (const row of rows) {
+    max = Math.max(max, parseRilstackUserNumber(row.User_ID || ""));
+  }
+  return `rilstack${String(max + 1).padStart(3, "0")}`;
 }
 
 function hashSecret(secret: string) {
@@ -300,8 +315,14 @@ export function hasStoredUserDashboardAccess(user: StoredUser) {
 }
 
 export async function findStoredUserByEmail(email: string) {
-  const row = await getUserByEmail(normalizeEmail(email));
-  return row ? mapSeaTableUser(row) : null;
+  const normalized = normalizeEmail(email);
+  const row = await getUserByEmail(normalized);
+  if (row) return mapSeaTableUser(row);
+
+  // Fallback: handle historical rows where Email casing differs.
+  const rows = await listUsers();
+  const found = rows.find((r) => normalizeEmail(r.Email || "") === normalized);
+  return found ? mapSeaTableUser(found) : null;
 }
 
 export async function findStoredUserByIdentifier(identifier: string) {
@@ -360,6 +381,103 @@ function withGoogleUpsertLock<T>(email: string, fn: () => Promise<T>): Promise<T
   });
 }
 
+function pickText(...values: Array<string | undefined>): string | undefined {
+  for (const value of values) {
+    const v = (value || "").trim();
+    if (v) return v;
+  }
+  return undefined;
+}
+
+function mergeUsers(canonical: StoredUser, duplicates: StoredUser[], normalizedEmail: string, googleId: string): StoredUser {
+  const all = [canonical, ...duplicates];
+  const now = new Date().toISOString();
+
+  const mergedKycData: KycData = all.reduce((acc, u) => ({
+    ...acc,
+    ...u.kycData,
+    emailVerified: acc.emailVerified || u.kycData.emailVerified,
+    bvnVerified: acc.bvnVerified || u.kycData.bvnVerified,
+    ninVerified: acc.ninVerified || u.kycData.ninVerified,
+    identityVerified: acc.identityVerified || u.kycData.identityVerified,
+    detailsComplete: acc.detailsComplete || u.kycData.detailsComplete,
+  }), defaultKycData());
+
+  const merged: StoredUser = {
+    ...canonical,
+    email: normalizedEmail,
+    googleId: googleId || pickText(canonical.googleId, ...duplicates.map((u) => u.googleId)),
+    name: pickText(canonical.name, ...duplicates.map((u) => u.name)) || canonical.name,
+    passwordHash: pickText(canonical.passwordHash, ...duplicates.map((u) => u.passwordHash)) || canonical.passwordHash,
+    phone: pickText(canonical.phone, ...duplicates.map((u) => u.phone)) || canonical.phone,
+    pinHash: pickText(canonical.pinHash, ...duplicates.map((u) => u.pinHash)),
+    avatarUrl: pickText(canonical.avatarUrl, ...duplicates.map((u) => u.avatarUrl)),
+    dateOfBirth: pickText(canonical.dateOfBirth, ...duplicates.map((u) => u.dateOfBirth)),
+    nin: pickText(canonical.nin, ...duplicates.map((u) => u.nin)),
+    bvn: pickText(canonical.bvn, ...duplicates.map((u) => u.bvn)),
+    address: pickText(canonical.address, ...duplicates.map((u) => u.address)),
+    stateOfOrigin: pickText(canonical.stateOfOrigin, ...duplicates.map((u) => u.stateOfOrigin)),
+    lga: pickText(canonical.lga, ...duplicates.map((u) => u.lga)),
+    gender: canonical.gender || duplicates.find((u) => u.gender)?.gender,
+    idType: pickText(canonical.idType, ...duplicates.map((u) => u.idType)),
+    idNumber: pickText(canonical.idNumber, ...duplicates.map((u) => u.idNumber)),
+    selfieUrl: pickText(canonical.selfieUrl, ...duplicates.map((u) => u.selfieUrl)),
+    idDocUrl: pickText(canonical.idDocUrl, ...duplicates.map((u) => u.idDocUrl)),
+    occupation: pickText(canonical.occupation, ...duplicates.map((u) => u.occupation)),
+    incomeRange: pickText(canonical.incomeRange, ...duplicates.map((u) => u.incomeRange)),
+    sourceOfFunds: pickText(canonical.sourceOfFunds, ...duplicates.map((u) => u.sourceOfFunds)),
+    authProvider: canonical.authProvider === "google" || duplicates.some((u) => u.authProvider === "google") ? "google" : canonical.authProvider,
+    termsAccepted: canonical.termsAccepted || duplicates.some((u) => u.termsAccepted),
+    loginCount: all.reduce((sum, u) => sum + (u.loginCount ?? 0), 0),
+    lastLogin: pickText(canonical.lastLogin, ...duplicates.map((u) => u.lastLogin)) || canonical.lastLogin,
+    kycData: mergedKycData,
+    updatedAt: now,
+  };
+
+  merged.kycLevel = calculateKycLevel(merged.kycData);
+  merged.kycStatus = deriveKycStatus(merged.kycData);
+  return merged;
+}
+
+function userRank(user: StoredUser, normalizedEmail: string, googleId: string): number {
+  let score = 0;
+  if (user.email === normalizedEmail) score += 100;
+  if ((user.googleId || "") === googleId) score += 80;
+  if (user.pinHash) score += 30;
+  if (user.phone) score += 20;
+  if (user.bvn || user.nin) score += 20;
+  score += Number(user.kycLevel || 0) * 10;
+  score += Number(user.loginCount || 0);
+  return score;
+}
+
+async function consolidateUsersByIdentity(normalizedEmail: string, googleId: string): Promise<StoredUser | null> {
+  const rows = await query<STUser>(
+    `SELECT * FROM ${TABLES.USERS} WHERE Email='${normalizedEmail.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' LIMIT 50`,
+  );
+  if (!rows.length) return null;
+
+  const users = rows.map(mapSeaTableUser);
+  users.sort((a, b) => userRank(b, normalizedEmail, googleId) - userRank(a, normalizedEmail, googleId));
+
+  const canonical = users[0];
+  const duplicates = users.slice(1);
+
+  const merged = mergeUsers(canonical, duplicates, normalizedEmail, googleId);
+  await updateRow(TABLES.USERS, canonical.rowId, buildUserUpdates(merged));
+
+  for (const duplicate of duplicates) {
+    if (duplicate.rowId === canonical.rowId) continue;
+    try {
+      await deleteRow(TABLES.USERS, duplicate.rowId);
+    } catch {
+      // Continue even if one duplicate row cannot be deleted.
+    }
+  }
+
+  return merged;
+}
+
 async function findGoogleAuthCandidate(email: string, googleId: string): Promise<StoredUser | null> {
   const rows = await query<STUser>(
     `SELECT * FROM ${TABLES.USERS} WHERE Email='${email.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' LIMIT 20`,
@@ -397,9 +515,10 @@ export async function createStoredUser(input: CreateStoredUserInput) {
   };
   const kycLevel = calculateKycLevel(mergedKycData);
   const loginCount = 1;
+  const generatedUserId = await generateNextRilstackUserId();
 
   const user: StoredUser = {
-    id: crypto.randomUUID(),
+    id: generatedUserId,
     rowId: "",
     name: input.name.trim(),
     email: normalizedEmail,
@@ -452,6 +571,29 @@ export async function upsertGoogleUser(input: {
 }) {
   const normalizedEmail = normalizeEmail(input.email);
   return withGoogleUpsertLock(normalizedEmail, async () => {
+    const consolidated = await consolidateUsersByIdentity(normalizedEmail, input.googleId);
+    if (consolidated) {
+      const now = new Date().toISOString();
+      const merged: StoredUser = {
+        ...consolidated,
+        name: consolidated.name || input.name,
+        email: normalizedEmail,
+        googleId: input.googleId,
+        authProvider: "google",
+        loginCount: (consolidated.loginCount ?? 0) + 1,
+        lastLogin: now,
+        kycData: {
+          ...consolidated.kycData,
+          emailVerified: true,
+        },
+        updatedAt: now,
+      };
+      merged.kycLevel = calculateKycLevel(merged.kycData);
+      merged.kycStatus = deriveKycStatus(merged.kycData);
+      await updateRow(TABLES.USERS, consolidated.rowId, buildUserUpdates(merged));
+      return merged;
+    }
+
     const existing =
       (await findGoogleAuthCandidate(normalizedEmail, input.googleId)) ||
       (await findStoredUserByGoogleId(input.googleId)) ||
