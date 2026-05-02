@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import {
   createStoredUser,
   ensureStoredUserForGoogleSession,
@@ -7,6 +8,7 @@ import {
   updateUserKyc,
 } from "@/lib/user-store";
 import { randomUUID } from "crypto";
+import { expressJsonRequest, isExpressBackendEnabled } from "@/lib/express-backend";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -75,11 +77,54 @@ function toResponseProfile(user: Awaited<ReturnType<typeof findStoredUserByEmail
   };
 }
 
-export async function GET() {
+function toResponseProfileFromExpress(user: any) {
+  const fullName = [user?.Surname, user?.First_Name, user?.Middle_Name]
+    .map((v: unknown) => String(v || "").trim())
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    fullName,
+    phone: String(user?.Phone || ""),
+    email: String(user?.Email || ""),
+    dateOfBirth: String(user?.Date_Of_Birth || ""),
+    gender: (String(user?.Gender || "M") as "M" | "F" | "other"),
+    stateOfOrigin: String(user?.State || ""),
+    lga: String(user?.LGA || ""),
+    address: String(user?.Address || ""),
+    nin: String(user?.NIN || ""),
+    idType: normalizeIdTypeForUi(String(user?.ID_Type || "nin")),
+    idNumber: String(user?.ID_Number || user?.NIN || ""),
+    occupation: String(user?.Occupation || ""),
+    incomeRange: String(user?.Income_Range || ""),
+    sourceOfFunds: String(user?.Source_of_Funds || ""),
+    bvn: String(user?.BVN || ""),
+  };
+}
+
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession();
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (isExpressBackendEnabled()) {
+      const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
+      const accessToken = (token as any)?.expressAccessToken;
+      if (accessToken) {
+        const result = await expressJsonRequest<any>("/profile", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (result.ok && result.data?.user) {
+          return NextResponse.json(
+            { success: true, profile: toResponseProfileFromExpress(result.data.user) },
+            { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } },
+          );
+        }
+      }
     }
 
     const user = await resolveSessionUser(session);
@@ -123,6 +168,48 @@ export async function PATCH(request: NextRequest) {
       incomeRange,
       sourceOfFunds,
     } = body;
+
+    if (isExpressBackendEnabled()) {
+      const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
+      const accessToken = (token as any)?.expressAccessToken;
+
+      if (accessToken) {
+        const nameParts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+        const expressPayload = {
+          Surname: nameParts[0] || "",
+          First_Name: nameParts[1] || "",
+          Middle_Name: nameParts.slice(2).join(" "),
+          Phone: String(phone || "").trim(),
+          Address: String(address || "").trim(),
+          State: String(stateOfOrigin || "").trim(),
+          LGA: String(lga || "").trim(),
+          ID_Type: String(idType || "nin").trim(),
+          ID_Number: String(idNumber || nin || "").trim(),
+          Occupation: String(occupation || "").trim(),
+          Income_Range: String(incomeRange || "").trim(),
+          Source_of_Funds: String(sourceOfFunds || "").trim(),
+          BVN: "",
+        };
+
+        const result = await expressJsonRequest<any>("/profile", {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify(expressPayload),
+        });
+
+        if (!result.ok) {
+          return NextResponse.json(
+            { error: result.data?.error || "Failed to save settings" },
+            { status: result.status || 500 },
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          profile: toResponseProfileFromExpress(result.data?.user || {}),
+        });
+      }
+    }
 
     const existingUser = await resolveSessionUser(session);
 

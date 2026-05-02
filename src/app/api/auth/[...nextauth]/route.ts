@@ -8,6 +8,7 @@ import {
   findStoredUserByIdentifierAndPassword,
   recordUserLogin,
 } from "@/lib/user-store";
+import { expressJsonRequest, isExpressBackendEnabled } from "@/lib/express-backend";
 
 // Strip trailing slash — must happen before NextAuth reads the env var
 if (process.env.NEXTAUTH_URL) {
@@ -51,6 +52,33 @@ const providers = [
 
       if (!identifier || !password) {
         return null;
+      }
+
+      if (isExpressBackendEnabled()) {
+        const result = await expressJsonRequest<any>("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ identifier, password }),
+        });
+
+        if (!result.ok || !result.data?.user) {
+          return null;
+        }
+
+        const u = result.data.user;
+        const fullName = [u.Surname, u.First_Name, u.Middle_Name]
+          .map((v: unknown) => String(v || "").trim())
+          .filter(Boolean)
+          .join(" ");
+
+        return {
+          id: String(u.User_ID || u._id || identifier),
+          name: fullName || String(u.First_Name || u.Surname || "User"),
+          email: String(u.Email || identifier),
+          kycLevel: 0,
+          profileComplete: Boolean(u.Address && u.State && u.LGA),
+          dashboardAccessGranted: true,
+          expressAccessToken: result.data?.token,
+        } as any;
       }
 
       const user = await findStoredUserByIdentifierAndPassword(identifier, password);
@@ -114,6 +142,7 @@ const handler = NextAuth({
         token.kycLevel = (user as any).kycLevel ?? 0;
         token.profileComplete = (user as any).profileComplete ?? true;
         token.dashboardAccessGranted = true;
+        token.expressAccessToken = (user as any).expressAccessToken || token.expressAccessToken;
       }
 
       // Apply explicit session update values before any DB lookup.
@@ -128,7 +157,7 @@ const handler = NextAuth({
 
       // Refresh user data from SeaTable on sign-in and on explicit session updates.
       // Wrapped in try-catch so a SeaTable failure never breaks the auth flow.
-      if (token.email && (user || trigger === "update")) {
+      if (!isExpressBackendEnabled() && token.email && (user || trigger === "update")) {
         try {
           const storedUser = await findStoredUserByEmail(token.email as string);
           if (storedUser) {
@@ -150,6 +179,7 @@ const handler = NextAuth({
         (session.user as any).kycLevel = token.kycLevel ?? 0;
         (session.user as any).profileComplete = token.profileComplete ?? true;
         (session.user as any).dashboardAccessGranted = true;
+        (session.user as any).expressAccessToken = (token as any).expressAccessToken || null;
       }
       return session;
     },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createStoredUser, findStoredUserByEmail, findStoredUserByIdentifier } from "@/lib/user-store";
 import { saveKycDocumentsForEmail } from "@/lib/kyc-documents";
+import { expressJsonRequest, isExpressBackendEnabled } from "@/lib/express-backend";
 
 interface RegisterRequest {
   name?: string;
@@ -32,6 +33,56 @@ interface RegisterRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: RegisterRequest = await request.json();
+    if (isExpressBackendEnabled()) {
+      const payload = {
+        Surname: String(body.surname || "").trim(),
+        First_Name: String(body.firstName || "").trim(),
+        Middle_Name: String(body.middleName || "").trim(),
+        Email: String(body.email || "").trim().toLowerCase(),
+        Phone: String(body.phone || "").trim(),
+        Password: String(body.password || ""),
+        PIN: String(body.pin || ""),
+        Google_ID: "",
+        Avatar_URL: "",
+        BVN: String(body.bvn || "").trim(),
+        NIN: String(body.nin || "").trim(),
+        Address: String(body.address || "").trim(),
+        State: String(body.stateOfOrigin || "").trim(),
+        LGA: String(body.lga || "").trim(),
+        ID_Type: String(body.idType || "nin").trim(),
+        ID_Number: String(body.idNumber || body.nin || "").trim(),
+        Selfie_URL: String(body.selfieName || "").trim(),
+        ID_Doc_URL: String(body.idPhotoName || "").trim(),
+        Occupation: String(body.occupation || "").trim(),
+        Income_Range: String(body.incomeRange || "").trim(),
+        Source_of_Funds: String(body.sourceOfFunds || "").trim(),
+      };
+
+      const result = await expressJsonRequest<any>("/auth/register", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: result.data?.error || "Failed to create account." },
+          { status: result.status || 500 },
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        user: {
+          id: result.data?.user?.User_ID || result.data?.user?.id || "",
+          name: [payload.Surname, payload.First_Name, payload.Middle_Name].filter(Boolean).join(" "),
+          email: payload.Email,
+          kycLevel: 0,
+        },
+        token: result.data?.token,
+        message: result.data?.message || "Account created successfully.",
+      });
+    }
+
     const kyc = (body.kycData || {}) as Record<string, unknown>;
     const {
       name,
