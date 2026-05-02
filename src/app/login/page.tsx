@@ -72,7 +72,7 @@ function LoginContent() {
       OAuthAccountNotLinked: "This email is already linked to another login method.",
       OAuthCallback: "Google sign-in callback failed. Please try again.",
       OAuthSignin: "Unable to start Google sign-in. Please try again.",
-      OAuthProvisioning: "We could not provision your Google account in SeaTable. Please try again.",
+      OAuthProvisioning: "We could not set up your Google account. Please try again.",
       AccessDenied:
         "Google blocked access for this account. Ensure your OAuth app is published or this email is added as a test user.",
     };

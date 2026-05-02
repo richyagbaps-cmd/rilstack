@@ -78,7 +78,7 @@ function WithdrawalBankSection() {
         "rilstack_bank",
         JSON.stringify({ bankName, accountNumber, accountName }),
       );
-      setSuccess("Bank details updated and saved to SeaTable.");
+      setSuccess("Bank details updated successfully.");
       setTimeout(() => setSuccess(""), 2000);
     } catch (err: any) {
       setError(err.message || "Failed to update bank details.");
@@ -342,7 +342,7 @@ export default function SettingsSection() {
         applyProfileToForm(payload.profile);
       }
 
-      setSaveSuccess("Settings saved successfully to SeaTable.");
+      setSaveSuccess("Settings saved successfully.");
     } catch (error: any) {
       setSaveError(error.message || "Failed to save settings.");
     } finally {
@@ -448,7 +448,7 @@ export default function SettingsSection() {
             )}
             {savedProfile && (
               <div className="rounded-xl border border-[#d8e2ef] bg-[#f8fafc] px-4 py-3 text-xs text-slate-700">
-                <p className="font-semibold text-slate-900">Saved in SeaTable</p>
+                <p className="font-semibold text-slate-900">Saved</p>
                 <p className="mt-1">Name: {savedProfile.fullName || "-"}</p>
                 <p>Phone: {savedProfile.phone || "-"}</p>
                 <p>DOB: {savedProfile.dateOfBirth || "-"}</p>

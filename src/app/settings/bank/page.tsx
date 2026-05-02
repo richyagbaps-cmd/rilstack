@@ -112,7 +112,7 @@ function WithdrawalBankSection() {
       const savePayload = await saveRes.json();
 
       if (!saveRes.ok) {
-        throw new Error(savePayload.error || "Failed to save bank details to SeaTable.");
+        throw new Error(savePayload.error || "Failed to save bank details. Please try again.");
       }
 
       const nextBank: SavedBankView = {
@@ -127,7 +127,7 @@ function WithdrawalBankSection() {
       setAccountName(nextBank.accountName);
 
       localStorage.setItem("rilstack_bank", JSON.stringify(nextBank));
-      setSuccess("Bank details saved successfully to SeaTable.");
+      setSuccess("Bank details saved successfully.");
     } catch (err: any) {
       setError(err.message || "Network or server error. Try again.");
     } finally {
@@ -201,7 +201,7 @@ function WithdrawalBankSection() {
 
           {savedBank && (
             <div className="rounded-xl border border-[#d8e2ef] bg-[#f8fafc] px-4 py-3 text-xs text-slate-700">
-              <p className="font-semibold text-slate-900">Saved in SeaTable</p>
+              <p className="font-semibold text-slate-900">Saved</p>
               <p className="mt-1">Bank: {savedBank.bankName || "-"}</p>
               <p>Account Number: {savedBank.accountNumber || "-"}</p>
               <p>Account Name: {savedBank.accountName || "-"}</p>
