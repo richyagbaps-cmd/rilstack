@@ -76,10 +76,11 @@ export default function PinModal({
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [stepLoading, setStepLoading] = useState(false);
 
   const currentPin = step === "confirm" ? pin : createPin;
 
-  // Reset on open
+  // Reset on open — check server to decide create vs enter when localStorage is empty
   useEffect(() => {
     if (!open) return;
     setPin("");
@@ -87,7 +88,23 @@ export default function PinModal({
     setError("");
     setShake(false);
     setAttempts(0);
-    setStep(hasPinStored() ? "enter" : "create");
+
+    if (hasPinStored()) {
+      setStep("enter");
+      return;
+    }
+
+    // No local PIN — ask server whether user already has one
+    setStepLoading(true);
+    fetch("/api/settings/pin/check", { method: "GET", cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        setStep(data?.hasPinSet ? "enter" : "create");
+      })
+      .catch(() => {
+        setStep("create");
+      })
+      .finally(() => setStepLoading(false));
   }, [open]);
 
   const doShake = () => {
@@ -186,6 +203,19 @@ export default function PinModal({
   );
 
   if (!open) return null;
+
+  if (stepLoading) {
+    return (
+      <div className="fixed inset-0 z-[120] flex flex-col items-center justify-end bg-black/60 backdrop-blur-[2px] animate-fade-in">
+        <div className="w-full max-w-md animate-slide-up rounded-t-[32px] bg-white pb-10 shadow-2xl flex items-center justify-center py-16">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 rounded-full border-4 border-[#0AB68B] border-t-transparent animate-spin" />
+            <p className="text-sm text-slate-500">Checking PIN…</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const displayPin = step === "confirm" ? pin : createPin;
 
