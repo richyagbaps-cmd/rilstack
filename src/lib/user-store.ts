@@ -343,6 +343,30 @@ function withSignupLock<T>(email: string, fn: () => Promise<T>): Promise<T> {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Per-email Google upsert lock — reduces duplicate rows from concurrent OAuth
+// callback requests within a single runtime instance.
+// ---------------------------------------------------------------------------
+const _googleUpsertLocks = new Map<string, Promise<void>>();
+
+function withGoogleUpsertLock<T>(email: string, fn: () => Promise<T>): Promise<T> {
+  const prev = _googleUpsertLocks.get(email) ?? Promise.resolve();
+  let resolve!: () => void;
+  const next = new Promise<void>((r) => { resolve = r; });
+  _googleUpsertLocks.set(email, next);
+  return prev.then(fn).finally(() => {
+    resolve();
+    if (_googleUpsertLocks.get(email) === next) _googleUpsertLocks.delete(email);
+  });
+}
+
+async function findGoogleAuthCandidate(email: string, googleId: string): Promise<StoredUser | null> {
+  const rows = await query<STUser>(
+    `SELECT * FROM ${TABLES.USERS} WHERE Email='${email.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' ORDER BY Updated_At DESC LIMIT 5`,
+  );
+  return rows[0] ? mapSeaTableUser(rows[0]) : null;
+}
+
 export async function createStoredUser(input: CreateStoredUserInput) {
   const normalizedEmail = normalizeEmail(input.email);
   return withSignupLock(normalizedEmail, async () => {
@@ -412,41 +436,44 @@ export async function upsertGoogleUser(input: {
   googleId: string;
 }) {
   const normalizedEmail = normalizeEmail(input.email);
-  const existing =
-    (await findStoredUserByGoogleId(input.googleId)) ||
-    (await findStoredUserByEmail(normalizedEmail));
+  return withGoogleUpsertLock(normalizedEmail, async () => {
+    const existing =
+      (await findGoogleAuthCandidate(normalizedEmail, input.googleId)) ||
+      (await findStoredUserByGoogleId(input.googleId)) ||
+      (await findStoredUserByEmail(normalizedEmail));
 
-  if (!existing) {
-    return createStoredUser({
-      name: input.name,
-      email: normalizedEmail,
-      password: crypto.randomUUID(),
-      phone: "",
+    if (!existing) {
+      return createStoredUser({
+        name: input.name,
+        email: normalizedEmail,
+        password: crypto.randomUUID(),
+        phone: "",
+        googleId: input.googleId,
+        authProvider: "google",
+        kycData: { emailVerified: true },
+      });
+    }
+
+    const now = new Date().toISOString();
+    const updated: StoredUser = {
+      ...existing,
+      name: existing.name || input.name,
       googleId: input.googleId,
       authProvider: "google",
-      kycData: { emailVerified: true },
-    });
-  }
+      loginCount: (existing.loginCount ?? 0) + 1,
+      lastLogin: now,
+      kycData: {
+        ...existing.kycData,
+        emailVerified: true,
+      },
+      updatedAt: now,
+    };
+    updated.kycLevel = calculateKycLevel(updated.kycData);
+    updated.kycStatus = deriveKycStatus(updated.kycData);
 
-  const now = new Date().toISOString();
-  const updated: StoredUser = {
-    ...existing,
-    name: existing.name || input.name,
-    googleId: input.googleId,
-    authProvider: "google",
-    loginCount: (existing.loginCount ?? 0) + 1,
-    lastLogin: now,
-    kycData: {
-      ...existing.kycData,
-      emailVerified: true,
-    },
-    updatedAt: now,
-  };
-  updated.kycLevel = calculateKycLevel(updated.kycData);
-  updated.kycStatus = deriveKycStatus(updated.kycData);
-
-  await updateRow(TABLES.USERS, existing.rowId, buildUserUpdates(updated));
-  return updated;
+    await updateRow(TABLES.USERS, existing.rowId, buildUserUpdates(updated));
+    return updated;
+  });
 }
 
 /**
