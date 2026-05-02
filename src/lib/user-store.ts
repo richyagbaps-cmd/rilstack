@@ -254,16 +254,16 @@ function mapSeaTableUser(row: STUser): StoredUser {
     nin: row.nin || row.NIN || undefined,
     bvn: row.bvn || row.BVN || undefined,
     address: row.address || row.Address || undefined,
-    stateOfOrigin: row.State || undefined,
-    lga: row.LGA || kycData.lga || undefined,
+    stateOfOrigin: row.state_of_origin || row.State || undefined,
+    lga: row.lga || row.LGA || kycData.lga || undefined,
     gender: row.Gender,
-    idType: row.ID_Type || kycData.idType || undefined,
-    idNumber: row.ID_Number || kycData.idNumber || undefined,
-    selfieUrl: row.Selfie_URL || kycData.selfieName || undefined,
-    idDocUrl: row.ID_Doc_URL || kycData.idPhotoName || undefined,
+    idType: row.id_type || row.ID_Type || kycData.idType || undefined,
+    idNumber: row.id_number || row.ID_Number || kycData.idNumber || undefined,
+    selfieUrl: row.selfie_url || row.Selfie_URL || kycData.selfieName || undefined,
+    idDocUrl: row.id_doc_url || row.ID_Doc_URL || kycData.idPhotoName || undefined,
     occupation: row.occupation || row.Occupation || kycData.occupation || undefined,
     incomeRange: row.income_range || row.Income_Range || kycData.income || undefined,
-    sourceOfFunds: row.Source_of_Funds || kycData.source || undefined,
+    sourceOfFunds: row.source_of_funds || row.Source_of_Funds || kycData.source || undefined,
     privacyMode: parseSeatableBool(row.Privacy_Mode),
     biometric: parseSeatableBool(row.Biometric),
     notifications: parseSeatableBool(row.Notifications),
@@ -288,11 +288,18 @@ function buildUserUpdates(user: StoredUser): Record<string, unknown> {
     password_hash: user.passwordHash,
     kyc_status: user.kycStatus,
     date_of_birth: user.dateOfBirth || "",
+    state_of_origin: user.stateOfOrigin || "",
+    lga: user.lga || "",
+    id_type: user.idType || "",
+    id_number: user.idNumber || "",
+    selfie_url: user.selfieUrl || "",
+    id_doc_url: user.idDocUrl || "",
     bvn: user.bvn || "",
     nin: user.nin || "",
     address: user.address || "",
     occupation: user.occupation || "",
     income_range: user.incomeRange || "",
+    source_of_funds: user.sourceOfFunds || "",
     last_login: user.lastLogin,
     login_count: user.loginCount,
     // Legacy columns kept in sync to support existing SeaTable schemas
@@ -385,6 +392,56 @@ export async function findStoredUserByIdentifier(identifier: string) {
 
   const row = await getUserByPhone(normalizePhone(normalized));
   return row ? mapSeaTableUser(row) : null;
+}
+
+/**
+ * Credentials-signin resolver: tries all candidate rows for an identifier and
+ * returns the first user whose stored password hash matches.
+ */
+export async function findStoredUserByIdentifierAndPassword(
+  identifier: string,
+  password: string,
+): Promise<StoredUser | null> {
+  const normalized = identifier.trim();
+
+  if (!normalized || !password) return null;
+
+  if (normalized.includes("@")) {
+    const email = normalizeEmail(normalized);
+    const candidates = (await listUsers())
+      .filter((row) => rowEmail(row) === email)
+      .map(mapSeaTableUser)
+      .sort((a, b) => {
+        // Prefer rows that actually have a password hash and stronger profile data.
+        const score = (u: StoredUser) =>
+          (u.passwordHash ? 100 : 0) +
+          (u.pinHash ? 30 : 0) +
+          (u.phone ? 20 : 0) +
+          Number(u.loginCount || 0);
+        return score(b) - score(a);
+      });
+
+    for (const candidate of candidates) {
+      if (candidate.passwordHash && verifyPassword(password, candidate.passwordHash)) {
+        return candidate;
+      }
+    }
+
+    // Fallback after consolidation in case we only had one merged canonical row.
+    const merged = await findStoredUserByEmail(email);
+    if (merged?.passwordHash && verifyPassword(password, merged.passwordHash)) {
+      return merged;
+    }
+
+    return null;
+  }
+
+  const byPhone = await findStoredUserByIdentifier(normalized);
+  if (byPhone?.passwordHash && verifyPassword(password, byPhone.passwordHash)) {
+    return byPhone;
+  }
+
+  return null;
 }
 
 export async function findStoredUserByGoogleId(googleId: string) {

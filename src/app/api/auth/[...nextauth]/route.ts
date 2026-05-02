@@ -5,8 +5,7 @@ import {
   isStoredUserProfileComplete,
   upsertGoogleUser,
   findStoredUserByEmail,
-  findStoredUserByIdentifier,
-  verifyPassword,
+  findStoredUserByIdentifierAndPassword,
   recordUserLogin,
 } from "@/lib/user-store";
 
@@ -54,13 +53,8 @@ const providers = [
         return null;
       }
 
-      const user = await findStoredUserByIdentifier(identifier);
+      const user = await findStoredUserByIdentifierAndPassword(identifier, password);
       if (!user) {
-        return null;
-      }
-
-      const isValid = verifyPassword(password, user.passwordHash);
-      if (!isValid) {
         return null;
       }
 

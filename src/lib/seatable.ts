@@ -289,11 +289,18 @@ export type STUser = {
   password_hash?: string;      // bcrypt hash
   kyc_status?: "pending" | "incomplete" | "verified";
   date_of_birth?: string;
+  state_of_origin?: string;
+  lga?: string;
+  id_type?: string;
+  id_number?: string;
+  selfie_url?: string;
+  id_doc_url?: string;
   bvn?: string;
   nin?: string;
   address?: string;
   occupation?: string;
   income_range?: string;
+  source_of_funds?: string;
   last_login?: string;
   login_count?: number;
   // Extended / legacy columns (may or may not exist in the base)

@@ -245,6 +245,7 @@ function SignupPageInner() {
         }
         const authResult = await signIn("credentials", {
           identifier,
+          email: identifier,
           password,
           redirect: false,
         });
