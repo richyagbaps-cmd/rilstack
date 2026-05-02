@@ -163,6 +163,7 @@ interface SavedProfileView {
   address: string;
   idType: "nin" | "bvn" | "passport" | "drivers-license" | "voters-card";
   idNumber: string;
+  bvn?: string;
 }
 
 export default function SettingsSection() {
@@ -173,6 +174,7 @@ export default function SettingsSection() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [bvn, setBvn] = useState<string>("");
   const [prefsLoading, setPrefsLoading] = useState(true);
   const [prefsSaving, setPrefsSaving] = useState<string | null>(null);
   // Security
@@ -217,8 +219,10 @@ export default function SettingsSection() {
         | "drivers-license"
         | "voters-card",
       idNumber: profile.idNumber || "",
+      bvn: profile.bvn || "",
     };
 
+    if (profile.bvn) setBvn(profile.bvn);
     reset(next);
     setSavedProfile(next);
   };
@@ -399,6 +403,21 @@ export default function SettingsSection() {
               <label className="mb-1 block text-xs font-semibold text-slate-700">Residential Address</label>
               <input type="text" {...register("address", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
             </div>
+            {bvn && (
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-xs font-semibold text-slate-700">BVN</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={bvn.replace(/.(?=.{4})/g, "*")}
+                    readOnly
+                    className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 cursor-not-allowed select-none"
+                  />
+                  <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">Verified</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">Your BVN is stored securely and used to set up your virtual account. It cannot be changed here.</p>
+              </div>
+            )}
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">KYC ID Type</label>
               <select {...register("idType", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100">
@@ -435,6 +454,7 @@ export default function SettingsSection() {
                 <p>DOB: {savedProfile.dateOfBirth || "-"}</p>
                 <p>ID: {savedProfile.idType?.toUpperCase() || "-"} {savedProfile.idNumber || ""}</p>
                 <p>Address: {savedProfile.address || "-"}</p>
+                {savedProfile.bvn && <p>BVN: {savedProfile.bvn.replace(/.(?=.{4})/g, "*")}</p>}
               </div>
             )}
             <button type="submit" disabled={isLoadingProfile || isSavingProfile} className="rounded-xl bg-[#2c3e5f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1e2d46] disabled:cursor-not-allowed disabled:opacity-70">{isSavingProfile ? "Saving..." : "Save Settings"}</button>

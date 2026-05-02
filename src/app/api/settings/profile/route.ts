@@ -20,6 +20,7 @@ function toResponseProfile(user: Awaited<ReturnType<typeof findStoredUserByEmail
       | "drivers-license"
       | "voters-card",
     idNumber: user.kycData?.idNumber || "",
+    bvn: user.bvn || "",
   };
 }
 
