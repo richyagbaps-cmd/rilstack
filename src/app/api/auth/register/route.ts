@@ -12,7 +12,13 @@ interface RegisterRequest {
   bvn?: string;
   address?: string;
   stateOfOrigin?: string;
+  lga?: string;
   gender?: "M" | "F" | "other";
+  idType?: string;
+  idNumber?: string;
+  occupation?: string;
+  incomeRange?: string;
+  sourceOfFunds?: string;
   termsAccepted?: boolean;
   kycData?: Record<string, unknown>;
 }
@@ -31,7 +37,13 @@ export async function POST(request: NextRequest) {
       bvn,
       address,
       stateOfOrigin,
+      lga,
       gender,
+      idType,
+      idNumber,
+      occupation,
+      incomeRange,
+      sourceOfFunds,
       termsAccepted,
       kycData,
     } = body;
@@ -88,7 +100,13 @@ export async function POST(request: NextRequest) {
       bvn,
       address,
       stateOfOrigin,
+      lga,
       gender,
+      idType,
+      idNumber,
+      occupation,
+      incomeRange,
+      sourceOfFunds,
       termsAccepted,
       authProvider: "credentials",
       kycData: (kycData || undefined) as any,

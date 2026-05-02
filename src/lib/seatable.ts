@@ -280,17 +280,29 @@ export type STUser = {
   Full_Name: string;
   Email: string;
   Phone: string;
-  Password_Hash: string;
+  Password: string;            // SeaTable column name is "Password"
   PIN_Hash?: string;
   Google_ID?: string;
+  Avatar_URL?: string;
   KYC_Status: "Pending" | "Verified" | "Rejected";
-  Privacy_Mode_Enabled?: boolean;
-  Is_Active?: boolean;
-  Date_Of_Birth?: string;
-  NIN?: string;
   BVN?: string;
+  NIN?: string;
   Address?: string;
-  State_Of_Origin?: string;
+  State?: string;              // SeaTable column name is "State"
+  LGA?: string;
+  ID_Type?: string;
+  ID_Number?: string;
+  Selfie_URL?: string;
+  ID_Doc_URL?: string;
+  Occupation?: string;
+  Income_Range?: string;
+  Source_of_Funds?: string;
+  Privacy_Mode?: boolean;      // SeaTable column name is "Privacy_Mode"
+  Biometric?: boolean;
+  Notifications?: boolean;
+  Is_Active?: boolean;
+  // Extended columns (add these to SeaTable if not present)
+  Date_Of_Birth?: string;
   Gender?: "M" | "F" | "other";
   KYC_Level?: number;
   KYC_Data_JSON?: string;

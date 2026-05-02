@@ -55,12 +55,24 @@ export interface StoredUser {
   phone: string;
   pinHash?: string;
   googleId?: string;
+  avatarUrl?: string;
   dateOfBirth?: string;
   nin?: string;
   bvn?: string;
   address?: string;
   stateOfOrigin?: string;
+  lga?: string;
   gender?: "M" | "F" | "other";
+  idType?: string;
+  idNumber?: string;
+  selfieUrl?: string;
+  idDocUrl?: string;
+  occupation?: string;
+  incomeRange?: string;
+  sourceOfFunds?: string;
+  privacyMode?: boolean;
+  biometric?: boolean;
+  notifications?: boolean;
   kycLevel: number;
   kycStatus: "Pending" | "Verified" | "Rejected";
   termsAccepted: boolean;
@@ -79,12 +91,21 @@ export interface CreateStoredUserInput {
   phone: string;
   pin?: string;
   googleId?: string;
+  avatarUrl?: string;
   dateOfBirth?: string;
   nin?: string;
   bvn?: string;
   address?: string;
   stateOfOrigin?: string;
+  lga?: string;
   gender?: "M" | "F" | "other";
+  idType?: string;
+  idNumber?: string;
+  selfieUrl?: string;
+  idDocUrl?: string;
+  occupation?: string;
+  incomeRange?: string;
+  sourceOfFunds?: string;
   termsAccepted?: boolean;
   authProvider?: "credentials" | "google";
   kycData?: Partial<KycData>;
@@ -188,16 +209,28 @@ function mapSeaTableUser(row: STUser): StoredUser {
     rowId: row._id,
     name: row.Full_Name || "",
     email: normalizeEmail(row.Email || ""),
-    passwordHash: row.Password_Hash || "",
+    passwordHash: row.Password || "",
     phone: row.Phone || "",
     pinHash: row.PIN_Hash || undefined,
     googleId: row.Google_ID || undefined,
+    avatarUrl: row.Avatar_URL || undefined,
     dateOfBirth: row.Date_Of_Birth || undefined,
     nin: row.NIN || undefined,
     bvn: row.BVN || undefined,
     address: row.Address || undefined,
-    stateOfOrigin: row.State_Of_Origin || undefined,
+    stateOfOrigin: row.State || undefined,
+    lga: row.LGA || kycData.lga || undefined,
     gender: row.Gender,
+    idType: row.ID_Type || kycData.idType || undefined,
+    idNumber: row.ID_Number || kycData.idNumber || undefined,
+    selfieUrl: row.Selfie_URL || kycData.selfieName || undefined,
+    idDocUrl: row.ID_Doc_URL || kycData.idPhotoName || undefined,
+    occupation: row.Occupation || kycData.occupation || undefined,
+    incomeRange: row.Income_Range || kycData.income || undefined,
+    sourceOfFunds: row.Source_of_Funds || kycData.source || undefined,
+    privacyMode: parseSeatableBool(row.Privacy_Mode),
+    biometric: parseSeatableBool(row.Biometric),
+    notifications: parseSeatableBool(row.Notifications),
     kycLevel,
     kycStatus: row.KYC_Status || deriveKycStatus(kycData),
     termsAccepted: parseSeatableBool(row.Terms_Accepted),
@@ -215,17 +248,28 @@ function buildUserUpdates(user: StoredUser): Record<string, unknown> {
     Full_Name: user.name,
     Email: user.email,
     Phone: user.phone,
-    Password_Hash: user.passwordHash,
+    Password: user.passwordHash,
     PIN_Hash: user.pinHash || "",
     Google_ID: user.googleId || "",
+    Avatar_URL: user.avatarUrl || "",
     KYC_Status: user.kycStatus,
-    Privacy_Mode_Enabled: "false",
+    BVN: user.bvn || "",
+    NIN: user.nin || "",
+    Address: user.address || "",
+    State: user.stateOfOrigin || "",
+    LGA: user.lga || "",
+    ID_Type: user.idType || "",
+    ID_Number: user.idNumber || "",
+    Selfie_URL: user.selfieUrl || "",
+    ID_Doc_URL: user.idDocUrl || "",
+    Occupation: user.occupation || "",
+    Income_Range: user.incomeRange || "",
+    Source_of_Funds: user.sourceOfFunds || "",
+    Privacy_Mode: user.privacyMode ? "true" : "false",
+    Biometric: user.biometric ? "true" : "false",
+    Notifications: user.notifications ? "true" : "false",
     Is_Active: "true",
     Date_Of_Birth: user.dateOfBirth || "",
-    NIN: user.nin || "",
-    BVN: user.bvn || "",
-    Address: user.address || "",
-    State_Of_Origin: user.stateOfOrigin || "",
     Gender: user.gender || "",
     KYC_Level: user.kycLevel,
     KYC_Data_JSON: JSON.stringify(user.kycData),
@@ -324,12 +368,21 @@ export async function createStoredUser(input: CreateStoredUserInput) {
     phone: normalizePhone(input.phone || ""),
     pinHash: input.pin ? hashPin(input.pin) : undefined,
     googleId: input.googleId || undefined,
+    avatarUrl: input.avatarUrl || undefined,
     dateOfBirth: input.dateOfBirth || undefined,
     nin: input.nin?.trim() || undefined,
     bvn: input.bvn?.trim() || undefined,
     address: input.address?.trim() || undefined,
     stateOfOrigin: input.stateOfOrigin?.trim() || undefined,
+    lga: input.lga?.trim() || undefined,
     gender: input.gender,
+    idType: input.idType?.trim() || undefined,
+    idNumber: input.idNumber?.trim() || undefined,
+    selfieUrl: input.selfieUrl || undefined,
+    idDocUrl: input.idDocUrl || undefined,
+    occupation: input.occupation?.trim() || undefined,
+    incomeRange: input.incomeRange?.trim() || undefined,
+    sourceOfFunds: input.sourceOfFunds?.trim() || undefined,
     kycLevel,
     kycStatus: deriveKycStatus(mergedKycData),
     termsAccepted: Boolean(input.termsAccepted),
@@ -452,6 +505,14 @@ export async function updateUserKyc(
     pinHash: updates.pinHash ?? existing.pinHash,
     phone: updates.phone ? normalizePhone(updates.phone) : existing.phone,
     stateOfOrigin: updates.stateOfOrigin ?? existing.stateOfOrigin,
+    lga: updates.lga ?? existing.lga,
+    idType: updates.idType ?? existing.idType,
+    idNumber: updates.idNumber ?? existing.idNumber,
+    selfieUrl: updates.selfieUrl ?? existing.selfieUrl,
+    idDocUrl: updates.idDocUrl ?? existing.idDocUrl,
+    occupation: updates.occupation ?? existing.occupation,
+    incomeRange: updates.incomeRange ?? existing.incomeRange,
+    sourceOfFunds: updates.sourceOfFunds ?? existing.sourceOfFunds,
     termsAccepted: Boolean(updates.termsAccepted ?? existing.termsAccepted),
     kycData: mergedKycData,
     updatedAt: new Date().toISOString(),
