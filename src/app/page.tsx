@@ -10,11 +10,12 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace(
-        (session?.user as any)?.dashboardAccessGranted
-          ? "/dashboard"
-          : "/signup?provider=google",
-      );
+      const profileComplete = (session?.user as any)?.profileComplete;
+      if (!profileComplete) {
+        router.replace("/profile/complete");
+      } else {
+        router.replace("/dashboard");
+      }
     }
   }, [status, router, session]);
 

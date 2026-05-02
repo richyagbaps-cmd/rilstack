@@ -2,12 +2,11 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import {
-  ensureStoredUserForGoogleSession,
+  isStoredUserProfileComplete,
+  upsertGoogleUser,
   findStoredUserByEmail,
   findStoredUserByIdentifier,
   verifyPassword,
-  isStoredUserProfileComplete,
-  upsertGoogleUser,
 } from "@/lib/user-store";
 
 const normalizedNextAuthUrl = process.env.NEXTAUTH_URL?.replace(/\/+$/, "");
@@ -120,13 +119,7 @@ const handler = NextAuth({
       }
 
       if (token.email) {
-        const storedUser =
-          (await findStoredUserByEmail(token.email as string)) ||
-          (await ensureStoredUserForGoogleSession({
-            email: token.email as string,
-            name: (token.name as string | null | undefined) ?? "",
-            id: (token.sub as string | null | undefined) ?? (token.id as string | null | undefined),
-          }));
+        const storedUser = await findStoredUserByEmail(token.email as string);
 
         if (storedUser) {
           token.kycLevel = storedUser.kycLevel ?? 0;
