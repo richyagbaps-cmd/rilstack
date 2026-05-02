@@ -124,7 +124,33 @@ function SignupPageInner() {
     setStep("kyc");
   };
 
-  const handleKYCComplete = (data: Record<string, any>) => {
+  const handleKYCComplete = async (data: Record<string, any>) => {
+    setError("");
+
+    // Check if phone already has an account
+    if (data.phone) {
+      try {
+        const phoneRes = await fetch("/api/auth/check-phone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: data.phone }),
+        });
+        const phoneData = await phoneRes.json();
+        if (phoneData.exists) {
+          setError(
+            `An account with this phone number already exists. Please sign in instead.`,
+          );
+          // Small delay so the user sees the error before redirect
+          setTimeout(() => {
+            router.push(`/login?notice=exists`);
+          }, 2500);
+          return;
+        }
+      } catch {
+        // Fail open — proceed if check errors
+      }
+    }
+
     setKYCData(data);
     setStep("pin");
   };

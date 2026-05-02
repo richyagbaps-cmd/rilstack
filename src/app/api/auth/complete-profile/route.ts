@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import {
   findStoredUserByEmail,
+  findStoredUserByIdentifier,
   hashPin,
   updateUserKyc,
 } from "@/lib/user-store";
@@ -56,6 +57,18 @@ export async function POST(request: NextRequest) {
 
     if (!existing) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
+    // Check phone uniqueness — only if the phone is changing
+    const normalizedPhone = String(phone).trim();
+    if (normalizedPhone !== (existing.phone || "").trim()) {
+      const phoneOwner = await findStoredUserByIdentifier(normalizedPhone);
+      if (phoneOwner && phoneOwner.email !== existing.email) {
+        return NextResponse.json(
+          { error: "This phone number is already registered to another account." },
+          { status: 409 },
+        );
+      }
     }
 
     const updated = await updateUserKyc(session.user.email, {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createStoredUser } from "@/lib/user-store";
+import { createStoredUser, findStoredUserByEmail, findStoredUserByIdentifier } from "@/lib/user-store";
 
 interface RegisterRequest {
   name: string;
@@ -55,6 +55,26 @@ export async function POST(request: NextRequest) {
         { error: "Invalid email address." },
         { status: 400 },
       );
+    }
+
+    // Check for duplicate email
+    const existingByEmail = await findStoredUserByEmail(email.trim().toLowerCase());
+    if (existingByEmail) {
+      return NextResponse.json(
+        { error: "An account already exists for this email address. Please sign in instead." },
+        { status: 409 },
+      );
+    }
+
+    // Check for duplicate phone
+    if (phone) {
+      const existingByPhone = await findStoredUserByIdentifier(phone.trim());
+      if (existingByPhone) {
+        return NextResponse.json(
+          { error: "This phone number is already registered. Please sign in instead." },
+          { status: 409 },
+        );
+      }
     }
 
     const user = await createStoredUser({

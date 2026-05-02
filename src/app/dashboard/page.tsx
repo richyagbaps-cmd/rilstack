@@ -179,6 +179,12 @@ function DashboardContent() {
       return;
     }
 
+    if (status === "authenticated") {
+      const profileComplete = (session?.user as any)?.profileComplete;
+      if (profileComplete === false) {
+        router.replace("/profile/complete");
+      }
+    }
   }, [status, router, session]);
 
   useEffect(() => {
