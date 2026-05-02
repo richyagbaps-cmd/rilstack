@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const kyc = (body || {}) as Record<string, unknown>;
     const {
       name,
       surname,
@@ -45,6 +46,21 @@ export async function POST(request: NextRequest) {
       sourceOfFunds,
     } = body;
 
+    const resolvedPhone = String(phone || kyc.phone || "").trim();
+    const resolvedDateOfBirth = String(dateOfBirth || kyc.dateOfBirth || kyc.dob || "").trim() || undefined;
+    const resolvedNin = String(nin || kyc.nin || "").trim() || undefined;
+    const resolvedBvn = String(bvn || kyc.bvn || "").trim() || undefined;
+    const resolvedAddress = String(address || kyc.address || "").trim() || undefined;
+    const resolvedStateOfOrigin =
+      String(stateOfOrigin || kyc.stateOfOrigin || kyc.state || "").trim() || undefined;
+    const resolvedLga = String(lga || kyc.lga || "").trim() || undefined;
+    const resolvedIdType = String(idType || kyc.idType || (resolvedNin ? "nin" : "")).trim() || undefined;
+    const resolvedIdNumber =
+      String(idNumber || kyc.idNumber || (resolvedIdType === "nin" ? resolvedNin || "" : "")).trim() || undefined;
+    const resolvedOccupation = String(occupation || kyc.occupation || "").trim() || undefined;
+    const resolvedIncomeRange = String(incomeRange || kyc.incomeRange || kyc.income || "").trim() || undefined;
+    const resolvedSourceOfFunds = String(sourceOfFunds || kyc.sourceOfFunds || kyc.source || "").trim() || undefined;
+
     const composedName = [surname, firstName, middleName]
       .map((value) => String(value || "").trim())
       .filter(Boolean)
@@ -52,7 +68,7 @@ export async function POST(request: NextRequest) {
     const resolvedName = String(name || composedName).trim();
 
     // Only the core fields are required for Google onboarding
-    if (!resolvedName || !phone || !pin || !termsAccepted || !dateOfBirth || !gender || !address || !stateOfOrigin) {
+    if (!resolvedName || !resolvedPhone || !pin || !termsAccepted || !resolvedDateOfBirth || !gender || !resolvedAddress || !resolvedStateOfOrigin) {
       return NextResponse.json(
         { error: "Surname/first name, phone, PIN, date of birth, gender, address and state are required." },
         { status: 400 },
@@ -79,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check phone uniqueness — only if the phone is changing
-    const normalizedPhone = String(phone).trim();
+    const normalizedPhone = resolvedPhone;
     if (normalizedPhone !== (existing.phone || "").trim()) {
       const phoneOwner = await findStoredUserByIdentifier(normalizedPhone);
       if (phoneOwner && phoneOwner.email !== existing.email) {
@@ -92,28 +108,34 @@ export async function POST(request: NextRequest) {
 
     const updated = await updateUserKyc(session.user.email, {
       name: resolvedName,
-      phone: String(phone).trim(),
+      phone: resolvedPhone,
       pinHash: hashPin(String(pin)),
-      dateOfBirth: dateOfBirth ? String(dateOfBirth) : undefined,
+      dateOfBirth: resolvedDateOfBirth,
       gender,
-      nin: nin ? String(nin).trim() : undefined,
-      bvn: bvn ? String(bvn).trim() : undefined,
-      address: address ? String(address).trim() : undefined,
-      stateOfOrigin: stateOfOrigin ? String(stateOfOrigin).trim() : undefined,
-      lga: lga ? String(lga).trim() : undefined,
-      idType: idType ? String(idType).trim() : undefined,
-      idNumber: idNumber ? String(idNumber).trim() : undefined,
+      nin: resolvedNin,
+      bvn: resolvedBvn,
+      address: resolvedAddress,
+      stateOfOrigin: resolvedStateOfOrigin,
+      lga: resolvedLga,
+      idType: resolvedIdType,
+      idNumber: resolvedIdNumber,
       selfieUrl: selfieUrl ? String(selfieUrl) : undefined,
       idDocUrl: idDocUrl ? String(idDocUrl) : undefined,
-      occupation: occupation ? String(occupation).trim() : undefined,
-      incomeRange: incomeRange ? String(incomeRange).trim() : undefined,
-      sourceOfFunds: sourceOfFunds ? String(sourceOfFunds).trim() : undefined,
+      occupation: resolvedOccupation,
+      incomeRange: resolvedIncomeRange,
+      sourceOfFunds: resolvedSourceOfFunds,
       termsAccepted: Boolean(termsAccepted),
       kycData: {
         ...existing.kycData,
         emailVerified: true,
         googleOnboardingSkipped: false,
         detailsComplete: true,
+        lga: resolvedLga,
+        idType: resolvedIdType,
+        idNumber: resolvedIdNumber,
+        occupation: resolvedOccupation,
+        income: resolvedIncomeRange,
+        source: resolvedSourceOfFunds,
       },
     });
 

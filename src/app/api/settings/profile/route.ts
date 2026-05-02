@@ -54,22 +54,24 @@ function normalizeIdTypeForUi(value?: string):
 function toResponseProfile(user: Awaited<ReturnType<typeof findStoredUserByEmail>>) {
   if (!user) return null;
 
+  const kyc = (user.kycData || {}) as any;
+
   return {
     fullName: user.name || "",
-    phone: user.phone || "",
+    phone: user.phone || kyc.phone || "",
     email: user.email || "",
-    dateOfBirth: user.dateOfBirth || "",
+    dateOfBirth: user.dateOfBirth || kyc.dateOfBirth || kyc.dob || "",
     gender: (user.gender || "M") as "M" | "F" | "other",
-    stateOfOrigin: user.stateOfOrigin || "",
-    lga: user.lga || "",
-    address: user.address || "",
-    nin: user.nin || "",
+    stateOfOrigin: user.stateOfOrigin || kyc.stateOfOrigin || kyc.state || "",
+    lga: user.lga || kyc.lga || "",
+    address: user.address || kyc.address || "",
+    nin: user.nin || kyc.nin || "",
     idType: normalizeIdTypeForUi(user.idType || user.kycData?.idType),
-    idNumber: user.idNumber || user.kycData?.idNumber || "",
+    idNumber: user.idNumber || user.kycData?.idNumber || kyc.nin || "",
     occupation: user.occupation || user.kycData?.occupation || "",
-    incomeRange: user.incomeRange || user.kycData?.income || "",
-    sourceOfFunds: user.sourceOfFunds || user.kycData?.source || "",
-    bvn: user.bvn || "",
+    incomeRange: user.incomeRange || user.kycData?.income || kyc.incomeRange || "",
+    sourceOfFunds: user.sourceOfFunds || user.kycData?.source || kyc.sourceOfFunds || "",
+    bvn: user.bvn || kyc.bvn || "",
   };
 }
 

@@ -32,6 +32,7 @@ interface RegisterRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: RegisterRequest = await request.json();
+    const kyc = (body.kycData || {}) as Record<string, unknown>;
     const {
       name,
       surname,
@@ -59,13 +60,28 @@ export async function POST(request: NextRequest) {
       kycData,
     } = body;
 
+    const resolvedPhone = String(phone || kyc.phone || "").trim();
+    const resolvedDateOfBirth = String(dateOfBirth || kyc.dateOfBirth || kyc.dob || "").trim() || undefined;
+    const resolvedNin = String(nin || kyc.nin || "").trim() || undefined;
+    const resolvedBvn = String(bvn || kyc.bvn || "").trim() || undefined;
+    const resolvedAddress = String(address || kyc.address || "").trim() || undefined;
+    const resolvedStateOfOrigin =
+      String(stateOfOrigin || kyc.stateOfOrigin || kyc.state || "").trim() || undefined;
+    const resolvedLga = String(lga || kyc.lga || "").trim() || undefined;
+    const resolvedIdType = String(idType || kyc.idType || (resolvedNin ? "nin" : "")).trim() || undefined;
+    const resolvedIdNumber =
+      String(idNumber || kyc.idNumber || (resolvedIdType === "nin" ? resolvedNin || "" : "")).trim() || undefined;
+    const resolvedOccupation = String(occupation || kyc.occupation || "").trim() || undefined;
+    const resolvedIncomeRange = String(incomeRange || kyc.incomeRange || kyc.income || "").trim() || undefined;
+    const resolvedSourceOfFunds = String(sourceOfFunds || kyc.sourceOfFunds || kyc.source || "").trim() || undefined;
+
     const composedName = [surname, firstName, middleName]
       .map((value) => String(value || "").trim())
       .filter(Boolean)
       .join(" ");
     const resolvedName = String(name || composedName).trim();
 
-    if (!resolvedName || !email || !password || !phone) {
+    if (!resolvedName || !email || !password || !resolvedPhone) {
       return NextResponse.json(
         { error: "Surname/first name, email, password, and phone are required." },
         { status: 400 },
@@ -96,8 +112,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicate phone
-    if (phone) {
-      const existingByPhone = await findStoredUserByIdentifier(phone.trim());
+    if (resolvedPhone) {
+      const existingByPhone = await findStoredUserByIdentifier(resolvedPhone);
       if (existingByPhone) {
         return NextResponse.json(
           { error: "This phone number is already registered. Please sign in instead." },
@@ -110,23 +126,31 @@ export async function POST(request: NextRequest) {
       name: resolvedName,
       email,
       password,
-      phone,
+      phone: resolvedPhone,
       pin,
-      dateOfBirth,
-      nin,
-      bvn,
-      address,
-      stateOfOrigin,
-      lga,
+      dateOfBirth: resolvedDateOfBirth,
+      nin: resolvedNin,
+      bvn: resolvedBvn,
+      address: resolvedAddress,
+      stateOfOrigin: resolvedStateOfOrigin,
+      lga: resolvedLga,
       gender,
-      idType,
-      idNumber,
-      occupation,
-      incomeRange,
-      sourceOfFunds,
+      idType: resolvedIdType,
+      idNumber: resolvedIdNumber,
+      occupation: resolvedOccupation,
+      incomeRange: resolvedIncomeRange,
+      sourceOfFunds: resolvedSourceOfFunds,
       termsAccepted,
       authProvider: "credentials",
-      kycData: (kycData || undefined) as any,
+      kycData: {
+        ...(kycData || {}),
+        lga: resolvedLga,
+        idType: resolvedIdType,
+        idNumber: resolvedIdNumber,
+        occupation: resolvedOccupation,
+        income: resolvedIncomeRange,
+        source: resolvedSourceOfFunds,
+      } as any,
     });
 
     const selfieDoc = String(selfieName || (kycData as any)?.selfieName || "").trim();
