@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
@@ -17,22 +17,28 @@ const {
   PORT = "4000",
   JWT_SECRET,
   JWT_EXPIRES_IN = "7d",
-  GOOGLE_TEMP_TOKEN_EXPIRES_IN = "15m",
-  FRONTEND_GOOGLE_COMPLETE_URL = "http://localhost:3000/signup?provider=google",
-  FRONTEND_GOOGLE_SUCCESS_URL = "http://localhost:3000/dashboard",
+  GOOGLE_PRE_TOKEN_EXPIRES_IN = "15m",
+  FRONTEND_URL = "http://localhost:3000",
+  FRONTEND_GOOGLE_COMPLETE_URL,
+  FRONTEND_GOOGLE_SUCCESS_URL,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI,
   SEATABLE_SERVER = "https://cloud.seatable.io",
   SEATABLE_BASE_UUID,
   SEATABLE_API_TOKEN,
   SEATABLE_USERS_TABLE = "Users",
 } = process.env;
 
-if (!JWT_SECRET) {
-  throw new Error("Missing JWT_SECRET in environment.");
-}
-
+if (!JWT_SECRET) throw new Error("Missing JWT_SECRET in environment.");
 if (!SEATABLE_BASE_UUID || !SEATABLE_API_TOKEN) {
   throw new Error("Missing SEATABLE_BASE_UUID or SEATABLE_API_TOKEN in environment.");
 }
+
+const GOOGLE_AUTH_SCOPE = "openid email profile";
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 
 const seatableApi = axios.create({
   baseURL: SEATABLE_SERVER.replace(/\/+$/, ""),
@@ -58,6 +64,10 @@ function generateUserId() {
   return `usr_${Date.now()}_${random4}`;
 }
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
 function isValidNin(value) {
   return /^\d{11}$/.test(String(value || "").trim());
 }
@@ -67,7 +77,11 @@ function isValidBvn(value) {
 }
 
 function isValidNigerianPhone(value) {
-  return /^(\+234|234|0)(7|8|9)\d{9}$/.test(String(value || "").trim());
+  return /^(070|080|081|090|091)\d{8}$/.test(String(value || "").trim());
+}
+
+function isValidPin(value) {
+  return /^\d{4,6}$/.test(String(value || "").trim());
 }
 
 function issueAccessToken(userRow) {
@@ -85,19 +99,24 @@ function issueAccessToken(userRow) {
   );
 }
 
-function issueGoogleTempToken(payload) {
+function issueGooglePreToken(payload) {
   return jwt.sign(
     {
-      type: "google_temp",
+      type: "google_pre",
       ...payload,
     },
     JWT_SECRET,
-    { expiresIn: GOOGLE_TEMP_TOKEN_EXPIRES_IN },
+    { expiresIn: GOOGLE_PRE_TOKEN_EXPIRES_IN },
   );
 }
 
 function verifyToken(token) {
   return jwt.verify(token, JWT_SECRET);
+}
+
+function buildRedirect(pathname) {
+  const root = String(FRONTEND_URL || "http://localhost:3000").replace(/\/+$/, "");
+  return `${root}${pathname}`;
 }
 
 async function runSql(sql) {
@@ -106,7 +125,6 @@ async function runSql(sql) {
       `/api-gateway/api/v2/dtables/${SEATABLE_BASE_UUID}/sql/`,
       { sql },
     );
-
     return response.data.results || response.data.rows || [];
   } catch (error) {
     const upstream = error?.response?.data?.error_message || error?.response?.data?.error_msg;
@@ -119,16 +137,12 @@ async function runSql(sql) {
 
 async function insertUserRow(row) {
   try {
-    const response = await seatableApi.post(
-      `/api/v2.1/dtables/${SEATABLE_BASE_UUID}/rows/`,
-      {
-        table_name: SEATABLE_USERS_TABLE,
-        rows: [row],
-      },
-    );
+    const response = await seatableApi.post(`/api/v2.1/dtables/${SEATABLE_BASE_UUID}/rows/`, {
+      table_name: SEATABLE_USERS_TABLE,
+      rows: [row],
+    });
 
-    const first = response.data.first_row || response.data.rows?.[0] || response.data;
-    return first;
+    return response.data.first_row || response.data.rows?.[0] || response.data;
   } catch (error) {
     const upstream = error?.response?.data?.error_message || error?.response?.data?.error_msg;
     const message = upstream || error.message || "SeaTable insert error";
@@ -140,13 +154,10 @@ async function insertUserRow(row) {
 
 async function updateUserRow(rowId, updates) {
   try {
-    await seatableApi.put(
-      `/api/v2.1/dtables/${SEATABLE_BASE_UUID}/rows/${rowId}/`,
-      {
-        table_name: SEATABLE_USERS_TABLE,
-        row: updates,
-      },
-    );
+    await seatableApi.put(`/api/v2.1/dtables/${SEATABLE_BASE_UUID}/rows/${rowId}/`, {
+      table_name: SEATABLE_USERS_TABLE,
+      row: updates,
+    });
   } catch (error) {
     const upstream = error?.response?.data?.error_message || error?.response?.data?.error_msg;
     const message = upstream || error.message || "SeaTable update error";
@@ -184,8 +195,7 @@ async function findUserByRowId(rowId) {
 async function findUserByEmailOrPhone(identifier) {
   const raw = String(identifier || "").trim();
   if (!raw) return null;
-  if (raw.includes("@")) return findUserByEmail(raw);
-  return findUserByPhone(raw);
+  return raw.includes("@") ? findUserByEmail(raw) : findUserByPhone(raw);
 }
 
 async function touchLogin(userRow) {
@@ -242,28 +252,22 @@ function validateRegistrationFields(payload) {
   ];
 
   const missing = required.filter((field) => !String(payload[field] || "").trim());
-  if (missing.length) {
-    return `Missing required fields: ${missing.join(", ")}`;
-  }
+  if (missing.length) return `Missing required fields: ${missing.join(", ")}`;
 
-  if (!isValidNin(payload.NIN)) {
-    return "Invalid NIN format. Must be 11 digits.";
-  }
-
-  if (payload.BVN && !isValidBvn(payload.BVN)) {
-    return "Invalid BVN format. Must be 11 digits.";
-  }
-
+  if (!isValidEmail(payload.Email)) return "Invalid email format.";
+  if (!isValidNin(payload.NIN)) return "Invalid NIN format. Must be 11 digits.";
+  if (payload.BVN && !isValidBvn(payload.BVN)) return "Invalid BVN format. Must be 11 digits.";
   if (!isValidNigerianPhone(payload.Phone)) {
-    return "Invalid Nigerian phone number.";
+    return "Invalid phone format. Use Nigerian format e.g. 08012345678.";
   }
+  if (!isValidPin(payload.PIN)) return "PIN must be 4-6 digits only.";
+  if (String(payload.Password || "").length < 8) return "Password must be at least 8 characters.";
 
   return null;
 }
 
 function buildDefaultUserRow(base) {
   const now = new Date().toISOString();
-
   return {
     User_ID: base.User_ID,
     Surname: base.Surname,
@@ -275,14 +279,14 @@ function buildDefaultUserRow(base) {
     PIN_Hash: base.PIN_Hash || "",
     Google_ID: base.Google_ID || "",
     Avatar_URL: base.Avatar_URL || "",
-    KYC_Status: "pending",
+    KYC_Status: String(base.KYC_Status || "pending").toLowerCase(),
     BVN: base.BVN || "",
     NIN: base.NIN,
     Address: base.Address,
     State: base.State,
     LGA: base.LGA,
-    ID_Type: base.ID_Type || "nin",
-    ID_Number: base.ID_Number || base.NIN,
+    ID_Type: base.ID_Type || "",
+    ID_Number: base.ID_Number || "",
     Selfie_URL: base.Selfie_URL || "",
     ID_Doc_URL: base.ID_Doc_URL || "",
     Occupation: base.Occupation || "",
@@ -294,10 +298,59 @@ function buildDefaultUserRow(base) {
       typeof base.Notification_Prefs === "string"
         ? base.Notification_Prefs
         : JSON.stringify(base.Notification_Prefs || {}),
+    Login_Count: Number(base.Login_Count || 0),
     Created_At: base.Created_At || now,
     Last_Login: base.Last_Login || now,
     Is_Active: base.Is_Active !== false,
-    Login_Count: Number(base.Login_Count || 1),
+  };
+}
+
+async function exchangeGoogleCodeForUser(code) {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
+    const error = new Error("Google OAuth environment is incomplete.");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const tokenBody = new URLSearchParams({
+    code: String(code),
+    client_id: GOOGLE_CLIENT_ID,
+    client_secret: GOOGLE_CLIENT_SECRET,
+    redirect_uri: GOOGLE_REDIRECT_URI,
+    grant_type: "authorization_code",
+  }).toString();
+
+  const tokenRes = await axios.post(GOOGLE_TOKEN_URL, tokenBody, {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 20000,
+  });
+
+  const accessToken = tokenRes.data?.access_token;
+  if (!accessToken) {
+    const error = new Error("Google token exchange failed.");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const userInfoRes = await axios.get(GOOGLE_USERINFO_URL, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    timeout: 20000,
+  });
+
+  const profile = userInfoRes.data || {};
+  const email = String(profile.email || "").trim().toLowerCase();
+  if (!email) {
+    const error = new Error("Google account has no email.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return {
+    email,
+    firstName: String(profile.given_name || "").trim(),
+    lastName: String(profile.family_name || "").trim(),
+    avatarUrl: String(profile.picture || "").trim(),
+    googleId: String(profile.sub || "").trim(),
   };
 }
 
@@ -309,22 +362,16 @@ app.post("/auth/register", async (req, res, next) => {
   try {
     const payload = req.body || {};
     const validationError = validateRegistrationFields(payload);
-    if (validationError) {
-      return res.status(400).json({ error: validationError });
-    }
+    if (validationError) return res.status(400).json({ error: validationError });
 
     const email = String(payload.Email).trim().toLowerCase();
     const nin = String(payload.NIN).trim();
 
     const existingNin = await findUserByNin(nin);
-    if (existingNin) {
-      return res.status(409).json({ error: "NIN already registered" });
-    }
+    if (existingNin) return res.status(409).json({ error: "NIN already registered" });
 
     const existingEmail = await findUserByEmail(email);
-    if (existingEmail) {
-      return res.status(409).json({ error: "Email already registered" });
-    }
+    if (existingEmail) return res.status(409).json({ error: "Email already registered" });
 
     const passwordHash = await bcrypt.hash(String(payload.Password), 10);
     const pinHash = await bcrypt.hash(String(payload.PIN), 10);
@@ -338,21 +385,25 @@ app.post("/auth/register", async (req, res, next) => {
       PIN_Hash: pinHash,
       Is_Active: true,
       KYC_Status: "pending",
-      Login_Count: 1,
+      Login_Count: 0,
     });
 
     const inserted = await insertUserRow(rowToInsert);
-    const stored = {
-      ...rowToInsert,
-      _id: inserted?._id || inserted?.id || null,
-    };
+    const stored = { ...rowToInsert, _id: inserted?._id || inserted?.id || null };
 
-    const token = issueAccessToken(stored);
+    const touched = await touchLogin(stored);
+    const token = issueAccessToken(touched);
 
     return res.status(201).json({
-      message: "Registration successful",
+      message: "Registration successful. Welcome to Rilstack!",
       token,
-      user: sanitizeUser(stored),
+      user: {
+        User_ID: touched.User_ID,
+        Surname: touched.Surname,
+        First_Name: touched.First_Name,
+        Email: touched.Email,
+        KYC_Status: touched.KYC_Status,
+      },
     });
   } catch (error) {
     return next(error);
@@ -361,32 +412,39 @@ app.post("/auth/register", async (req, res, next) => {
 
 app.post("/auth/login", async (req, res, next) => {
   try {
-    const { identifier, email, phone, password } = req.body || {};
-    const loginIdentifier = String(identifier || email || phone || "").trim();
+    const { identifier, password } = req.body || {};
+    const loginIdentifier = String(identifier || "").trim();
 
     if (!loginIdentifier || !password) {
-      return res.status(400).json({ error: "identifier and password are required" });
+      return res.status(400).json({ error: "Missing identifier or password" });
     }
 
     const user = await findUserByEmailOrPhone(loginIdentifier);
     if (!user) {
-      return res.status(404).json({ error: "No account found. Please sign up." });
+      return res.status(404).json({
+        error: "No account found. Please register.",
+        redirect: "/register",
+      });
+    }
+
+    if (!Boolean(user.Is_Active)) {
+      return res.status(403).json({ error: "Account deactivated" });
     }
 
     if (!user.Password_Hash) {
-      return res.status(401).json({ error: "This account uses Google sign-in. Use Google login." });
+      return res.status(401).json({ error: "Incorrect password" });
     }
 
     const valid = await bcrypt.compare(String(password), String(user.Password_Hash));
     if (!valid) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Incorrect password" });
     }
 
     const touched = await touchLogin(user);
     const token = issueAccessToken(touched);
 
-    return res.json({
-      message: "Login successful",
+    return res.status(200).json({
+      message: "Login successful. Welcome back!",
       token,
       user: sanitizeUser(touched),
     });
@@ -397,56 +455,66 @@ app.post("/auth/login", async (req, res, next) => {
 
 app.get("/auth/google", async (req, res, next) => {
   try {
-    const mode = String(req.query.mode || "login").trim().toLowerCase();
-    const email = String(req.query.email || "").trim().toLowerCase();
-    const firstName = String(req.query.first_name || req.query.firstName || "").trim();
-    const lastName = String(req.query.last_name || req.query.lastName || "").trim();
-    const avatarUrl = String(req.query.avatar_url || req.query.avatarUrl || "").trim();
-    const googleId = String(req.query.google_id || req.query.googleId || "").trim();
-
-    if (!email || !firstName || !lastName) {
-      return res.status(400).json({
-        error: "email, first_name and last_name are required in Google callback placeholder",
-      });
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_REDIRECT_URI) {
+      return res.status(500).json({ error: "Google OAuth is not configured" });
     }
 
-    const existing = await findUserByEmail(email);
+    const state = Buffer.from(
+      JSON.stringify({ ts: Date.now(), nonce: Math.random().toString(36).slice(2) }),
+    ).toString("base64url");
 
-    if (mode !== "signup") {
-      if (!existing) {
-        return res.status(404).json({ error: "No account found. Please sign up." });
+    const authUrl = new URL(GOOGLE_AUTH_URL);
+    authUrl.searchParams.set("client_id", GOOGLE_CLIENT_ID);
+    authUrl.searchParams.set("redirect_uri", GOOGLE_REDIRECT_URI);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", GOOGLE_AUTH_SCOPE);
+    authUrl.searchParams.set("access_type", "online");
+    authUrl.searchParams.set("prompt", "select_account");
+    authUrl.searchParams.set("state", state);
+
+    return res.redirect(302, authUrl.toString());
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/auth/google/callback", async (req, res, next) => {
+  try {
+    const code = String(req.query.code || "").trim();
+    if (!code) return res.status(400).json({ error: "Missing authorization code" });
+
+    const profile = await exchangeGoogleCodeForUser(code);
+    const existing = await findUserByEmail(profile.email);
+
+    if (existing) {
+      if (!Boolean(existing.Is_Active)) {
+        const loginUrl = buildRedirect("/login?error=deactivated");
+        return res.redirect(302, loginUrl);
       }
 
       const touched = await touchLogin(existing);
       const accessToken = issueAccessToken(touched);
 
-      const redirectUrl = new URL(FRONTEND_GOOGLE_SUCCESS_URL);
-      redirectUrl.searchParams.set("token", accessToken);
-      redirectUrl.searchParams.set("provider", "google");
-      return res.redirect(302, redirectUrl.toString());
+      const successUrl = new URL(
+        FRONTEND_GOOGLE_SUCCESS_URL || buildRedirect("/dashboard"),
+      );
+      successUrl.searchParams.set("token", accessToken);
+      return res.redirect(302, successUrl.toString());
     }
 
-    if (existing) {
-      const touched = await touchLogin(existing);
-      const accessToken = issueAccessToken(touched);
-      const redirectUrl = new URL(FRONTEND_GOOGLE_SUCCESS_URL);
-      redirectUrl.searchParams.set("token", accessToken);
-      redirectUrl.searchParams.set("provider", "google");
-      redirectUrl.searchParams.set("existing", "true");
-      return res.redirect(302, redirectUrl.toString());
-    }
-
-    const tempToken = issueGoogleTempToken({
-      email,
-      firstName,
-      lastName,
-      avatarUrl,
-      googleId,
+    const preToken = issueGooglePreToken({
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      avatarUrl: profile.avatarUrl,
+      googleId: profile.googleId,
     });
 
-    const redirectUrl = new URL(FRONTEND_GOOGLE_COMPLETE_URL);
-    redirectUrl.searchParams.set("google_temp_token", tempToken);
-    return res.redirect(302, redirectUrl.toString());
+    const completeUrl = new URL(
+      FRONTEND_GOOGLE_COMPLETE_URL || buildRedirect("/complete-registration"),
+    );
+    completeUrl.searchParams.set("pre_token", preToken);
+    return res.redirect(302, completeUrl.toString());
   } catch (error) {
     return next(error);
   }
@@ -455,10 +523,10 @@ app.get("/auth/google", async (req, res, next) => {
 app.post("/auth/google/complete", async (req, res, next) => {
   try {
     const {
-      google_temp_token: googleTempToken,
-      Middle_Name = "",
-      Phone,
+      pre_token: preToken,
       NIN,
+      Phone,
+      Middle_Name = "",
       BVN = "",
       Address,
       State,
@@ -467,103 +535,90 @@ app.post("/auth/google/complete", async (req, res, next) => {
       Income_Range,
       Source_of_Funds,
       PIN,
-      ID_Type = "nin",
-      ID_Number,
+      ID_Type = "",
+      ID_Number = "",
       Selfie_URL = "",
       ID_Doc_URL = "",
-      Privacy_Mode_Enabled = false,
-      Biometric_Enabled = false,
-      Notification_Prefs = "{}",
     } = req.body || {};
 
-    if (!googleTempToken) {
-      return res.status(400).json({ error: "google_temp_token is required" });
-    }
+    if (!preToken) return res.status(400).json({ error: "pre_token is required" });
 
     let decoded;
     try {
-      decoded = verifyToken(String(googleTempToken));
+      decoded = verifyToken(String(preToken));
     } catch {
-      return res.status(401).json({ error: "Invalid or expired Google completion token" });
+      return res.status(401).json({ error: "Invalid or expired pre_token" });
     }
 
-    if (decoded.type !== "google_temp") {
-      return res.status(401).json({ error: "Invalid token type for Google completion" });
+    if (decoded.type !== "google_pre") {
+      return res.status(401).json({ error: "Invalid token type" });
     }
 
-    if (!Phone || !NIN || !Address || !State || !LGA || !Occupation || !Income_Range || !Source_of_Funds || !PIN) {
-      return res.status(400).json({
-        error: "Missing required fields for Google registration completion",
-      });
+    const required = [NIN, Phone, Address, State, LGA, Occupation, Income_Range, Source_of_Funds, PIN];
+    if (required.some((v) => !String(v || "").trim())) {
+      return res.status(400).json({ error: "Missing required completion fields" });
     }
 
-    if (!isValidNigerianPhone(Phone)) {
-      return res.status(400).json({ error: "Invalid Nigerian phone number." });
-    }
-
-    if (!isValidNin(NIN)) {
-      return res.status(400).json({ error: "Invalid NIN format. Must be 11 digits." });
-    }
-
+    if (!isValidNin(NIN)) return res.status(400).json({ error: "Invalid NIN format. Must be 11 digits." });
     if (BVN && !isValidBvn(BVN)) {
       return res.status(400).json({ error: "Invalid BVN format. Must be 11 digits." });
     }
-
-    const existingNin = await findUserByNin(NIN);
-    if (existingNin) {
-      return res.status(409).json({ error: "NIN already registered" });
+    if (!isValidNigerianPhone(Phone)) {
+      return res.status(400).json({ error: "Invalid phone format. Use Nigerian format e.g. 08012345678." });
     }
+    if (!isValidPin(PIN)) return res.status(400).json({ error: "PIN must be 4-6 digits only." });
 
-    const existingEmail = await findUserByEmail(decoded.email);
-    if (existingEmail) {
-      return res.status(409).json({ error: "Email already registered" });
-    }
+    const existingNin = await findUserByNin(String(NIN).trim());
+    if (existingNin) return res.status(409).json({ error: "NIN already registered" });
+
+    const existingEmail = await findUserByEmail(String(decoded.email || "").trim().toLowerCase());
+    if (existingEmail) return res.status(409).json({ error: "Email already registered" });
 
     const pinHash = await bcrypt.hash(String(PIN), 10);
 
     const rowToInsert = buildDefaultUserRow({
       User_ID: generateUserId(),
-      Surname: decoded.lastName,
-      First_Name: decoded.firstName,
+      Surname: String(decoded.lastName || "").trim(),
+      First_Name: String(decoded.firstName || "").trim(),
       Middle_Name: String(Middle_Name || "").trim(),
-      Email: String(decoded.email).trim().toLowerCase(),
+      Email: String(decoded.email || "").trim().toLowerCase(),
       Phone: String(Phone).trim(),
       Password_Hash: "",
       PIN_Hash: pinHash,
       Google_ID: String(decoded.googleId || "").trim(),
       Avatar_URL: String(decoded.avatarUrl || "").trim(),
+      KYC_Status: "pending",
       BVN: String(BVN || "").trim(),
       NIN: String(NIN).trim(),
       Address: String(Address).trim(),
       State: String(State).trim(),
       LGA: String(LGA).trim(),
-      ID_Type: String(ID_Type || "nin").trim(),
-      ID_Number: String(ID_Number || NIN).trim(),
+      ID_Type: String(ID_Type || "").trim(),
+      ID_Number: String(ID_Number || "").trim(),
       Selfie_URL: String(Selfie_URL || "").trim(),
       ID_Doc_URL: String(ID_Doc_URL || "").trim(),
       Occupation: String(Occupation).trim(),
       Income_Range: String(Income_Range).trim(),
       Source_of_Funds: String(Source_of_Funds).trim(),
-      Privacy_Mode_Enabled,
-      Biometric_Enabled,
-      Notification_Prefs,
       Is_Active: true,
-      KYC_Status: "pending",
-      Login_Count: 1,
+      Login_Count: 0,
     });
 
     const inserted = await insertUserRow(rowToInsert);
-    const stored = {
-      ...rowToInsert,
-      _id: inserted?._id || inserted?.id || null,
-    };
-
-    const token = issueAccessToken(stored);
+    const stored = { ...rowToInsert, _id: inserted?._id || inserted?.id || null };
+    const touched = await touchLogin(stored);
+    const token = issueAccessToken(touched);
 
     return res.status(201).json({
-      message: "Google registration completed successfully",
+      message: "Registration successful. Welcome to Rilstack!",
       token,
-      user: sanitizeUser(stored),
+      user: {
+        User_ID: touched.User_ID,
+        Surname: touched.Surname,
+        First_Name: touched.First_Name,
+        Email: touched.Email,
+        KYC_Status: touched.KYC_Status,
+      },
     });
   } catch (error) {
     return next(error);
@@ -575,16 +630,12 @@ app.get("/profile", authRequired, async (req, res, next) => {
     const { rowId, email, userId } = req.auth;
 
     let user = null;
-
     if (rowId) user = await findUserByRowId(rowId);
     if (!user && email) user = await findUserByEmail(email);
     if (!user && userId) user = await findUserById(userId);
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    return res.json({ user: sanitizeUser(user) });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    return res.status(200).json({ user: sanitizeUser(user) });
   } catch (error) {
     return next(error);
   }
@@ -592,7 +643,26 @@ app.get("/profile", authRequired, async (req, res, next) => {
 
 app.put("/profile", authRequired, async (req, res, next) => {
   try {
-    const immutable = new Set(["User_ID", "NIN", "Email", "Created_At", "_id", "Password_Hash", "PIN_Hash"]);
+    const immutable = new Set([
+      "User_ID",
+      "NIN",
+      "Email",
+      "Created_At",
+      "Password_Hash",
+      "PIN_Hash",
+      "Google_ID",
+      "KYC_Status",
+      "Is_Active",
+      "Login_Count",
+    ]);
+
+    const incoming = req.body || {};
+    const immutableAttempt = Object.keys(incoming).find((field) => immutable.has(field));
+    if (immutableAttempt) {
+      return res.status(400).json({
+        error: `Field ${immutableAttempt} is immutable and cannot be updated`,
+      });
+    }
 
     const allowedFields = [
       "Surname",
@@ -609,21 +679,16 @@ app.put("/profile", authRequired, async (req, res, next) => {
       "Occupation",
       "Income_Range",
       "Source_of_Funds",
+      "Avatar_URL",
+      "BVN",
       "Privacy_Mode_Enabled",
       "Biometric_Enabled",
       "Notification_Prefs",
-      "Avatar_URL",
-      "Google_ID",
-      "KYC_Status",
-      "BVN",
-      "Is_Active",
     ];
 
-    const incoming = req.body || {};
     const updates = {};
-
     for (const field of allowedFields) {
-      if (Object.prototype.hasOwnProperty.call(incoming, field) && !immutable.has(field)) {
+      if (Object.prototype.hasOwnProperty.call(incoming, field)) {
         updates[field] = incoming[field];
       }
     }
@@ -633,7 +698,7 @@ app.put("/profile", authRequired, async (req, res, next) => {
     }
 
     if (updates.Phone && !isValidNigerianPhone(updates.Phone)) {
-      return res.status(400).json({ error: "Invalid Nigerian phone number." });
+      return res.status(400).json({ error: "Invalid phone format. Use Nigerian format e.g. 08012345678." });
     }
 
     if (updates.BVN && !isValidBvn(updates.BVN)) {
@@ -642,23 +707,16 @@ app.put("/profile", authRequired, async (req, res, next) => {
 
     const { rowId, email, userId } = req.auth;
     let user = null;
-
     if (rowId) user = await findUserByRowId(rowId);
     if (!user && email) user = await findUserByEmail(email);
     if (!user && userId) user = await findUserById(userId);
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     await updateUserRow(user._id, updates);
-
     const latest = await findUserByRowId(user._id);
 
-    return res.json({
-      message: "Profile updated successfully",
-      user: sanitizeUser(latest || { ...user, ...updates }),
-    });
+    return res.status(200).json({ user: sanitizeUser(latest || { ...user, ...updates }) });
   } catch (error) {
     return next(error);
   }
@@ -676,5 +734,5 @@ app.use((err, req, res, next) => {
 
 app.listen(Number(PORT), () => {
   // eslint-disable-next-line no-console
-  console.log(`Rilstack SeaTable auth server running on port ${PORT}`);
+  console.log(`Rilstack backend running on port ${PORT}`);
 });

@@ -305,6 +305,10 @@ export type STUser = {
   login_count?: number;
   // Extended / legacy columns (may or may not exist in the base)
   User_ID?: string;            // custom rilstack001 identifier
+  Surname?: string;
+  First_Name?: string;
+  Middle_Name?: string;
+  "Middle_Name(s)"?: string;
   Google_ID?: string;
   Avatar_URL?: string;
   PIN_Hash?: string;

@@ -226,11 +226,31 @@ function rowGoogleId(row: STUser): string {
   return String(row.Google_ID || "").trim();
 }
 
+function splitName(name: string): { surname: string; firstName: string; middleName: string } {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  return {
+    surname: parts[0] || "",
+    firstName: parts[1] || "",
+    middleName: parts.length > 2 ? parts.slice(2).join(" ") : "",
+  };
+}
+
 function mapSeaTableUser(row: STUser): StoredUser {
   const kycData = parseKycData(row.KYC_Data_JSON);
   const kycLevel = Number(row.KYC_Level ?? calculateKycLevel(kycData));
   const createdAt = row.Created_At || new Date().toISOString();
   const updatedAt = row.Updated_At || createdAt;
+  const resolvedName =
+    row.full_name ||
+    row.Full_Name ||
+    [row.Surname, row.First_Name, row["Middle_Name(s)"], row.Middle_Name]
+      .map((v) => String(v || "").trim())
+      .filter(Boolean)
+      .join(" ");
 
   // Normalise kyc_status: spec uses lowercase; legacy rows may use PascalCase
   const rawStatus = String(row.kyc_status || row.KYC_Status || "").toLowerCase();
@@ -243,7 +263,7 @@ function mapSeaTableUser(row: STUser): StoredUser {
   return {
     id: row.User_ID || row._id,
     rowId: row._id,
-    name: row.full_name || row.Full_Name || "",
+    name: resolvedName,
     email: normalizeEmail(row.email || row.Email || ""),
     passwordHash: row.password_hash || row.Password || "",
     phone: row.phone_number || row.Phone || "",
@@ -280,6 +300,8 @@ function mapSeaTableUser(row: STUser): StoredUser {
 }
 
 function buildUserUpdates(user: StoredUser): Record<string, unknown> {
+  const { surname, firstName, middleName } = splitName(user.name);
+
   return {
     // Spec-defined lowercase columns
     full_name: user.name,
@@ -304,6 +326,10 @@ function buildUserUpdates(user: StoredUser): Record<string, unknown> {
     login_count: user.loginCount,
     // Legacy columns kept in sync to support existing SeaTable schemas
     Full_Name: user.name,
+    Surname: surname,
+    First_Name: firstName,
+    "Middle_Name(s)": middleName,
+    Middle_Name: middleName,
     Email: user.email,
     Phone: user.phone,
     Password: user.passwordHash,
