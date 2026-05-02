@@ -308,6 +308,16 @@ function SignupPageInner() {
           emailCredentials.password,
         );
         if (!loginOk) {
+          // Final fallback: let NextAuth handle a full redirecting sign-in flow.
+          await signIn("credentials", {
+            identifier: String(payload.email || "").trim(),
+            email: String(payload.email || "").trim(),
+            password: emailCredentials.password,
+            callbackUrl: "/dashboard",
+            redirect: true,
+          });
+
+          // If redirect did not happen, show a clear path to continue.
           router.push(`/login?notice=created&email=${encodeURIComponent(String(payload.email || "").trim())}`);
           return;
         }
