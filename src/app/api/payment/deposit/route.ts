@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ensurePaystackWalletForEmail,
-  mapDepositMethodToChannel,
   paystackRequest,
 } from "@/lib/paystack";
 import { findStoredUserByEmail } from "@/lib/user-store";
@@ -42,26 +41,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let wallet: Awaited<ReturnType<typeof ensurePaystackWalletForEmail>> | null = null;
-
-    const userRecord = await findStoredUserByEmail(userEmail).catch(() => null);
-
-    // Always provision/fetch the user's dedicated virtual account.
-    let walletError: string | null = null;
-    try {
-      wallet = await ensurePaystackWalletForEmail(userEmail, {
-        name: userRecord?.name,
-        phone: userRecord?.phone,
-        bvn: userRecord?.bvn,
-      });
-    } catch (err) {
-      walletError = err instanceof Error ? err.message : "Wallet provisioning failed";
-      console.warn("Wallet provisioning failed during deposit init:", err);
-    }
-
-    // For bank transfers, the user deposits directly to their permanent
-    // dedicated virtual account (DVA) — no payment link needed.
+    // For bank transfers, provision the DVA and return account details immediately.
+    // Card/USSD go straight to Paystack — no wallet provisioning needed here;
+    // the webhook handles wallet setup + crediting after payment succeeds.
     if (method === "transfer") {
+      const userRecord = await findStoredUserByEmail(userEmail).catch(() => null);
+      let wallet: Awaited<ReturnType<typeof ensurePaystackWalletForEmail>> | null = null;
+      let walletError: string | null = null;
+      try {
+        wallet = await ensurePaystackWalletForEmail(userEmail, {
+          name: userRecord?.name,
+          phone: userRecord?.phone,
+          bvn: userRecord?.bvn,
+        });
+      } catch (err) {
+        walletError = err instanceof Error ? err.message : "Wallet provisioning failed";
+      }
       if (!wallet) {
         const isKycIssue = walletError?.toLowerCase().includes("identified") ||
           walletError?.toLowerCase().includes("kyc") ||
@@ -101,15 +96,12 @@ export async function POST(request: NextRequest) {
         currency: "NGN",
         reference,
         callback_url: callbackUrl,
-        channels: [mapDepositMethodToChannel(method)],
         metadata: {
           description: description || "RILSTACK Deposit",
           type: "deposit",
           platform: "rilstack",
           userEmail,
           depositMethod: method,
-          walletAccountNumber: wallet?.accountNumber,
-          walletBankName: wallet?.bankName,
         },
       }),
     });
@@ -124,7 +116,6 @@ export async function POST(request: NextRequest) {
       status: "pending",
       paymentUrl: response.data.authorization_url,
       accessCode: response.data.access_code,
-      wallet,
       message: "Payment link generated. Complete the flow on Paystack.",
     });
   } catch (error: any) {

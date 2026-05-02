@@ -4,6 +4,7 @@ import {
   getWalletByCustomerCode,
   getWalletByUserId,
   creditWallet,
+  upsertWallet,
 } from "@/lib/wallet-store";
 import { findStoredUserByEmail, isWebhookEventProcessed, markWebhookEventProcessed } from "@/lib/user-store";
 
@@ -78,18 +79,33 @@ export async function POST(request: NextRequest) {
     // Find wallet by Paystack customer_code first (most reliable)
     let wallet = await getWalletByCustomerCode(customer.customer_code);
 
-    // Fallback: look up user by email then get their wallet
+    // Fallback: look up user by email then get/create their wallet
     if (!wallet && customer.email) {
       const user = await findStoredUserByEmail(
         customer.email.trim().toLowerCase(),
       );
       if (user) {
         wallet = await getWalletByUserId(user.id);
+
+        // Auto-create the SeaTable wallet record if it doesn't exist yet.
+        // This handles users who paid via card/USSD before their wallet was provisioned.
+        if (!wallet) {
+          try {
+            wallet = await upsertWallet({
+              userId: user.id,
+              paystackCustomerCode: customer.customer_code,
+              accountNumber: "",
+              accountName: user.name ?? "",
+              bankName: "",
+            });
+          } catch (createErr) {
+            console.warn("Webhook: failed to auto-create wallet:", createErr);
+          }
+        }
       }
     }
 
     if (!wallet) {
-      // Wallet not set up yet — log and return 200 so Paystack doesn't retry
       console.warn(
         `Webhook: charge.success for unknown customer ${customer.customer_code} (${customer.email}), ref: ${reference}`,
       );

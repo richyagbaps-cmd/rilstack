@@ -216,7 +216,7 @@ export async function ensurePaystackWalletForEmail(
     },
   );
 
-  const existingWallet = dedicatedAccounts.data
+  const existingWallet = (dedicatedAccounts.data ?? [])
     .filter((account) => {
       const accountCustomerCode = account.customer?.customer_code;
       const accountCustomerId = account.customer?.id;
