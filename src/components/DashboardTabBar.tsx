@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Calculator, Home, PiggyBank, TrendingUp, User } from "lucide-react";
+import { Calculator, Home, PiggyBank, TrendingUp } from "lucide-react";
 
 export default function DashboardTabBar() {
   const pathname = usePathname();
@@ -12,7 +12,6 @@ export default function DashboardTabBar() {
     { href: "/budgets", label: "Budget", icon: Calculator },
     { href: "/savings", label: "Savings", icon: PiggyBank },
     { href: "/investments", label: "Invest", icon: TrendingUp },
-    { href: "/settings", label: "Profile", icon: User },
   ];
 
   return (
