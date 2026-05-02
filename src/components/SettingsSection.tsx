@@ -145,6 +145,9 @@ function WithdrawalBankSection() {
 }
 
 interface SettingsFormData {
+  surname: string;
+  firstName: string;
+  middleName: string;
   fullName: string;
   phone: string;
   email: string;
@@ -162,6 +165,9 @@ interface SettingsFormData {
 }
 
 interface SavedProfileView {
+  surname: string;
+  firstName: string;
+  middleName: string;
   fullName: string;
   phone: string;
   email: string;
@@ -205,6 +211,9 @@ export default function SettingsSection() {
 
   const { register, handleSubmit, reset } = useForm<SettingsFormData>({
     defaultValues: {
+      surname: "",
+      firstName: "",
+      middleName: "",
       fullName: session?.user?.name || "",
       phone: "",
       email: session?.user?.email || "",
@@ -224,6 +233,9 @@ export default function SettingsSection() {
 
   const applyProfileToForm = (profile: Partial<SavedProfileView>) => {
     const next: SavedProfileView = {
+      surname: profile.surname || "",
+      firstName: profile.firstName || "",
+      middleName: profile.middleName || "",
       fullName: profile.fullName || session?.user?.name || "",
       phone: profile.phone || "",
       email: profile.email || session?.user?.email || "",
@@ -253,6 +265,9 @@ export default function SettingsSection() {
 
   useEffect(() => {
     reset({
+      surname: "",
+      firstName: "",
+      middleName: "",
       fullName: session?.user?.name || "",
       phone: "",
       email: session?.user?.email || "",
@@ -355,6 +370,17 @@ export default function SettingsSection() {
   const onSubmit = async (data: SettingsFormData) => {
     setSaveError(null);
     setSaveSuccess(null);
+
+    const resolvedFullName = [data.surname, data.firstName, data.middleName]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+      .join(" ");
+
+    if (!data.surname.trim() || !data.firstName.trim()) {
+      setSaveError("Surname and first name are required.");
+      return;
+    }
+
     if (!data.dateOfBirth) {
       setSaveError("Date of birth is required.");
       return;
@@ -365,7 +391,10 @@ export default function SettingsSection() {
       const res = await fetch("/api/settings/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          fullName: resolvedFullName,
+        }),
       });
       const payload = await res.json();
 
@@ -539,8 +568,16 @@ export default function SettingsSection() {
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="grid flex-1 gap-3 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-700">Full Name</label>
-              <input type="text" {...register("fullName", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
+              <label className="mb-1 block text-xs font-semibold text-slate-700">Surname</label>
+              <input type="text" {...register("surname", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">First Name</label>
+              <input type="text" {...register("firstName", { required: true })} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-700">Middle Name(s)</label>
+              <input type="text" {...register("middleName")} disabled={isLoadingProfile || isSavingProfile} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-700">Email</label>
@@ -657,7 +694,10 @@ export default function SettingsSection() {
             {savedProfile && (
               <div className="rounded-xl border border-[#d8e2ef] bg-[#f8fafc] px-4 py-3 text-xs text-slate-700">
                 <p className="font-semibold text-slate-900">Saved</p>
-                <p className="mt-1">Name: {savedProfile.fullName || "-"}</p>
+                <p className="mt-1">Surname: {savedProfile.surname || "-"}</p>
+                <p>First Name: {savedProfile.firstName || "-"}</p>
+                <p>Middle Name(s): {savedProfile.middleName || "-"}</p>
+                <p>Name: {savedProfile.fullName || "-"}</p>
                 <p>Phone: {savedProfile.phone || "-"}</p>
                 <p>DOB: {savedProfile.dateOfBirth || "-"}</p>
                 <p>LGA: {savedProfile.lga || "-"}</p>

@@ -571,6 +571,120 @@ function rankByEmail(user: StoredUser, normalizedEmail: string): number {
   return score;
 }
 
+function normalizeIdentityValue(value: string | undefined): string {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeDigitsOnly(value: string | undefined): string {
+  return String(value || "").replace(/\D+/g, "").trim();
+}
+
+function userIdentityTokens(user: StoredUser): string[] {
+  const tokens = new Set<string>();
+  const email = normalizeIdentityValue(user.email);
+  const googleId = normalizeIdentityValue(user.googleId);
+  const phone = normalizeDigitsOnly(user.phone);
+  const nin = normalizeDigitsOnly(user.nin);
+
+  if (email) tokens.add(`email:${email}`);
+  if (googleId) tokens.add(`google:${googleId}`);
+  if (phone) tokens.add(`phone:${phone}`);
+  if (nin) tokens.add(`nin:${nin}`);
+
+  return [...tokens];
+}
+
+function rankForCanonical(user: StoredUser): number {
+  let score = 0;
+  if (user.passwordHash) score += 120;
+  if (user.pinHash) score += 50;
+  if (user.phone) score += 30;
+  if (user.nin) score += 40;
+  if (user.bvn) score += 20;
+  if (user.name) score += 20;
+  if (user.termsAccepted) score += 15;
+  score += Number(user.kycLevel || 0) * 10;
+  score += Number(user.loginCount || 0);
+  return score;
+}
+
+async function consolidateAllUsersByIdentity(): Promise<number> {
+  const rows = await listUsers();
+  if (!rows.length) return 0;
+
+  const users = rows.map(mapSeaTableUser);
+  const tokenToIndexes = new Map<string, number[]>();
+
+  for (let i = 0; i < users.length; i += 1) {
+    for (const token of userIdentityTokens(users[i])) {
+      const list = tokenToIndexes.get(token) || [];
+      list.push(i);
+      tokenToIndexes.set(token, list);
+    }
+  }
+
+  const visited = new Set<number>();
+  let removed = 0;
+
+  for (let i = 0; i < users.length; i += 1) {
+    if (visited.has(i)) continue;
+
+    const queue = [i];
+    const group = new Set<number>();
+
+    while (queue.length) {
+      const idx = queue.pop() as number;
+      if (group.has(idx)) continue;
+      group.add(idx);
+
+      for (const token of userIdentityTokens(users[idx])) {
+        const linked = tokenToIndexes.get(token) || [];
+        for (const nextIdx of linked) {
+          if (!group.has(nextIdx)) queue.push(nextIdx);
+        }
+      }
+    }
+
+    for (const idx of group) visited.add(idx);
+    if (group.size <= 1) continue;
+
+    const groupUsers = [...group].map((idx) => users[idx]);
+    groupUsers.sort((a, b) => rankForCanonical(b) - rankForCanonical(a));
+
+    const canonical = groupUsers[0];
+    const duplicates = groupUsers.slice(1);
+
+    const normalizedEmail =
+      normalizeEmail(canonical.email || "") ||
+      normalizeEmail(duplicates.find((u) => u.email)?.email || "");
+    const googleId =
+      String(canonical.googleId || "").trim() ||
+      String(duplicates.find((u) => u.googleId)?.googleId || "").trim() ||
+      (normalizedEmail ? `google:${normalizedEmail}` : "");
+
+    const merged = mergeUsers(
+      canonical,
+      duplicates,
+      normalizedEmail || normalizeEmail(canonical.email || ""),
+      googleId,
+    );
+
+    await updateUserRecord(canonical.rowId, merged);
+
+    for (const duplicate of duplicates) {
+      if (duplicate.rowId === canonical.rowId) continue;
+      try {
+        await deleteRow(TABLES.USERS, duplicate.rowId);
+        removed += 1;
+      } catch {
+        // Best-effort dedupe cleanup.
+      }
+    }
+  }
+
+  return removed;
+}
+
 async function consolidateUsersByEmail(normalizedEmail: string): Promise<StoredUser | null> {
   const rows = (await listUsers()).filter((row) => rowEmail(row) === normalizedEmail);
   if (!rows.length) return null;
@@ -652,6 +766,8 @@ async function findGoogleAuthCandidate(email: string, googleId: string): Promise
 export async function createStoredUser(input: CreateStoredUserInput) {
   const normalizedEmail = normalizeEmail(input.email);
   return withSignupLock(normalizedEmail, async () => {
+    await consolidateAllUsersByIdentity();
+
     const existing = await findStoredUserByEmail(normalizedEmail);
     if (existing) {
       const mergedKycData: KycData = {
@@ -758,6 +874,8 @@ export async function upsertGoogleUser(input: {
 }) {
   const normalizedEmail = normalizeEmail(input.email);
   return withGoogleUpsertLock(normalizedEmail, async () => {
+    await consolidateAllUsersByIdentity();
+
     const consolidated = await consolidateUsersByIdentity(normalizedEmail, input.googleId);
     if (consolidated) {
       const now = new Date().toISOString();
@@ -867,6 +985,8 @@ export async function updateUserKyc(
   updates: Partial<Omit<StoredUser, "kycData">> & { kycData?: Partial<KycData> },
 ) {
   const normalized = normalizeEmail(email);
+  await consolidateAllUsersByIdentity();
+
   const existing =
     (await consolidateUsersByEmail(normalized)) ||
     (await findStoredUserByEmail(normalized));
@@ -922,6 +1042,8 @@ export async function ensureStoredUserForGoogleSession(sessionUser: {
   name?: string | null;
   id?: string | number | null;
 }) {
+  await consolidateAllUsersByIdentity();
+
   const email = normalizeEmail(sessionUser.email || "");
   if (!email) return null;
 

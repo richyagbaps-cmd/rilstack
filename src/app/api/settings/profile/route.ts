@@ -57,8 +57,15 @@ function toResponseProfile(user: Awaited<ReturnType<typeof findStoredUserByEmail
   if (!user) return null;
 
   const kyc = (user.kycData || {}) as any;
+  const nameParts = String(user.name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 
   return {
+    surname: nameParts[0] || "",
+    firstName: nameParts[1] || "",
+    middleName: nameParts.slice(2).join(" "),
     fullName: user.name || "",
     phone: user.phone || kyc.phone || "",
     email: user.email || "",
@@ -84,6 +91,9 @@ function toResponseProfileFromExpress(user: any) {
     .join(" ");
 
   return {
+    surname: String(user?.Surname || ""),
+    firstName: String(user?.First_Name || ""),
+    middleName: String(user?.Middle_Name || ""),
     fullName,
     phone: String(user?.Phone || ""),
     email: String(user?.Email || ""),
@@ -154,6 +164,9 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json();
     const {
+      surname,
+      firstName,
+      middleName,
       fullName,
       phone,
       dateOfBirth,
@@ -174,11 +187,28 @@ export async function PATCH(request: NextRequest) {
       const accessToken = (token as any)?.expressAccessToken;
 
       if (accessToken) {
-        const nameParts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+        const hasExplicitNames =
+          Boolean(String(surname || "").trim()) ||
+          Boolean(String(firstName || "").trim()) ||
+          Boolean(String(middleName || "").trim());
+        const fullNameParts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+        const expressSurname = String(surname || "").trim() || fullNameParts[0] || "";
+        const expressFirstName = String(firstName || "").trim() || fullNameParts[1] || "";
+        const expressMiddleName =
+          String(middleName || "").trim() ||
+          (fullNameParts.length > 2 ? fullNameParts.slice(2).join(" ") : "");
+
+        if (!hasExplicitNames && !String(fullName || "").trim()) {
+          return NextResponse.json(
+            { error: "Surname and first name are required" },
+            { status: 400 },
+          );
+        }
+
         const expressPayload = {
-          Surname: nameParts[0] || "",
-          First_Name: nameParts[1] || "",
-          Middle_Name: nameParts.slice(2).join(" "),
+          Surname: expressSurname,
+          First_Name: expressFirstName,
+          Middle_Name: expressMiddleName,
           Phone: String(phone || "").trim(),
           Address: String(address || "").trim(),
           State: String(stateOfOrigin || "").trim(),
@@ -217,7 +247,13 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (!fullName || !phone || !dateOfBirth || !gender || !stateOfOrigin || !address) {
+    const composedFullName = [surname, firstName, middleName]
+      .map((v: unknown) => String(v || "").trim())
+      .filter(Boolean)
+      .join(" ");
+    const resolvedFullName = String(fullName || composedFullName).trim();
+
+    if (!resolvedFullName || !phone || !dateOfBirth || !gender || !stateOfOrigin || !address) {
       return NextResponse.json(
         { error: "Missing required profile fields" },
         { status: 400 },
@@ -225,7 +261,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updated = await updateUserKyc(session.user.email, {
-      name: String(fullName).trim(),
+      name: resolvedFullName,
       phone: String(phone).trim(),
       dateOfBirth: String(dateOfBirth),
       gender,
