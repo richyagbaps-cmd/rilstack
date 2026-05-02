@@ -58,10 +58,10 @@ export interface STWallet {
 
 export interface STWalletTransaction {
   _id: string;
-  Wallet_ID?: string;
-  Wallet_Id: string;
-  User_ID?: string;
-  User_Id: string;
+  Wallet_ID: string;
+  Wallet_Id?: string;
+  User_ID: string;
+  User_Id?: string;
   Type: "deposit" | "withdrawal" | "fee";
   Amount: number; // in kobo
   Balance_Before: number;
@@ -73,8 +73,8 @@ export interface STWalletTransaction {
 
 export interface STPayoutRecipient {
   _id: string;
-  User_ID?: string;
-  User_Id: string;
+  User_ID: string;
+  User_Id?: string;
   Recipient_Code: string;
   Bank_Name: string;
   Account_Number: string | number;
