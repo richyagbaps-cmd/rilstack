@@ -75,7 +75,7 @@ export interface StoredUser {
   biometric?: boolean;
   notifications?: boolean;
   kycLevel: number;
-  kycStatus: "Pending" | "Verified" | "Rejected";
+  kycStatus: "pending" | "incomplete" | "verified";
   termsAccepted: boolean;
   authProvider: "credentials" | "google";
   loginCount: number;
@@ -197,10 +197,10 @@ function calculateKycLevel(kycData: KycData): number {
   return level;
 }
 
-function deriveKycStatus(kycData: KycData): "Pending" | "Verified" | "Rejected" {
-  return kycData.identityVerified && kycData.detailsComplete
-    ? "Verified"
-    : "Pending";
+function deriveKycStatus(kycData: KycData): "pending" | "incomplete" | "verified" {
+  if (kycData.identityVerified && kycData.detailsComplete) return "verified";
+  if (kycData.detailsComplete) return "pending"; // KYC form submitted, awaiting admin review
+  return "incomplete"; // default for new / partially-onboarded users
 }
 
 function parseSeatableBool(value: unknown): boolean {
@@ -219,20 +219,28 @@ function mapSeaTableUser(row: STUser): StoredUser {
   const createdAt = row.Created_At || new Date().toISOString();
   const updatedAt = row.Updated_At || createdAt;
 
+  // Normalise kyc_status: spec uses lowercase; legacy rows may use PascalCase
+  const rawStatus = (row.kyc_status || "").toLowerCase();
+  const resolvedKycStatus: "pending" | "incomplete" | "verified" =
+    rawStatus === "verified" ? "verified" :
+    rawStatus === "pending"  ? "pending"  :
+    rawStatus === "incomplete" ? "incomplete" :
+    deriveKycStatus(kycData);
+
   return {
-    id: row.User_ID,
+    id: row.User_ID || row._id,
     rowId: row._id,
-    name: row.Full_Name || "",
-    email: normalizeEmail(row.Email || ""),
-    passwordHash: row.Password || "",
-    phone: row.Phone || "",
+    name: row.full_name || "",
+    email: normalizeEmail(row.email || ""),
+    passwordHash: row.password_hash || "",
+    phone: row.phone_number || "",
     pinHash: row.PIN_Hash || undefined,
     googleId: row.Google_ID || undefined,
     avatarUrl: row.Avatar_URL || undefined,
-    dateOfBirth: row.Date_Of_Birth || undefined,
-    nin: row.NIN || undefined,
-    bvn: row.BVN || undefined,
-    address: row.Address || undefined,
+    dateOfBirth: row.date_of_birth || undefined,
+    nin: row.nin || undefined,
+    bvn: row.bvn || undefined,
+    address: row.address || undefined,
     stateOfOrigin: row.State || undefined,
     lga: row.LGA || kycData.lga || undefined,
     gender: row.Gender,
@@ -240,18 +248,18 @@ function mapSeaTableUser(row: STUser): StoredUser {
     idNumber: row.ID_Number || kycData.idNumber || undefined,
     selfieUrl: row.Selfie_URL || kycData.selfieName || undefined,
     idDocUrl: row.ID_Doc_URL || kycData.idPhotoName || undefined,
-    occupation: row.Occupation || kycData.occupation || undefined,
-    incomeRange: row.Income_Range || kycData.income || undefined,
+    occupation: row.occupation || kycData.occupation || undefined,
+    incomeRange: row.income_range || kycData.income || undefined,
     sourceOfFunds: row.Source_of_Funds || kycData.source || undefined,
     privacyMode: parseSeatableBool(row.Privacy_Mode),
     biometric: parseSeatableBool(row.Biometric),
     notifications: parseSeatableBool(row.Notifications),
     kycLevel,
-    kycStatus: row.KYC_Status || deriveKycStatus(kycData),
+    kycStatus: resolvedKycStatus,
     termsAccepted: parseSeatableBool(row.Terms_Accepted),
     authProvider: row.Auth_Provider || (row.Google_ID ? "google" : "credentials"),
-    loginCount: Number(row.Login_Count ?? 0),
-    lastLogin: row.Last_Login || "",
+    loginCount: Number(row.login_count ?? 0),
+    lastLogin: row.last_login || "",
     kycData,
     createdAt,
     updatedAt,
@@ -260,38 +268,40 @@ function mapSeaTableUser(row: STUser): StoredUser {
 
 function buildUserUpdates(user: StoredUser): Record<string, unknown> {
   return {
-    Full_Name: user.name,
-    Email: user.email,
-    Phone: user.phone,
-    Password: user.passwordHash,
+    // Spec-defined lowercase columns
+    full_name: user.name,
+    email: user.email,
+    phone_number: user.phone,
+    password_hash: user.passwordHash,
+    kyc_status: user.kycStatus,
+    date_of_birth: user.dateOfBirth || "",
+    bvn: user.bvn || "",
+    nin: user.nin || "",
+    address: user.address || "",
+    occupation: user.occupation || "",
+    income_range: user.incomeRange || "",
+    last_login: user.lastLogin,
+    login_count: user.loginCount,
+    // Extended / legacy columns
     PIN_Hash: user.pinHash || "",
     Google_ID: user.googleId || "",
     Avatar_URL: user.avatarUrl || "",
-    KYC_Status: user.kycStatus,
-    BVN: user.bvn || "",
-    NIN: user.nin || "",
-    Address: user.address || "",
     State: user.stateOfOrigin || "",
     LGA: user.lga || "",
     ID_Type: user.idType || "",
     ID_Number: user.idNumber || "",
     Selfie_URL: user.selfieUrl || "",
     ID_Doc_URL: user.idDocUrl || "",
-    Occupation: user.occupation || "",
-    Income_Range: user.incomeRange || "",
     Source_of_Funds: user.sourceOfFunds || "",
     Privacy_Mode: user.privacyMode ? "true" : "false",
     Biometric: user.biometric ? "true" : "false",
     Notifications: user.notifications ? "true" : "false",
     Is_Active: "true",
-    Date_Of_Birth: user.dateOfBirth || "",
     Gender: user.gender || "",
     KYC_Level: user.kycLevel,
     KYC_Data_JSON: JSON.stringify(user.kycData),
     Terms_Accepted: user.termsAccepted ? "true" : "false",
     Auth_Provider: user.authProvider,
-    Login_Count: user.loginCount,
-    Last_Login: user.lastLogin,
     Created_At: user.createdAt,
     Updated_At: user.updatedAt,
   };
@@ -325,7 +335,7 @@ export async function findStoredUserByEmail(email: string) {
 
   // Fallback: handle historical rows where Email casing differs.
   const rows = await listUsers();
-  const found = rows.find((r) => normalizeEmail(r.Email || "") === normalized);
+  const found = rows.find((r) => normalizeEmail(r.email || "") === normalized);
   return found ? mapSeaTableUser(found) : null;
 }
 
@@ -468,7 +478,7 @@ function rankByEmail(user: StoredUser, normalizedEmail: string): number {
 
 async function consolidateUsersByEmail(normalizedEmail: string): Promise<StoredUser | null> {
   const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE Email='${normalizedEmail.replace(/'/g, "''")}' LIMIT 50`,
+    `SELECT * FROM ${TABLES.USERS} WHERE email='${normalizedEmail.replace(/'/g, "''")}' LIMIT 50`,
   );
   if (!rows.length) return null;
 
@@ -499,7 +509,7 @@ async function consolidateUsersByEmail(normalizedEmail: string): Promise<StoredU
 
 async function consolidateUsersByIdentity(normalizedEmail: string, googleId: string): Promise<StoredUser | null> {
   const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE Email='${normalizedEmail.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' LIMIT 50`,
+    `SELECT * FROM ${TABLES.USERS} WHERE email='${normalizedEmail.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' LIMIT 50`,
   );
   if (!rows.length) return null;
 
@@ -526,14 +536,14 @@ async function consolidateUsersByIdentity(normalizedEmail: string, googleId: str
 
 async function findGoogleAuthCandidate(email: string, googleId: string): Promise<StoredUser | null> {
   const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE Email='${email.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' LIMIT 20`,
+    `SELECT * FROM ${TABLES.USERS} WHERE email='${email.replace(/'/g, "''")}' OR Google_ID='${googleId.replace(/'/g, "''")}' LIMIT 20`,
   );
   if (!rows.length) return null;
 
   // Prefer the strongest match first: exact email + googleId, then email, then googleId.
   const ranked = rows.sort((a, b) => {
     const rank = (row: STUser) => {
-      const emailMatch = (row.Email || "").trim().toLowerCase() === email;
+      const emailMatch = (row.email || "").trim().toLowerCase() === email;
       const googleMatch = (row.Google_ID || "").trim() === googleId;
       if (emailMatch && googleMatch) return 3;
       if (emailMatch) return 2;
@@ -729,8 +739,8 @@ export async function recordUserLogin(email: string): Promise<void> {
   if (!user) return;
   const now = new Date().toISOString();
   await updateRow(TABLES.USERS, user.rowId, {
-    Login_Count: (user.loginCount ?? 0) + 1,
-    Last_Login: now,
+    login_count: (user.loginCount ?? 0) + 1,
+    last_login: now,
     Updated_At: now,
   });
 }

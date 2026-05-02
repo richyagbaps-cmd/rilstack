@@ -86,6 +86,7 @@ async function getBaseTokenFromAccountToken(
 // Table names  must match your SeaTable base exactly
 export const TABLES = {
   USERS:               "Users",
+  KYC_DOCUMENTS:       "KYC_Documents",
   BUDGETS:             "Budgets",
   SAVINGS_GOALS:       "Savings_Goals",
   INVESTMENTS:         "Investments",
@@ -274,44 +275,59 @@ export async function deleteRow(tableName: string, rowId: string): Promise<void>
 // Typed helpers per table
 // ---------------------------------------------------------------------------
 
+/**
+ * Actual SeaTable Users table columns (lowercase as defined in the base schema).
+ * Spec-defined columns use lowercase snake_case. Legacy/extended columns retain their
+ * original casing and are treated as optional extras.
+ */
 export type STUser = {
   _id: string;
-  User_ID: string;
-  Full_Name: string;
-  Email: string;
-  Phone: string;
-  Password: string;            // SeaTable column name is "Password"
-  PIN_Hash?: string;
+  // Spec-defined columns (lowercase — actual SeaTable column names)
+  email: string;
+  full_name: string;
+  phone_number?: string;
+  password_hash?: string;      // bcrypt hash
+  kyc_status?: "pending" | "incomplete" | "verified";
+  date_of_birth?: string;
+  bvn?: string;
+  nin?: string;
+  address?: string;
+  occupation?: string;
+  income_range?: string;
+  last_login?: string;
+  login_count?: number;
+  // Extended / legacy columns (may or may not exist in the base)
+  User_ID?: string;            // custom rilstack001 identifier
   Google_ID?: string;
   Avatar_URL?: string;
-  KYC_Status: "Pending" | "Verified" | "Rejected";
-  BVN?: string;
-  NIN?: string;
-  Address?: string;
-  State?: string;              // SeaTable column name is "State"
+  PIN_Hash?: string;
+  State?: string;
   LGA?: string;
   ID_Type?: string;
   ID_Number?: string;
   Selfie_URL?: string;
   ID_Doc_URL?: string;
-  Occupation?: string;
-  Income_Range?: string;
   Source_of_Funds?: string;
-  Privacy_Mode?: boolean;      // SeaTable column name is "Privacy_Mode"
+  Privacy_Mode?: boolean;
   Biometric?: boolean;
   Notifications?: boolean;
   Is_Active?: boolean;
-  // Extended columns (add these to SeaTable if not present)
-  Date_Of_Birth?: string;
   Gender?: "M" | "F" | "other";
   KYC_Level?: number;
   KYC_Data_JSON?: string;
   Terms_Accepted?: boolean;
   Auth_Provider?: "credentials" | "google";
-  Login_Count?: number;
-  Last_Login?: string;
   Created_At?: string;
   Updated_At?: string;
+};
+
+/** KYC_Documents table row */
+export type STKycDocument = {
+  _id: string;
+  user_email: string;
+  document_type: "selfie" | "id_card";
+  document_url: string;
+  uploaded_at: string;
 };
 
 export type STBudget = {
@@ -411,21 +427,26 @@ export const nairaToKobo = (n: number) => Math.round(n * 100);
 
 export async function getUserByEmail(email: string): Promise<STUser | null> {
   const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE Email='${email.replace(/'/g, "''")}' LIMIT 1`,
+    `SELECT * FROM ${TABLES.USERS} WHERE email='${email.replace(/'/g, "''")}' LIMIT 1`,
   );
   return rows[0] ?? null;
 }
 
 export async function getUserById(userId: string): Promise<STUser | null> {
-  const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE User_ID='${userId}' LIMIT 1`,
-  );
-  return rows[0] ?? null;
+  // Try by custom User_ID first, then by SeaTable row _id
+  const byUserId = await query<STUser>(
+    `SELECT * FROM ${TABLES.USERS} WHERE User_ID='${userId.replace(/'/g, "''")}' LIMIT 1`,
+  ).catch(() => [] as STUser[]);
+  if (byUserId[0]) return byUserId[0];
+  const byRowId = await query<STUser>(
+    `SELECT * FROM ${TABLES.USERS} WHERE _id='${userId.replace(/'/g, "''")}' LIMIT 1`,
+  ).catch(() => [] as STUser[]);
+  return byRowId[0] ?? null;
 }
 
 export async function getUserByPhone(phone: string): Promise<STUser | null> {
   const rows = await query<STUser>(
-    `SELECT * FROM ${TABLES.USERS} WHERE Phone='${phone.replace(/'/g, "''")}' LIMIT 1`,
+    `SELECT * FROM ${TABLES.USERS} WHERE phone_number='${phone.replace(/'/g, "''")}' LIMIT 1`,
   );
   return rows[0] ?? null;
 }

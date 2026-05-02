@@ -317,9 +317,9 @@ export async function POST(request: NextRequest) {
 
       if (action === "retirement_withdraw") {
         const user = await getUserById(userId);
-        const ageFromDob = user?.Date_Of_Birth
+        const ageFromDob = user?.date_of_birth
           ? Math.floor(
-              (Date.now() - new Date(user.Date_Of_Birth).getTime()) /
+              (Date.now() - new Date(user.date_of_birth).getTime()) /
                 (1000 * 60 * 60 * 24 * 365.25),
             )
           : 0;
