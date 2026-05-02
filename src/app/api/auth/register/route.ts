@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createStoredUser, findStoredUserByEmail, findStoredUserByIdentifier } from "@/lib/user-store";
+import { saveKycDocumentsForEmail } from "@/lib/kyc-documents";
 
 interface RegisterRequest {
   name?: string;
@@ -22,6 +23,8 @@ interface RegisterRequest {
   occupation?: string;
   incomeRange?: string;
   sourceOfFunds?: string;
+  selfieName?: string;
+  idPhotoName?: string;
   termsAccepted?: boolean;
   kycData?: Record<string, unknown>;
 }
@@ -50,6 +53,8 @@ export async function POST(request: NextRequest) {
       occupation,
       incomeRange,
       sourceOfFunds,
+      selfieName,
+      idPhotoName,
       termsAccepted,
       kycData,
     } = body;
@@ -123,6 +128,13 @@ export async function POST(request: NextRequest) {
       authProvider: "credentials",
       kycData: (kycData || undefined) as any,
     });
+
+    const selfieDoc = String(selfieName || (kycData as any)?.selfieName || "").trim();
+    const idCardDoc = String(idPhotoName || (kycData as any)?.idPhotoName || "").trim();
+    await saveKycDocumentsForEmail(user.email, [
+      { type: "selfie", url: selfieDoc },
+      { type: "id_card", url: idCardDoc },
+    ]);
 
     return NextResponse.json({
       success: true,

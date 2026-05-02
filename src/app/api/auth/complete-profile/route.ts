@@ -7,6 +7,7 @@ import {
   hashPin,
   updateUserKyc,
 } from "@/lib/user-store";
+import { saveKycDocumentsForEmail } from "@/lib/kyc-documents";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,8 @@ export async function POST(request: NextRequest) {
       idNumber,
       selfieUrl,
       idDocUrl,
+      selfieName,
+      idPhotoName,
       occupation,
       incomeRange,
       sourceOfFunds,
@@ -113,6 +116,11 @@ export async function POST(request: NextRequest) {
         detailsComplete: true,
       },
     });
+
+    await saveKycDocumentsForEmail(updated.email, [
+      { type: "selfie", url: String(selfieUrl || selfieName || "").trim() },
+      { type: "id_card", url: String(idDocUrl || idPhotoName || "").trim() },
+    ]);
 
     return NextResponse.json({
       success: true,
